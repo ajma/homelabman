@@ -1,16 +1,49 @@
 import { useState } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, FolderOpen, Network, HardDrive, Settings, LogOut, Plus, Menu, X } from 'lucide-react';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { LayoutDashboard, FolderOpen, Network, HardDrive, Settings, LogOut, Plus, Menu, X, Container, ChevronDown, ChevronRight, Box } from 'lucide-react';
 import { api } from '../lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjects } from '../hooks/useProjects';
 
-const navItems = [
+const topNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/networks', icon: Network, label: 'Networks' },
+];
+
+const dockerNavItems = [
+  { to: '/containers', icon: Box, label: 'Containers' },
   { to: '/images', icon: HardDrive, label: 'Images' },
+  { to: '/networks', icon: Network, label: 'Networks' },
+];
+
+const bottomNavItems = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
+
+function NavItem({
+  item,
+  onNavClick,
+}: {
+  item: { to: string; icon: React.ElementType; label: string };
+  onNavClick?: () => void;
+}) {
+  return (
+    <NavLink
+      to={item.to}
+      end={item.to === '/'}
+      onClick={onNavClick}
+      className={({ isActive }) =>
+        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+          isActive
+            ? 'bg-primary text-primary-foreground'
+            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+        }`
+      }
+    >
+      <item.icon className="h-4 w-4" />
+      {item.label}
+    </NavLink>
+  );
+}
 
 function SidebarContent({
   projects,
@@ -21,6 +54,10 @@ function SidebarContent({
   onLogout: () => void;
   onNavClick?: () => void;
 }) {
+  const location = useLocation();
+  const isDockerRoute = dockerNavItems.some((item) => location.pathname === item.to);
+  const [dockerOpen, setDockerOpen] = useState(isDockerRoute);
+
   return (
     <>
       <div className="flex h-14 items-center border-b px-4">
@@ -28,23 +65,37 @@ function SidebarContent({
       </div>
       <nav className="flex-1 overflow-y-auto p-2">
         <div className="space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              onClick={onNavClick}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                }`
-              }
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </NavLink>
+          {topNavItems.map((item) => (
+            <NavItem key={item.to} item={item} onNavClick={onNavClick} />
+          ))}
+
+          {/* Docker expandable section */}
+          <button
+            onClick={() => setDockerOpen(!dockerOpen)}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+              isDockerRoute
+                ? 'text-primary'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+            }`}
+          >
+            <Container className="h-4 w-4" />
+            Docker
+            {dockerOpen ? (
+              <ChevronDown className="ml-auto h-3.5 w-3.5" />
+            ) : (
+              <ChevronRight className="ml-auto h-3.5 w-3.5" />
+            )}
+          </button>
+          {dockerOpen && (
+            <div className="ml-3 space-y-1 border-l border-border pl-2">
+              {dockerNavItems.map((item) => (
+                <NavItem key={item.to} item={item} onNavClick={onNavClick} />
+              ))}
+            </div>
+          )}
+
+          {bottomNavItems.map((item) => (
+            <NavItem key={item.to} item={item} onNavClick={onNavClick} />
           ))}
         </div>
 

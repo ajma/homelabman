@@ -8,6 +8,15 @@ export async function dockerRoutes(app: FastifyInstance) {
   // All routes require authentication
   app.addHook('preHandler', authenticate);
 
+  // GET /containers - List all Docker containers
+  app.get('/containers', async (_request, reply) => {
+    if (!dockerService) {
+      return reply.code(503).send({ error: 'Docker is not available' });
+    }
+    const containers = await dockerService.listContainers();
+    return containers;
+  });
+
   // GET /networks - List all Docker networks
   app.get('/networks', async (_request, reply) => {
     if (!dockerService) {

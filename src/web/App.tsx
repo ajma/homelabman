@@ -9,6 +9,7 @@ import { ProjectEditor } from './pages/ProjectEditor';
 import { Settings } from './pages/Settings';
 import { Networks } from './pages/Networks';
 import { Images } from './pages/Images';
+import { Containers } from './pages/Containers';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { data, isLoading } = useAuthStatus();
@@ -46,6 +47,7 @@ export function App() {
           <Route index element={<Dashboard />} />
           <Route path="projects/:id" element={<ProjectEditor />} />
           <Route path="projects/new" element={<ProjectEditor />} />
+          <Route path="containers" element={<Containers />} />
           <Route path="networks" element={<Networks />} />
           <Route path="images" element={<Images />} />
           <Route path="settings" element={<Settings />} />
