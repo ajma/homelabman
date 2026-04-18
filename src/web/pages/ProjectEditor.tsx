@@ -171,7 +171,7 @@ export function ProjectEditor() {
     reset,
     setValue,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<CreateProjectInput>({
     resolver: zodResolver(isEditing ? updateProjectSchema : createProjectSchema),
     defaultValues: {
@@ -244,6 +244,17 @@ export function ProjectEditor() {
       }
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong');
+    }
+  };
+
+  const handleSaveAndDeploy = async () => {
+    const data = watch();
+    try {
+      await updateMutation.mutateAsync(data);
+      toast.success('Changes saved');
+      await deployMutation.mutateAsync();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save and deploy');
     }
   };
 
@@ -322,6 +333,16 @@ export function ProjectEditor() {
             )}
             {isRunning && (
               <>
+                {isDirty && (
+                  <button
+                    type="button"
+                    onClick={handleSaveAndDeploy}
+                    disabled={isDeploying || updateMutation.isPending}
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {updateMutation.isPending || isDeploying ? 'Deploying...' : 'Save & Redeploy'}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => stopMutation.mutate()}
