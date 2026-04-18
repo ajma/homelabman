@@ -20,6 +20,13 @@ function cookieOptions() {
 }
 
 export async function authRoutes(app: FastifyInstance) {
+  // Apply rate limiting to auth routes
+  await app.register(import('@fastify/rate-limit'), {
+    max: 10,
+    timeWindow: '1 minute',
+    keyGenerator: (request) => request.ip,
+  });
+
   // POST /register - Create first admin user
   app.post('/register', async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);

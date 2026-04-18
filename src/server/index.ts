@@ -125,14 +125,6 @@ async function main() {
   // Health check
   app.get('/health', async () => ({ status: 'ok', docker: dockerService !== null }));
 
-  // Rate limiting for auth routes
-  await app.register(import('@fastify/rate-limit'), {
-    max: 10,
-    timeWindow: '1 minute',
-    hook: 'preHandler',
-    keyGenerator: (request) => request.ip,
-  });
-
   // Register routes
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(projectRoutes, { prefix: '/api/projects' });
