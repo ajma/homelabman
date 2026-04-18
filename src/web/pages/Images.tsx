@@ -86,11 +86,28 @@ function usePruneImages() {
   });
 }
 
+function useContainers() {
+  return useQuery<{ Id: string; Image: string; ImageID: string }[]>({
+    queryKey: ['containers'],
+    queryFn: () => api.get('/docker/containers'),
+  });
+}
+
 export function Images() {
   const { data: images, isLoading } = useImages();
+  const { data: containers } = useContainers();
   const pullImage = usePullImage();
   const deleteImage = useDeleteImage();
   const pruneImages = usePruneImages();
+
+  const usedImageIds = new Set(
+    containers?.flatMap((c) => [c.ImageID, c.Image]) ?? [],
+  );
+
+  const containerCountByImage = new Map<string, number>();
+  containers?.forEach((c) => {
+    containerCountByImage.set(c.ImageID, (containerCountByImage.get(c.ImageID) || 0) + 1);
+  });
 
   const [isPulling, setIsPulling] = useState(false);
   const [pullName, setPullName] = useState('');
@@ -240,6 +257,9 @@ export function Images() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   Created
                 </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                  Containers
+                </th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                   Actions
                 </th>
@@ -260,18 +280,23 @@ export function Images() {
                   <td className="px-4 py-3 text-sm text-muted-foreground">
                     {formatDate(image.Created)}
                   </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {containerCountByImage.get(image.Id) || 0}
+                  </td>
                   <td className="px-4 py-3 text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() =>
-                        handleDelete(image.Id, getRepoTag(image))
-                      }
-                      disabled={deleteImage.isPending}
-                      title="Delete image"
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {!usedImageIds.has(image.Id) && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          handleDelete(image.Id, getRepoTag(image))
+                        }
+                        disabled={deleteImage.isPending}
+                        title="Delete image"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}

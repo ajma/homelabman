@@ -66,6 +66,13 @@ export async function dockerRoutes(app: FastifyInstance) {
         return reply.code(503).send({ error: 'Docker is not available' });
       }
       const { id } = request.params;
+
+      const containers = await dockerService.listContainers();
+      const inUse = containers.some((c) => c.ImageID === id || c.Image === id);
+      if (inUse) {
+        return reply.code(409).send({ error: 'Image is in use by a running container' });
+      }
+
       const force = request.query.force === 'true';
       await dockerService.removeImage(id, force);
       return { success: true };
