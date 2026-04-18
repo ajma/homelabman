@@ -199,6 +199,20 @@ export class CloudflareProvider extends BaseProvider {
     }
   }
 
+  async listDomains(): Promise<string[]> {
+    try {
+      const res = await fetch(
+        `${CF_API_BASE}/zones?account.id=${this.accountId}&status=active&per_page=50`,
+        { headers: this.headers() },
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      return (data.result || []).map((zone: { name: string }) => zone.name);
+    } catch {
+      return [];
+    }
+  }
+
   getComposeTemplate(config: Record<string, any>): string | null {
     const token = config.tunnelToken ?? config.tunnel_token;
     if (!token) return null;

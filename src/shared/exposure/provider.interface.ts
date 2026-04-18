@@ -14,6 +14,7 @@ export interface ExposureProvider {
   getHealth(): Promise<ProviderHealth>;
   cleanup(): Promise<void>;
 
+  listDomains?(): Promise<string[]>;
   getComposeTemplate?(config: Record<string, any>): string | null;
 }
 

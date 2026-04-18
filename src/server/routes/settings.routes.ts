@@ -4,6 +4,7 @@ import { settingsSchema, onboardingSchema, exposureProviderSchema } from '../../
 import { getDatabase } from '../db/index.js';
 import { settings, exposureProviders } from '../db/schema.js';
 import { authenticate } from '../middleware/auth.middleware.js';
+import { ExposureProviderRegistry } from '../services/exposure/provider-registry.js';
 
 export async function settingsRoutes(app: FastifyInstance) {
   // All routes require authentication
@@ -184,5 +185,35 @@ export async function settingsRoutes(app: FastifyInstance) {
     await db.delete(exposureProviders).where(eq(exposureProviders.id, id));
 
     return { success: true };
+  });
+
+  // GET /exposure-providers/:id/domains - List available domains for a provider
+  app.get('/exposure-providers/:id/domains', async (request, reply) => {
+    const db = getDatabase();
+    const { id: userId } = request.user as { id: string; username: string };
+    const { id } = request.params as { id: string };
+
+    const [providerConfig] = await db
+      .select()
+      .from(exposureProviders)
+      .where(eq(exposureProviders.id, id));
+
+    if (!providerConfig || providerConfig.userId !== userId) {
+      return reply.code(404).send({ error: 'Provider not found' });
+    }
+
+    const registry = (app as any).providerRegistry as ExposureProviderRegistry;
+    const provider = registry.get(providerConfig.providerType);
+    if (!provider || !provider.listDomains) {
+      return [];
+    }
+
+    const config =
+      typeof providerConfig.configuration === 'string'
+        ? JSON.parse(providerConfig.configuration)
+        : providerConfig.configuration;
+
+    await provider.initialize(config);
+    return provider.listDomains();
   });
 }

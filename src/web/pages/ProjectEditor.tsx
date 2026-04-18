@@ -225,7 +225,12 @@ export function ProjectEditor() {
   const selectedProviderId = watch('exposureProviderId');
 
   const selectedProvider = availableProviders.find((p) => p.id === selectedProviderId);
-  const availableDomains = selectedProvider?.configuration?.domains || [];
+
+  const { data: availableDomains = [] } = useQuery<string[]>({
+    queryKey: ['provider-domains', selectedProviderId],
+    queryFn: () => api.get(`/settings/exposure-providers/${selectedProviderId}/domains`),
+    enabled: !!selectedProviderId && exposureEnabled,
+  });
 
   const handleComposeChange = useCallback(
     (value: string) => {
