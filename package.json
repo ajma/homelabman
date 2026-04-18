@@ -9,6 +9,7 @@
     "preview": "node dist/server/index.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:reset": "rm -f ./data/homelabman.db && drizzle-kit generate && drizzle-kit migrate",
     "test": "vitest",
     "lint": "eslint src/"
   },

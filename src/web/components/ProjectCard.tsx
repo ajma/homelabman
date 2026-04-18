@@ -71,7 +71,15 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
               {project.domainName && (
                 <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                   <Globe className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{project.domainName}</span>
+                  <a
+                    href={`https://${project.domainName}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="truncate hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {project.domainName}
+                  </a>
                 </div>
               )}
             </div>

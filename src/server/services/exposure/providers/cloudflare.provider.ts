@@ -116,7 +116,7 @@ export class CloudflareProvider extends BaseProvider {
 
   async addRoute(route: ExposureRoute): Promise<void> {
     const config = await this.getTunnelConfig();
-    const targetHost = route.targetHost || 'localhost';
+    const targetHost = route.targetHost || 'host.docker.internal';
     const service = `http://${targetHost}:${route.targetPort}`;
 
     // Remove catch-all, add new entry, re-add catch-all
@@ -318,6 +318,8 @@ export class CloudflareProvider extends BaseProvider {
     command: tunnel run --token \${TUNNEL_TOKEN}
     environment:
       - TUNNEL_TOKEN=${token}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 `;
   }
 }
