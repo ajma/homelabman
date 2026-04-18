@@ -1,21 +1,15 @@
-# HomelabMan - README Template
-
-Use this as the basis for the project's root README.md when the project is ready.
-
----
-
 # HomelabMan
 
 > Docker management made simple. A web-based application to manage Docker Compose stacks with intelligent exposure via Caddy, Cloudflare, and more.
 
 ## Features
 
-- Docker Compose Management - Create, deploy, and manage compose stacks
-- Flexible Exposure - Caddy, Cloudflare Tunnels, or custom providers
-- Real-time Monitoring - Container stats, uptime, and update detection
-- Version Control - Snapshot and restore compose configurations
-- Responsive UI - Optimized for desktop and mobile
-- Extensible - Plugin-based exposure provider system
+- **Docker Compose Management** — Create, deploy, and manage compose stacks
+- **Flexible Exposure** — Caddy, Cloudflare Tunnels, or custom providers
+- **Real-time Monitoring** — Container stats, uptime, and update detection
+- **Version Control** — Snapshot and restore compose configurations
+- **Responsive UI** — Optimized for desktop and mobile
+- **Extensible** — Plugin-based exposure provider system
 
 ## Quick Start
 
@@ -55,15 +49,15 @@ Then open http://localhost:3000 in your browser.
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
 | `DATABASE_PATH` | Path to SQLite database file | No | `/data/homelabman.db` |
-| `JWT_SECRET` | Secret for JWT token signing | Yes | - |
+| `JWT_SECRET` | Secret for JWT token signing | Yes | — |
 | `PORT` | Application port | No | `3000` |
-| `LOG_LEVEL` | Logging level (debug, info, warn, error) | No | `info` |
+| `LOG_LEVEL` | Logging level (`debug`, `info`, `warn`, `error`) | No | `info` |
 
 ## Requirements
 
 - Docker Engine 20.10+
 - Docker Compose 2.0+ (for managed projects)
-- 512MB RAM minimum (1GB+ recommended)
+- 512 MB RAM minimum (1 GB+ recommended)
 - External Caddy server (if using Caddy exposure)
 - Cloudflare account (if using Cloudflare Tunnel exposure)
 
