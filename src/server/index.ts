@@ -15,6 +15,8 @@ import { dockerRoutes } from './routes/docker.routes.js';
 import { settingsRoutes } from './routes/settings.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { DockerService } from './services/docker.service.js';
+import { UpdateCheckerService } from './services/update-checker.service.js';
+import { StatsService } from './services/stats.service.js';
 import { setupWebSocket } from './websocket/stats.handler.js';
 import { ExposureProviderRegistry } from './services/exposure/provider-registry.js';
 import { ExposureService } from './services/exposure/exposure.service.js';
@@ -89,9 +91,28 @@ async function main() {
   // Decorate app with dockerService (may be null if Docker is unavailable)
   app.decorate('dockerService', dockerService);
 
+  // Initialize update checker service if Docker is available
+  let updateCheckerService: UpdateCheckerService | null = null;
+  if (dockerService) {
+    updateCheckerService = new UpdateCheckerService(dockerService);
+    updateCheckerService.startPeriodicChecks();
+    app.log.info('Update checker service started (checks every 6 hours)');
+  }
+  app.decorate('updateCheckerService', updateCheckerService);
+
   // Set up WebSocket handler for real-time updates
   const { broadcast } = setupWebSocket(app);
   app.decorate('wsBroadcast', broadcast);
+
+  // Initialize stats collection service if Docker is available
+  let statsService: StatsService | null = null;
+  if (dockerService) {
+    statsService = new StatsService(dockerService, broadcast);
+    statsService.startCollection();
+    statsService.startRetention();
+    app.log.info('Stats collection service started (collecting every 10s)');
+  }
+  app.decorate('statsService', statsService);
 
   // Initialize exposure provider system
   const providerRegistry = new ExposureProviderRegistry();
@@ -136,6 +157,8 @@ async function main() {
 
   const shutdown = async () => {
     app.log.info('Shutting down...');
+    statsService?.stopCollection();
+    updateCheckerService?.stopPeriodicChecks();
     await app.close();
     process.exit(0);
   };

@@ -6,12 +6,27 @@ import { ComposeValidatorService } from '../services/compose-validator.service.j
 import { DeployService } from '../services/deploy.service.js';
 import { DockerService } from '../services/docker.service.js';
 import type { ExposureService } from '../services/exposure/exposure.service.js';
+import type { UpdateCheckerService } from '../services/update-checker.service.js';
+import type { StatsService } from '../services/stats.service.js';
 
 const projectService = new ProjectService();
+
+/** Parse a range string like '1h', '6h', '24h', '7d', '30d' into milliseconds */
+function parseRange(range: string): number {
+  const match = range.match(/^(\d+)(h|d)$/);
+  if (!match) return 24 * 60 * 60 * 1000; // default 24h
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+  if (unit === 'h') return value * 60 * 60 * 1000;
+  if (unit === 'd') return value * 24 * 60 * 60 * 1000;
+  return 24 * 60 * 60 * 1000;
+}
 
 export async function projectRoutes(app: FastifyInstance) {
   const dockerService = (app as any).dockerService as DockerService | null;
   const exposureService = (app as any).exposureService as ExposureService | undefined;
+  const updateCheckerService = (app as any).updateCheckerService as UpdateCheckerService | undefined;
+  const statsService = (app as any).statsService as StatsService | undefined;
   const wsBroadcast = (app as any).wsBroadcast as
     | ((projectId: string, message: any) => void)
     | undefined;
@@ -200,6 +215,86 @@ export async function projectRoutes(app: FastifyInstance) {
       return { active: false, domain: '', message: error.message };
     }
   });
+
+  // GET /:id/updates - Get update info for a project
+  app.get<{ Params: { id: string } }>('/:id/updates', async (request, reply) => {
+    const userId = (request.user as any).id;
+    const { id } = request.params;
+
+    const project = await projectService.getProject(id, userId);
+    if (!project) {
+      return reply.code(404).send({ error: 'Project not found' });
+    }
+
+    if (!updateCheckerService) {
+      return [];
+    }
+
+    return updateCheckerService.getProjectUpdates(id);
+  });
+
+  // POST /:id/updates/check - Trigger manual update check
+  app.post<{ Params: { id: string } }>('/:id/updates/check', async (request, reply) => {
+    const userId = (request.user as any).id;
+    const { id } = request.params;
+
+    const project = await projectService.getProject(id, userId);
+    if (!project) {
+      return reply.code(404).send({ error: 'Project not found' });
+    }
+
+    if (!updateCheckerService) {
+      return reply.code(503).send({ error: 'Update checker is not available' });
+    }
+
+    await updateCheckerService.triggerCheck(id);
+    return updateCheckerService.getProjectUpdates(id);
+  });
+
+  // GET /:id/stats - Get historical stats for a project
+  app.get<{ Params: { id: string }; Querystring: { range?: string } }>(
+    '/:id/stats',
+    async (request, reply) => {
+      const userId = (request.user as any).id;
+      const { id } = request.params;
+      const range = request.query.range || '24h';
+
+      const project = await projectService.getProject(id, userId);
+      if (!project) {
+        return reply.code(404).send({ error: 'Project not found' });
+      }
+
+      if (!statsService) {
+        return [];
+      }
+
+      const rangeMs = parseRange(range);
+      return statsService.getProjectStats(id, rangeMs);
+    },
+  );
+
+  // GET /:id/uptime - Get uptime percentage for a project
+  app.get<{ Params: { id: string }; Querystring: { range?: string } }>(
+    '/:id/uptime',
+    async (request, reply) => {
+      const userId = (request.user as any).id;
+      const { id } = request.params;
+      const range = request.query.range || '24h';
+
+      const project = await projectService.getProject(id, userId);
+      if (!project) {
+        return reply.code(404).send({ error: 'Project not found' });
+      }
+
+      if (!statsService) {
+        return { uptime: 0 };
+      }
+
+      const rangeMs = parseRange(range);
+      const uptime = await statsService.getProjectUptime(id, rangeMs);
+      return { uptime };
+    },
+  );
 
   // POST /compose/validate - Validate compose YAML
   app.post('/compose/validate', async (request) => {

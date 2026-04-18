@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProjects } from '../hooks/useProjects';
+import { useWebSocket } from '../hooks/useWebSocket';
+import type { ContainerStats } from '../hooks/useStats';
 import { ProjectCard } from '../components/ProjectCard';
 import { Button } from '../components/ui/button';
 import { api } from '../lib/api';
@@ -11,6 +14,36 @@ export function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: projects, isLoading } = useProjects();
+  const ws = useWebSocket();
+  const [projectStats, setProjectStats] = useState<Map<string, ContainerStats[]>>(new Map());
+
+  // Subscribe to stats for all running projects
+  useEffect(() => {
+    if (!ws.connected || !projects) return;
+
+    const runningProjects = projects.filter((p) => p.status === 'running');
+    for (const project of runningProjects) {
+      ws.subscribe(project.id);
+    }
+
+    const cleanup = ws.on('stats:update', (msg) => {
+      const pid = msg.projectId;
+      if (pid && msg.containers) {
+        setProjectStats((prev) => {
+          const next = new Map(prev);
+          next.set(pid, msg.containers);
+          return next;
+        });
+      }
+    });
+
+    return () => {
+      for (const project of runningProjects) {
+        ws.unsubscribe(project.id);
+      }
+      cleanup();
+    };
+  }, [ws.connected, projects]);
 
   const deployMutation = useMutation({
     mutationFn: (id: string) => api.post(`/projects/${id}/deploy`),
@@ -84,6 +117,7 @@ export function Dashboard() {
             <ProjectCard
               key={project.id}
               project={project}
+              stats={projectStats.get(project.id)}
               onDeploy={(id) => deployMutation.mutate(id)}
               onStop={(id) => stopMutation.mutate(id)}
               onRestart={(id) => restartMutation.mutate(id)}
