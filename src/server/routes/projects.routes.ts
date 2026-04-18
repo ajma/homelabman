@@ -5,11 +5,13 @@ import { ProjectService } from '../services/project.service.js';
 import { ComposeValidatorService } from '../services/compose-validator.service.js';
 import { DeployService } from '../services/deploy.service.js';
 import { DockerService } from '../services/docker.service.js';
+import type { ExposureService } from '../services/exposure/exposure.service.js';
 
 const projectService = new ProjectService();
 
 export async function projectRoutes(app: FastifyInstance) {
   const dockerService = (app as any).dockerService as DockerService | null;
+  const exposureService = (app as any).exposureService as ExposureService | undefined;
   const wsBroadcast = (app as any).wsBroadcast as
     | ((projectId: string, message: any) => void)
     | undefined;
@@ -18,6 +20,9 @@ export async function projectRoutes(app: FastifyInstance) {
   let deployService: DeployService | null = null;
   if (dockerService) {
     deployService = new DeployService(dockerService, projectService);
+    if (exposureService) {
+      deployService.setExposureService(exposureService);
+    }
   }
 
   // All project routes require authentication
@@ -173,6 +178,28 @@ export async function projectRoutes(app: FastifyInstance) {
       return { logs };
     },
   );
+
+  // GET /:id/exposure-status - Get exposure route status for a project
+  app.get<{ Params: { id: string } }>('/:id/exposure-status', async (request, reply) => {
+    const userId = (request.user as any).id;
+    const { id } = request.params;
+
+    const project = await projectService.getProject(id, userId);
+    if (!project) {
+      return reply.code(404).send({ error: 'Project not found' });
+    }
+
+    if (!exposureService) {
+      return { active: false, domain: '', message: 'Exposure service not available' };
+    }
+
+    try {
+      const status = await exposureService.getProjectExposureStatus(id);
+      return status || { active: false, domain: '', message: 'Exposure not configured' };
+    } catch (error: any) {
+      return { active: false, domain: '', message: error.message };
+    }
+  });
 
   // POST /compose/validate - Validate compose YAML
   app.post('/compose/validate', async (request) => {

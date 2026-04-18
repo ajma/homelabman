@@ -3,6 +3,7 @@ import path from 'path';
 import yaml from 'js-yaml';
 import { DockerService } from './docker.service.js';
 import { ProjectService } from './project.service.js';
+import type { ExposureService } from './exposure/exposure.service.js';
 import { getDatabase } from '../db/index.js';
 import { projects } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
@@ -16,10 +17,16 @@ interface DeploymentListener {
 }
 
 export class DeployService {
+  private exposureService: ExposureService | null = null;
+
   constructor(
     private dockerService: DockerService,
     private projectService: ProjectService,
   ) {}
+
+  setExposureService(exposureService: ExposureService): void {
+    this.exposureService = exposureService;
+  }
 
   /** Inject homelabman labels into compose YAML so containers are trackable */
   private injectLabels(composeContent: string, projectId: string): string {
@@ -88,6 +95,17 @@ export class DeployService {
         .set({ status: 'running', deployedAt: Date.now(), updatedAt: Date.now() })
         .where(eq(projects.id, projectId));
 
+      // Set up exposure routes if configured
+      if (this.exposureService) {
+        try {
+          listener?.onProgress('exposure', 'Configuring exposure routes...');
+          await this.exposureService.addProjectExposure(projectId);
+        } catch (exposureErr: any) {
+          listener?.onProgress('exposure', `Exposure setup failed: ${exposureErr.message}`);
+          // Don't fail the deploy for exposure errors
+        }
+      }
+
       listener?.onProgress('complete', 'Deployment successful');
       listener?.onComplete('success');
     } catch (error: any) {
@@ -109,6 +127,15 @@ export class DeployService {
 
     const projectDir = path.join(COMPOSE_DIR, project.slug);
     const composeFile = path.join(projectDir, 'docker-compose.yml');
+
+    // Remove exposure routes before stopping
+    if (this.exposureService) {
+      try {
+        await this.exposureService.removeProjectExposure(projectId);
+      } catch {
+        // Don't fail the stop for exposure errors
+      }
+    }
 
     try {
       await this.dockerService.composeDown(composeFile, project.slug);

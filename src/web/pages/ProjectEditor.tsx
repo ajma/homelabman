@@ -11,6 +11,23 @@ import { ComposeEditor } from '../components/ComposeEditor';
 import { api } from '../lib/api';
 import { useWebSocket } from '../hooks/useWebSocket';
 
+interface ExposureProviderOption {
+  id: string;
+  providerType: string;
+  name: string;
+  enabled: boolean;
+}
+
+interface SettingsResponse {
+  exposureProviders: ExposureProviderOption[];
+}
+
+interface ExposureStatus {
+  active: boolean;
+  domain: string;
+  message?: string;
+}
+
 interface ValidationResult {
   valid: boolean;
   errors: Array<{ line?: number; message: string }>;
@@ -43,6 +60,21 @@ export function ProjectEditor() {
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [deployProgress, setDeployProgress] = useState<DeployProgress[]>([]);
   const [showLogs, setShowLogs] = useState(false);
+
+  // Fetch available exposure providers from settings
+  const { data: settingsData } = useQuery<SettingsResponse>({
+    queryKey: ['settings'],
+    queryFn: () => api.get('/settings'),
+  });
+
+  const availableProviders = settingsData?.exposureProviders?.filter((p) => p.enabled) || [];
+
+  // Fetch exposure status for deployed projects
+  const { data: exposureStatus } = useQuery<ExposureStatus>({
+    queryKey: ['projects', id, 'exposure-status'],
+    queryFn: () => api.get(`/projects/${id}/exposure-status`),
+    enabled: !!id && project?.status === 'running' && !!project?.exposureEnabled,
+  });
 
   const { subscribe, unsubscribe, on, connected } = useWebSocket();
 
@@ -143,22 +175,33 @@ export function ProjectEditor() {
       composeContent: '',
       logoUrl: null,
       domainName: null,
+      exposureEnabled: false,
+      exposureProviderId: null,
+      exposureConfig: {},
     },
   });
 
   // Populate form when project data loads
   useEffect(() => {
     if (project) {
+      const expConfig =
+        typeof project.exposureConfig === 'string'
+          ? JSON.parse(project.exposureConfig || '{}')
+          : project.exposureConfig || {};
       reset({
         name: project.name,
         composeContent: project.composeContent,
         logoUrl: project.logoUrl || null,
         domainName: project.domainName || null,
+        exposureEnabled: project.exposureEnabled ?? false,
+        exposureProviderId: project.exposureProviderId || null,
+        exposureConfig: expConfig,
       });
     }
   }, [project, reset]);
 
   const composeContent = watch('composeContent');
+  const exposureEnabled = watch('exposureEnabled');
 
   const handleComposeChange = useCallback(
     (value: string) => {
@@ -378,6 +421,96 @@ export function ProjectEditor() {
           />
           {errors.domainName && (
             <p className="text-sm text-destructive">{errors.domainName.message}</p>
+          )}
+        </div>
+
+        {/* Exposure */}
+        <div className="space-y-4 rounded-lg border border-input p-4">
+          <h3 className="text-sm font-semibold">Exposure</h3>
+
+          <div className="flex items-center gap-3">
+            <input
+              id="exposureEnabled"
+              type="checkbox"
+              {...register('exposureEnabled')}
+              className="h-4 w-4 rounded border-input"
+            />
+            <label htmlFor="exposureEnabled" className="text-sm font-medium">
+              Enable external exposure
+            </label>
+          </div>
+
+          {exposureEnabled && (
+            <div className="space-y-4 pl-7">
+              <div className="space-y-2">
+                <label htmlFor="exposureProviderId" className="text-sm font-medium">
+                  Exposure Provider
+                </label>
+                <select
+                  id="exposureProviderId"
+                  {...register('exposureProviderId')}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select a provider...</option>
+                  {availableProviders.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.providerType})
+                    </option>
+                  ))}
+                </select>
+                {availableProviders.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No providers configured. Add one in Settings.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="exposurePort" className="text-sm font-medium">
+                  Target Port
+                </label>
+                <input
+                  id="exposurePort"
+                  type="number"
+                  defaultValue={
+                    (typeof project?.exposureConfig === 'string'
+                      ? JSON.parse(project?.exposureConfig || '{}')
+                      : project?.exposureConfig
+                    )?.port || 80
+                  }
+                  onChange={(e) => {
+                    const current = watch('exposureConfig') || {};
+                    setValue('exposureConfig', { ...current, port: parseInt(e.target.value, 10) || 80 });
+                  }}
+                  placeholder="80"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                <p className="text-xs text-muted-foreground">
+                  The port your service listens on inside the container.
+                </p>
+              </div>
+
+              {/* Show exposure status for running projects */}
+              {isEditing && project?.status === 'running' && exposureStatus && (
+                <div
+                  className={`rounded-md p-3 text-sm ${
+                    exposureStatus.active
+                      ? 'bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  <span className="font-medium">
+                    {exposureStatus.active ? 'Route active' : 'Route inactive'}
+                  </span>
+                  {exposureStatus.domain && (
+                    <span className="ml-2">({exposureStatus.domain})</span>
+                  )}
+                  {exposureStatus.message && (
+                    <p className="mt-1 text-xs">{exposureStatus.message}</p>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 

@@ -16,6 +16,9 @@ import { settingsRoutes } from './routes/settings.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { DockerService } from './services/docker.service.js';
 import { setupWebSocket } from './websocket/stats.handler.js';
+import { ExposureProviderRegistry } from './services/exposure/provider-registry.js';
+import { ExposureService } from './services/exposure/exposure.service.js';
+import { CaddyProvider, CloudflareProvider } from './services/exposure/providers/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -89,6 +92,14 @@ async function main() {
   // Set up WebSocket handler for real-time updates
   const { broadcast } = setupWebSocket(app);
   app.decorate('wsBroadcast', broadcast);
+
+  // Initialize exposure provider system
+  const providerRegistry = new ExposureProviderRegistry();
+  providerRegistry.register(new CaddyProvider());
+  providerRegistry.register(new CloudflareProvider());
+  const exposureService = new ExposureService(providerRegistry);
+  app.decorate('exposureService', exposureService);
+  app.decorate('providerRegistry', providerRegistry);
 
   // Health check
   app.get('/health', async () => ({ status: 'ok', docker: dockerService !== null }));
