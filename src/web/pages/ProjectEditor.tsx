@@ -306,7 +306,7 @@ export function ProjectEditor() {
           : 'bg-muted text-muted-foreground';
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <div className="mx-auto max-w-7xl p-6">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold">{isEditing ? 'Edit Project' : 'New Project'}</h2>
         {isEditing && (
@@ -318,254 +318,259 @@ export function ProjectEditor() {
         )}
       </div>
 
-      {/* Deployment controls */}
-      {isEditing && project && (
-        <div className="mb-6 rounded-lg border border-input p-4">
-          <h3 className="mb-3 text-sm font-semibold">Deployment</h3>
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column - Project Settings */}
+        <div className="space-y-6">
+          {/* Name */}
+          <div className="space-y-2">
+            <label htmlFor="name" className="text-sm font-medium">
+              Project Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              {...register('name')}
+              placeholder="My Awesome Project"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+          </div>
+
+          {/* Logo URL */}
+          <div className="space-y-2">
+            <label htmlFor="logoUrl" className="text-sm font-medium">
+              Logo URL <span className="text-muted-foreground">(optional)</span>
+            </label>
+            <input
+              id="logoUrl"
+              type="text"
+              {...register('logoUrl')}
+              placeholder="https://example.com/logo.png"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            {errors.logoUrl && <p className="text-sm text-destructive">{errors.logoUrl.message}</p>}
+          </div>
+
+          {/* Domain Name */}
+          <div className="space-y-2">
+            <label htmlFor="domainName" className="text-sm font-medium">
+              Domain Name <span className="text-muted-foreground">(optional)</span>
+            </label>
+            <input
+              id="domainName"
+              type="text"
+              {...register('domainName')}
+              placeholder="app.example.com"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            {errors.domainName && (
+              <p className="text-sm text-destructive">{errors.domainName.message}</p>
+            )}
+          </div>
+
+          {/* Exposure */}
+          <div className="space-y-4 rounded-lg border border-input p-4">
+            <h3 className="text-sm font-semibold">Exposure</h3>
+
+            <div className="flex items-center gap-3">
+              <input
+                id="exposureEnabled"
+                type="checkbox"
+                {...register('exposureEnabled')}
+                className="h-4 w-4 rounded border-input"
+              />
+              <label htmlFor="exposureEnabled" className="text-sm font-medium">
+                Enable external exposure
+              </label>
+            </div>
+
+            {exposureEnabled && (
+              <div className="space-y-4 pl-7">
+                <div className="space-y-2">
+                  <label htmlFor="exposureProviderId" className="text-sm font-medium">
+                    Exposure Provider
+                  </label>
+                  <select
+                    id="exposureProviderId"
+                    {...register('exposureProviderId')}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Select a provider...</option>
+                    {availableProviders.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.providerType})
+                      </option>
+                    ))}
+                  </select>
+                  {availableProviders.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      No providers configured. Add one in Settings.
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="exposurePort" className="text-sm font-medium">
+                    Target Port
+                  </label>
+                  <input
+                    id="exposurePort"
+                    type="number"
+                    defaultValue={
+                      (typeof project?.exposureConfig === 'string'
+                        ? JSON.parse(project?.exposureConfig || '{}')
+                        : project?.exposureConfig
+                      )?.port || 80
+                    }
+                    onChange={(e) => {
+                      const current = watch('exposureConfig') || {};
+                      setValue('exposureConfig', { ...current, port: parseInt(e.target.value, 10) || 80 });
+                    }}
+                    placeholder="80"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The port your service listens on inside the container.
+                  </p>
+                </div>
+
+                {/* Show exposure status for running projects */}
+                {isEditing && project?.status === 'running' && exposureStatus && (
+                  <div
+                    className={`rounded-md p-3 text-sm ${
+                      exposureStatus.active
+                        ? 'bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    <span className="font-medium">
+                      {exposureStatus.active ? 'Route active' : 'Route inactive'}
+                    </span>
+                    {exposureStatus.domain && (
+                      <span className="ml-2">({exposureStatus.domain})</span>
+                    )}
+                    {exposureStatus.message && (
+                      <p className="mt-1 text-xs">{exposureStatus.message}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
           <div className="flex items-center gap-3">
-            {(isStopped || project.status === 'error') && (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Project'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="rounded-lg border border-input px-4 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Cancel
+            </button>
+            {isEditing && (
               <button
                 type="button"
-                onClick={() => deployMutation.mutate()}
-                disabled={isDeploying}
-                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="ml-auto rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
               >
-                {isDeploying ? 'Deploying...' : 'Deploy'}
+                Delete
               </button>
             )}
-            {isRunning && (
-              <>
-                {isDirty && (
+          </div>
+        </div>
+
+        {/* Right Column - Docker Compose */}
+        <div className="space-y-6">
+          {/* Deployment controls */}
+          {isEditing && project && (
+            <div className="rounded-lg border border-input p-4">
+              <h3 className="mb-3 text-sm font-semibold">Deployment</h3>
+              <div className="flex items-center gap-3 flex-wrap">
+                {(isStopped || project.status === 'error') && (
                   <button
                     type="button"
-                    onClick={handleSaveAndDeploy}
-                    disabled={isDeploying || updateMutation.isPending}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    onClick={() => deployMutation.mutate()}
+                    disabled={isDeploying}
+                    className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
                   >
-                    {updateMutation.isPending || isDeploying ? 'Deploying...' : 'Save & Redeploy'}
+                    {isDeploying ? 'Deploying...' : 'Deploy'}
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => stopMutation.mutate()}
-                  disabled={stopMutation.isPending}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                >
-                  {stopMutation.isPending ? 'Stopping...' : 'Stop'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => restartMutation.mutate()}
-                  disabled={restartMutation.isPending}
-                  className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
-                >
-                  {restartMutation.isPending ? 'Restarting...' : 'Restart'}
-                </button>
-              </>
-            )}
-            {isDeploying && (
-              <span className="text-sm text-muted-foreground">
-                Deployment in progress...
-              </span>
-            )}
-          </div>
-
-          {/* Deployment progress messages */}
-          {deployProgress.length > 0 && (
-            <div className="mt-3 max-h-40 overflow-y-auto rounded border border-input bg-muted/50 p-3">
-              <h4 className="mb-2 text-xs font-semibold text-muted-foreground">Progress</h4>
-              {deployProgress.map((p, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs">
-                  <span className="shrink-0 font-mono text-muted-foreground">
-                    [{p.stage}]
+                {isRunning && (
+                  <>
+                    {isDirty && (
+                      <button
+                        type="button"
+                        onClick={handleSaveAndDeploy}
+                        disabled={isDeploying || updateMutation.isPending}
+                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {updateMutation.isPending || isDeploying ? 'Deploying...' : 'Save & Redeploy'}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => stopMutation.mutate()}
+                      disabled={stopMutation.isPending}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {stopMutation.isPending ? 'Stopping...' : 'Stop'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => restartMutation.mutate()}
+                      disabled={restartMutation.isPending}
+                      className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                    >
+                      {restartMutation.isPending ? 'Restarting...' : 'Restart'}
+                    </button>
+                  </>
+                )}
+                {isDeploying && (
+                  <span className="text-sm text-muted-foreground">
+                    Deployment in progress...
                   </span>
-                  <span>{p.message}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Name */}
-        <div className="space-y-2">
-          <label htmlFor="name" className="text-sm font-medium">
-            Project Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            {...register('name')}
-            placeholder="My Awesome Project"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-        </div>
-
-        {/* Compose Content */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Docker Compose
-          </label>
-          <ComposeEditor
-            value={composeContent ?? ''}
-            onChange={handleComposeChange}
-            errors={validation?.errors}
-            warnings={validation?.warnings}
-          />
-          {errors.composeContent && (
-            <p className="text-sm text-destructive">{errors.composeContent.message}</p>
-          )}
-        </div>
-
-        {/* Logo URL */}
-        <div className="space-y-2">
-          <label htmlFor="logoUrl" className="text-sm font-medium">
-            Logo URL <span className="text-muted-foreground">(optional)</span>
-          </label>
-          <input
-            id="logoUrl"
-            type="text"
-            {...register('logoUrl')}
-            placeholder="https://example.com/logo.png"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          {errors.logoUrl && <p className="text-sm text-destructive">{errors.logoUrl.message}</p>}
-        </div>
-
-        {/* Domain Name */}
-        <div className="space-y-2">
-          <label htmlFor="domainName" className="text-sm font-medium">
-            Domain Name <span className="text-muted-foreground">(optional)</span>
-          </label>
-          <input
-            id="domainName"
-            type="text"
-            {...register('domainName')}
-            placeholder="app.example.com"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          {errors.domainName && (
-            <p className="text-sm text-destructive">{errors.domainName.message}</p>
-          )}
-        </div>
-
-        {/* Exposure */}
-        <div className="space-y-4 rounded-lg border border-input p-4">
-          <h3 className="text-sm font-semibold">Exposure</h3>
-
-          <div className="flex items-center gap-3">
-            <input
-              id="exposureEnabled"
-              type="checkbox"
-              {...register('exposureEnabled')}
-              className="h-4 w-4 rounded border-input"
-            />
-            <label htmlFor="exposureEnabled" className="text-sm font-medium">
-              Enable external exposure
-            </label>
-          </div>
-
-          {exposureEnabled && (
-            <div className="space-y-4 pl-7">
-              <div className="space-y-2">
-                <label htmlFor="exposureProviderId" className="text-sm font-medium">
-                  Exposure Provider
-                </label>
-                <select
-                  id="exposureProviderId"
-                  {...register('exposureProviderId')}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">Select a provider...</option>
-                  {availableProviders.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.providerType})
-                    </option>
-                  ))}
-                </select>
-                {availableProviders.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No providers configured. Add one in Settings.
-                  </p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="exposurePort" className="text-sm font-medium">
-                  Target Port
-                </label>
-                <input
-                  id="exposurePort"
-                  type="number"
-                  defaultValue={
-                    (typeof project?.exposureConfig === 'string'
-                      ? JSON.parse(project?.exposureConfig || '{}')
-                      : project?.exposureConfig
-                    )?.port || 80
-                  }
-                  onChange={(e) => {
-                    const current = watch('exposureConfig') || {};
-                    setValue('exposureConfig', { ...current, port: parseInt(e.target.value, 10) || 80 });
-                  }}
-                  placeholder="80"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-                <p className="text-xs text-muted-foreground">
-                  The port your service listens on inside the container.
-                </p>
-              </div>
-
-              {/* Show exposure status for running projects */}
-              {isEditing && project?.status === 'running' && exposureStatus && (
-                <div
-                  className={`rounded-md p-3 text-sm ${
-                    exposureStatus.active
-                      ? 'bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  <span className="font-medium">
-                    {exposureStatus.active ? 'Route active' : 'Route inactive'}
-                  </span>
-                  {exposureStatus.domain && (
-                    <span className="ml-2">({exposureStatus.domain})</span>
-                  )}
-                  {exposureStatus.message && (
-                    <p className="mt-1 text-xs">{exposureStatus.message}</p>
-                  )}
+              {/* Deployment progress messages */}
+              {deployProgress.length > 0 && (
+                <div className="mt-3 max-h-40 overflow-y-auto rounded border border-input bg-muted/50 p-3">
+                  <h4 className="mb-2 text-xs font-semibold text-muted-foreground">Progress</h4>
+                  {deployProgress.map((p, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs">
+                      <span className="shrink-0 font-mono text-muted-foreground">
+                        [{p.stage}]
+                      </span>
+                      <span>{p.message}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
           )}
-        </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {isSubmitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Project'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="rounded-lg border border-input px-4 py-2 text-sm font-medium hover:bg-accent"
-          >
-            Cancel
-          </button>
-          {isEditing && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="ml-auto rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </button>
-          )}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Docker Compose
+            </label>
+            <ComposeEditor
+              value={composeContent ?? ''}
+              onChange={handleComposeChange}
+              errors={validation?.errors}
+              warnings={validation?.warnings}
+            />
+            {errors.composeContent && (
+              <p className="text-sm text-destructive">{errors.composeContent.message}</p>
+            )}
+          </div>
         </div>
       </form>
 
