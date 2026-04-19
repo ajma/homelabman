@@ -409,12 +409,17 @@ function CompleteStep({
 export function Onboarding() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: authStatus } = useAuthStatus();
+  const { data: authStatus, refetch: refetchAuthStatus } = useAuthStatus();
   const [step, setStep] = useState<OnboardingStep>(1);
 
   useEffect(() => {
+    if (authStatus?.authenticated && !authStatus.needsOnboarding) {
+      navigate('/', { replace: true });
+      return;
+    }
+
     if (authStatus?.authenticated) setStep((s) => s === 1 ? 2 : s);
-  }, [authStatus?.authenticated]);
+  }, [authStatus?.authenticated, authStatus?.needsOnboarding, navigate]);
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -454,9 +459,10 @@ export function Onboarding() {
       }
 
       await api.post('/settings/onboarding', { exposureProviders });
-      queryClient.invalidateQueries({ queryKey: ['auth'] });
+      await queryClient.invalidateQueries({ queryKey: ['auth', 'status'] });
+      await refetchAuthStatus();
       toast.success('Setup complete! Welcome to HomelabMan.');
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to complete setup');
     } finally {
