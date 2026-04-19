@@ -118,9 +118,13 @@ export async function authRoutes(app: FastifyInstance) {
   app.get('/status', async (request) => {
     const db = getDatabase();
 
-    // Check if any user exists
+    // Check if any user exists and has completed onboarding
     const existingUsers = await db.select().from(users);
-    const needsOnboarding = existingUsers.length === 0;
+    if (existingUsers.length === 0) {
+      return { needsOnboarding: true, authenticated: false };
+    }
+    const [userSettings] = await db.select().from(settings).where(eq(settings.userId, existingUsers[0].id));
+    const needsOnboarding = !userSettings?.onboardingCompleted;
 
     // Try to verify JWT from cookie (don't fail if invalid)
     let authenticated = false;

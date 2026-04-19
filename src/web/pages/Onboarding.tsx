@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface SetupCheck {
@@ -45,7 +45,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { registerSchema, type RegisterInput, type ExposureProviderInput } from '@shared/schemas';
-import { useRegister } from '../hooks/useAuth';
+import { useRegister, useAuthStatus } from '../hooks/useAuth';
 import { api } from '../lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -481,7 +481,12 @@ function CompleteStep({
 export function Onboarding() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { data: authStatus } = useAuthStatus();
   const [step, setStep] = useState<OnboardingStep>(1);
+
+  useEffect(() => {
+    if (authStatus?.authenticated) setStep((s) => s === 1 ? 2 : s);
+  }, [authStatus?.authenticated]);
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
