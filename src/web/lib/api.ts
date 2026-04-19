@@ -9,7 +9,7 @@ class ApiError extends Error {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
-    ...options?.headers,
+    ...(options?.headers as Record<string, string> | undefined),
   };
 
   // Only set Content-Type if there's a body
