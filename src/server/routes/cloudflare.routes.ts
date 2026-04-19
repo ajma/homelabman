@@ -52,7 +52,7 @@ export async function cloudflareRoutes(app: FastifyInstance) {
       const res = await fetch(`${CF_API}/accounts/${accountId}/cfd_tunnel`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: tunnelName, tunnel_secret: tunnelSecret }),
+        body: JSON.stringify({ name: tunnelName, tunnel_secret: tunnelSecret, config_src: 'cloudflare' }),
       });
       const data = await res.json();
       if (!data.success) {
