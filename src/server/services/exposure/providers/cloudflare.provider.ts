@@ -326,17 +326,33 @@ export class CloudflareProvider extends BaseProvider {
 
     // Check 4: API Token permissions (parallel)
     try {
-      const [tunnelConfigRes, zonesRes] = await Promise.all([
+      const [tunnelConfigRes, zonesRes, accountRes] = await Promise.all([
         fetch(this.configUrl(), { headers: this.headers() }),
         fetch(`${CF_API_BASE}/zones?account.id=${this.accountId}&per_page=1`, { headers: this.headers() }),
+        fetch(`${CF_API_BASE}/accounts/${this.accountId}`, { headers: this.headers() }),
       ]);
 
       const missingPerms: string[] = [];
       if (!tunnelConfigRes.ok && tunnelConfigRes.status === 403) {
-        missingPerms.push('Cloudflare Tunnel → Edit');
+        missingPerms.push('Account → Cloudflare Tunnel → Edit');
+      }
+      if (!accountRes.ok && accountRes.status === 403) {
+        missingPerms.push('Account → Account Settings → Read');
       }
       if (!zonesRes.ok && zonesRes.status === 403) {
         missingPerms.push('Zone → Zone → Read');
+      }
+
+      // Check Zone → DNS → Edit using the first zone from the zones response
+      if (zonesRes.ok) {
+        const zonesData = await zonesRes.json();
+        const firstZoneId = zonesData.result?.[0]?.id as string | undefined;
+        if (firstZoneId) {
+          const dnsRes = await fetch(`${CF_API_BASE}/zones/${firstZoneId}/dns_records?per_page=1`, { headers: this.headers() });
+          if (!dnsRes.ok && dnsRes.status === 403) {
+            missingPerms.push('Zone → DNS → Edit');
+          }
+        }
       }
 
       if (missingPerms.length > 0) {
@@ -352,7 +368,7 @@ export class CloudflareProvider extends BaseProvider {
       checks.push({
         name: 'API Token Permissions',
         passed: true,
-        message: 'Cloudflare Tunnel:Edit and Zone:Read permissions confirmed',
+        message: 'All required permissions confirmed',
       });
     } catch {
       checks.push({

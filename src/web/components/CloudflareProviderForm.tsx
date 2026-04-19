@@ -105,24 +105,42 @@ export function CloudflareProviderForm({ value, onChange }: Props) {
             Click Connect to reload your accounts and tunnels.
           </p>
         )}
-        <p className="text-xs text-muted-foreground">
-          <a
-            href="https://dash.cloudflare.com/profile/api-tokens"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            Create an API token
-          </a>{' '}
-          with <strong>Account → Cloudflare Tunnel → Edit</strong> and{' '}
-          <strong>Zone → Zone → Read</strong> permissions.
-        </p>
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p>
+            Create an API token (
+            <a
+              href="https://dash.cloudflare.com/profile/api-tokens"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              Open Cloudflare dashboard
+            </a>
+            ) with these permissions:
+          </p>
+          <ul className="list-disc list-inside space-y-0.5">
+            <li><strong>Account → Cloudflare Tunnel → Edit</strong></li>
+            <li><strong>Account → Account Settings → Read</strong></li>
+            <li><strong>Zone → Zone → Read</strong></li>
+            <li><strong>Zone → DNS → Edit</strong></li>
+          </ul>
+        </div>
       </div>
 
       {/* Account dropdown */}
       {accounts.length > 0 && (
         <div className="space-y-2">
-          <Label htmlFor="cf-account">Account</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="cf-account">Account</Label>
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleConnect}
+              disabled={isConnecting}
+            >
+              {isConnecting ? 'Refreshing…' : 'refresh'}
+            </button>
+          </div>
           <select
             id="cf-account"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -140,7 +158,17 @@ export function CloudflareProviderForm({ value, onChange }: Props) {
       {/* Tunnel dropdown */}
       {value.accountId && accounts.length > 0 && (
         <div className="space-y-2">
-          <Label htmlFor="cf-tunnel">Tunnel</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="cf-tunnel">Tunnel</Label>
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => handleAccountChange(value.accountId)}
+              disabled={isLoadingTunnels}
+            >
+              {isLoadingTunnels ? 'Refreshing…' : 'refresh'}
+            </button>
+          </div>
           <select
             id="cf-tunnel"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
