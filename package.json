@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"vite\" \"tsx watch src/server/index.ts\"",
+    "dev:web": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build && tsup",
     "preview": "node dist/server/index.js",
     "db:generate": "drizzle-kit generate",
