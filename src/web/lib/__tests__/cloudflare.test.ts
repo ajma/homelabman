@@ -89,16 +89,19 @@ describe('cloudflare web helpers', () => {
     });
   });
 
-  it('creates infrastructure project for cloudflared deployment', async () => {
-    vi.mocked(api.post).mockResolvedValueOnce(undefined);
+  it('creates and deploys infrastructure project for cloudflared deployment', async () => {
+    vi.mocked(api.post)
+      .mockResolvedValueOnce({ id: 'proj-123' })
+      .mockResolvedValueOnce(undefined);
 
     await deployCloudflaredProject('infra-token');
 
-    expect(api.post).toHaveBeenCalledTimes(1);
-    expect(api.post).toHaveBeenCalledWith('/projects', {
+    expect(api.post).toHaveBeenCalledTimes(2);
+    expect(api.post).toHaveBeenNthCalledWith(1, '/projects', {
       name: 'Cloudflare Tunnel',
       composeContent: expect.stringContaining('command: tunnel run --token infra-token'),
       isInfrastructure: true,
     });
+    expect(api.post).toHaveBeenNthCalledWith(2, '/projects/proj-123/deploy');
   });
 });

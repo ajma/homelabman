@@ -100,6 +100,10 @@ test('completes onboarding with Cloudflare provider and lands on dashboard', asy
     await route.fulfill(jsonResponse({ tunnelId: 'tunnel-abc', tunnelToken: 'tok-xyz' }));
   });
 
+  await page.route('**/api/projects/*/deploy', async (route) => {
+    await route.fulfill(jsonResponse({ ok: true }));
+  });
+
   await page.route('**/api/projects', async (route) => {
     if (route.request().method() === 'POST') {
       await route.fulfill(jsonResponse({ id: 'proj-1' }, 201));

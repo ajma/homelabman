@@ -49,9 +49,10 @@ export async function resolveCloudflareBeforeSave(cf: CloudflareProviderFormValu
 }
 
 export async function deployCloudflaredProject(tunnelToken: string): Promise<void> {
-  await api.post('/projects', {
+  const project = await api.post<{ id: string }>('/projects', {
     name: 'Cloudflare Tunnel',
     composeContent: buildCloudflaredComposeContent(tunnelToken),
     isInfrastructure: true,
   });
+  await api.post(`/projects/${project.id}/deploy`);
 }
