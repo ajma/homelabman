@@ -107,10 +107,14 @@ export class DockerService {
     return execa('docker', ['compose', '-f', composeFilePath, '-p', projectName, 'pull']);
   }
 
-  /** List all Docker networks, with Containers populated via parallel inspects */
+  /** List all Docker networks (no Containers field) */
   async listNetworks(): Promise<Dockerode.NetworkInspectInfo[]> {
-    const networks = await this.docker.listNetworks();
-    return Promise.all(networks.map((n) => this.docker.getNetwork(n.Id).inspect()));
+    return this.docker.listNetworks();
+  }
+
+  /** Inspect a specific subset of networks to populate the Containers field */
+  async inspectNetworks(ids: string[]): Promise<Dockerode.NetworkInspectInfo[]> {
+    return Promise.all(ids.map((id) => this.docker.getNetwork(id).inspect()));
   }
 
   /** Create a Docker network */

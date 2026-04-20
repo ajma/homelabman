@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Network } from 'lucide-react';
+import { TablePagination } from '../components/TablePagination';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { Card, CardContent } from '../components/ui/card';
@@ -21,10 +22,10 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString();
 }
 
-function useNetworks() {
-  return useQuery<DockerNetwork[]>({
-    queryKey: ['networks'],
-    queryFn: () => api.get('/docker/networks'),
+function useNetworks(page: number, pageSize: number) {
+  return useQuery<{ data: DockerNetwork[]; total: number }>({
+    queryKey: ['networks', page, pageSize],
+    queryFn: () => api.get(`/docker/networks?page=${page}&pageSize=${pageSize}`),
   });
 }
 
@@ -60,13 +61,17 @@ function useDeleteNetwork() {
 const DRIVER_OPTIONS = ['bridge', 'overlay', 'macvlan', 'host', 'none'] as const;
 
 export function Networks() {
-  const { data: networks, isLoading } = useNetworks();
-  const createNetwork = useCreateNetwork();
-  const deleteNetwork = useDeleteNetwork();
-
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDriver, setNewDriver] = useState('bridge');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
+  const { data: response, isLoading } = useNetworks(page, pageSize);
+  const networks = response?.data;
+  const total = response?.total ?? 0;
+  const createNetwork = useCreateNetwork();
+  const deleteNetwork = useDeleteNetwork();
 
   const handleCreate = () => {
     if (!newName.trim()) return;
@@ -230,6 +235,13 @@ export function Networks() {
               ))}
             </tbody>
           </table>
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
     </div>

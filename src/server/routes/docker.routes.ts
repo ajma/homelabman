@@ -17,13 +17,17 @@ export async function dockerRoutes(app: FastifyInstance) {
     return containers;
   });
 
-  // GET /networks - List all Docker networks
-  app.get('/networks', async (_request, reply) => {
+  // GET /networks - List Docker networks for a page, with Containers populated only for that page
+  app.get<{ Querystring: { page?: string; pageSize?: string } }>('/networks', async (request, reply) => {
     if (!dockerService) {
       return reply.code(503).send({ error: 'Docker is not available' });
     }
-    const networks = await dockerService.listNetworks();
-    return networks;
+    const page = Math.max(1, parseInt(request.query.page ?? '1', 10));
+    const pageSize = Math.min(50, Math.max(1, parseInt(request.query.pageSize ?? '15', 10)));
+    const all = await dockerService.listNetworks();
+    const pageIds = all.slice((page - 1) * pageSize, page * pageSize).map((n) => n.Id);
+    const data = await dockerService.inspectNetworks(pageIds);
+    return { data, total: all.length };
   });
 
   // POST /networks - Create a network

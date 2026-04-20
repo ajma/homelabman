@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Download, Trash2, HardDrive, Search } from 'lucide-react';
+import { TablePagination } from '../components/TablePagination';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { Card, CardContent } from '../components/ui/card';
@@ -112,6 +113,8 @@ export function Images() {
   const [isPulling, setIsPulling] = useState(false);
   const [pullName, setPullName] = useState('');
   const [filter, setFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
   const handlePull = () => {
     if (!pullName.trim()) return;
@@ -142,6 +145,8 @@ export function Images() {
     const query = filter.toLowerCase();
     return tag.includes(query) || id.includes(query);
   });
+
+  const paginatedImages = filteredImages?.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="p-6 space-y-6">
@@ -206,7 +211,7 @@ export function Images() {
           <Input
             placeholder="Filter images by name or ID..."
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={(e) => { setFilter(e.target.value); setPage(1); }}
             className="pl-10"
           />
         </div>
@@ -266,7 +271,7 @@ export function Images() {
               </tr>
             </thead>
             <tbody>
-              {filteredImages.map((image) => (
+              {paginatedImages!.map((image) => (
                 <tr key={image.Id} className="border-b last:border-b-0">
                   <td className="px-4 py-3 text-sm font-medium">
                     {getRepoTag(image)}
@@ -302,6 +307,13 @@ export function Images() {
               ))}
             </tbody>
           </table>
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            total={filteredImages.length}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@ import { Box, Search } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '../lib/api';
 import { Input } from '../components/ui/input';
+import { TablePagination } from '../components/TablePagination';
 
 interface DockerContainer {
   Id: string;
@@ -48,6 +49,8 @@ function stateColor(state: string): string {
 
 export function Containers() {
   const [filter, setFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
 
   const { data: containers, isLoading } = useQuery<DockerContainer[]>({
     queryKey: ['containers'],
@@ -64,6 +67,8 @@ export function Containers() {
     return name.includes(query) || image.includes(query) || id.includes(query);
   });
 
+  const paginated = filtered?.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="p-6 space-y-6">
       <h2 className="text-2xl font-bold">Containers</h2>
@@ -74,7 +79,7 @@ export function Containers() {
           <Input
             placeholder="Filter containers by name, image, or ID..."
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={(e) => { setFilter(e.target.value); setPage(1); }}
             className="pl-10"
           />
         </div>
@@ -115,7 +120,7 @@ export function Containers() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((container) => (
+              {paginated!.map((container) => (
                 <tr key={container.Id} className="border-b last:border-b-0">
                   <td className="px-4 py-3 text-sm font-medium">{containerName(container.Names)}</td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">{container.Image}</td>
@@ -129,6 +134,13 @@ export function Containers() {
               ))}
             </tbody>
           </table>
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
     </div>
