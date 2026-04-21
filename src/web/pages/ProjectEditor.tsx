@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { Globe } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -501,6 +502,17 @@ export function ProjectEditor() {
             <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColor}`}>
               {project?.status}
             </span>
+          )}
+          {isEditing && project?.status === 'running' && project?.domainName && (
+            <a
+              href={`https://${project.domainName}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground hover:underline"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              {project.domainName}
+            </a>
           )}
         </div>
         <div className="flex items-center gap-3">
