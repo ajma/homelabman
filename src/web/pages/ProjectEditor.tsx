@@ -574,18 +574,29 @@ export function ProjectEditor() {
           </div>
 
           {/* Logo URL */}
-          <div className="space-y-2">
-            <label htmlFor="logoUrl" className="text-sm font-medium">
-              Logo URL <span className="text-muted-foreground">(optional)</span>
-            </label>
-            <input
-              id="logoUrl"
-              type="text"
-              {...register('logoUrl')}
-              placeholder="https://example.com/logo.png"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            {errors.logoUrl && <p className="text-sm text-destructive">{errors.logoUrl.message}</p>}
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1 space-y-2">
+              <label htmlFor="logoUrl" className="text-sm font-medium">
+                Logo URL <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <input
+                id="logoUrl"
+                type="text"
+                {...register('logoUrl')}
+                placeholder="https://example.com/logo.png"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              {errors.logoUrl && <p className="text-sm text-destructive">{errors.logoUrl.message}</p>}
+            </div>
+            {watch('logoUrl') && (
+              <img
+                src={watch('logoUrl') as string}
+                alt="Logo preview"
+                className="h-10 w-10 rounded object-contain shrink-0"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.display = ''; }}
+              />
+            )}
           </div>
 
           {/* Exposure */}
