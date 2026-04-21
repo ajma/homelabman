@@ -1,7 +1,7 @@
 services:
   cloudflared:
     image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    command: tunnel run --token ${token}
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
