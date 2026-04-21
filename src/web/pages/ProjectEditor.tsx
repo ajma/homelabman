@@ -6,7 +6,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProject, useCreateProject, useUpdateProject, useDeleteProject, useProjectUpdates, useCheckUpdates } from '../hooks/useProjects';
 import { createProjectSchema, updateProjectSchema } from '@shared/schemas';
 import type { CreateProjectInput } from '@shared/schemas';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { load } from 'js-yaml';
 import { ComposeEditor } from '../components/ComposeEditor';
 import { api } from '../lib/api';
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -43,6 +44,90 @@ interface DeployProgress {
   stage: string;
   message: string;
   timestamp: number;
+}
+
+export function parsePort(value: unknown): number | null {
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) return null;
+  return parsed;
+}
+
+export function extractTargetPortFromEntry(entry: unknown): number | null {
+  if (typeof entry === 'string') {
+    const withoutProtocol = entry.split('/')[0]?.trim() ?? '';
+    if (!withoutProtocol) return null;
+
+    const parts = withoutProtocol.split(':').map((part) => part.trim()).filter(Boolean);
+    const targetPart = parts[parts.length - 1];
+    return parsePort(targetPart);
+  }
+
+  if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+    const candidate = (entry as Record<string, unknown>).target ?? (entry as Record<string, unknown>).port;
+    return parsePort(candidate);
+  }
+
+  return null;
+}
+
+export function extractComposeTargetPorts(composeContent: string): number[] {
+  if (!composeContent.trim()) return [];
+
+  try {
+    const parsed = load(composeContent);
+    if (!parsed || typeof parsed !== 'object') return [];
+
+    const services = (parsed as { services?: Record<string, { ports?: unknown[] }> }).services;
+    if (!services || typeof services !== 'object') return [];
+
+    const ports = new Set<number>();
+    for (const service of Object.values(services)) {
+      if (!Array.isArray(service?.ports)) continue;
+
+      for (const entry of service.ports) {
+        const targetPort = extractTargetPortFromEntry(entry);
+        if (targetPort !== null) ports.add(targetPort);
+      }
+    }
+
+    return Array.from(ports).sort((a, b) => a - b);
+  } catch {
+    return [];
+  }
+}
+
+export function extractComposeProjectName(composeContent: string): string | null {
+  if (!composeContent.trim()) return null;
+  try {
+    const parsed = load(composeContent);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const services = (parsed as { services?: Record<string, unknown> }).services;
+    if (!services || typeof services !== 'object') return null;
+    const firstName = Object.keys(services)[0];
+    return firstName ? firstName : null;
+  } catch {
+    return null;
+  }
+}
+
+export function extractFirstComposeTargetPort(composeContent: string): number | null {
+  if (!composeContent.trim()) return null;
+  try {
+    const parsed = load(composeContent);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const services = (parsed as { services?: Record<string, { ports?: unknown[] }> }).services;
+    if (!services || typeof services !== 'object') return null;
+    for (const service of Object.values(services)) {
+      if (!Array.isArray(service?.ports)) continue;
+      for (const entry of service.ports) {
+        const port = extractTargetPortFromEntry(entry);
+        if (port !== null) return port;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 const emptyProjectFormValues: CreateProjectInput = {
@@ -233,6 +318,16 @@ export function ProjectEditor() {
   const composeContent = watch('composeContent');
   const exposureEnabled = watch('exposureEnabled');
   const selectedProviderId = watch('exposureProviderId');
+  const exposureConfig = watch('exposureConfig') as Record<string, unknown> | undefined;
+
+  const composeTargetPorts = useMemo(
+    () => extractComposeTargetPorts(composeContent ?? ''),
+    [composeContent],
+  );
+
+  const targetPort = parsePort(exposureConfig?.port) ?? 80;
+  const targetPortMissingFromCompose =
+    composeTargetPorts.length > 0 && !composeTargetPorts.includes(targetPort);
 
   const { data: availableDomains = [] } = useQuery<string[]>({
     queryKey: ['provider-domains', selectedProviderId],
@@ -246,6 +341,20 @@ export function ProjectEditor() {
     },
     [setValue],
   );
+
+  const handleInferDetails = useCallback(() => {
+    if (!composeContent) return;
+    const extractedName = extractComposeProjectName(composeContent);
+    if (extractedName) {
+      setValue('name', extractedName, { shouldDirty: true });
+    }
+    const firstPort = extractFirstComposeTargetPort(composeContent);
+    if (firstPort !== null) {
+      const current = exposureConfig || {};
+      setValue('exposureConfig', { ...current, port: firstPort }, { shouldDirty: true });
+      setValue('exposureEnabled', true, { shouldDirty: true });
+    }
+  }, [composeContent, exposureConfig, setValue]);
 
   // Debounced validation of compose content
   useEffect(() => {
@@ -493,22 +602,32 @@ export function ProjectEditor() {
                   <input
                     id="exposurePort"
                     type="number"
-                    defaultValue={
-                      (typeof project?.exposureConfig === 'string'
-                        ? JSON.parse(project?.exposureConfig || '{}')
-                        : project?.exposureConfig
-                      )?.port || 80
-                    }
+                    value={targetPort}
                     onChange={(e) => {
                       const current = watch('exposureConfig') || {};
-                      setValue('exposureConfig', { ...current, port: parseInt(e.target.value, 10) || 80 });
+                      setValue('exposureConfig', {
+                        ...current,
+                        port: parsePort(e.target.value) ?? 80,
+                      }, { shouldDirty: true });
                     }}
                     placeholder="80"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    min={1}
+                    max={65535}
+                    className="flex h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                   <p className="text-xs text-muted-foreground">
                     The port your service listens on inside the container.
                   </p>
+                  {composeTargetPorts.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Compose target ports: {composeTargetPorts.join(', ')}
+                    </p>
+                  )}
+                  {targetPortMissingFromCompose && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      Warning: Target port {targetPort} is not found in this Docker Compose ports list.
+                    </p>
+                  )}
                 </div>
 
                 {/* Show exposure status for running projects */}
@@ -635,9 +754,17 @@ export function ProjectEditor() {
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Docker Compose
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Docker Compose</label>
+              <button
+                type="button"
+                onClick={handleInferDetails}
+                disabled={!composeContent}
+                className="rounded-md border border-input px-3 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Infer project details
+              </button>
+            </div>
             <ComposeEditor
               value={composeContent ?? ''}
               onChange={handleComposeChange}
