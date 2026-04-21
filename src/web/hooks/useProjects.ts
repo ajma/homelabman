@@ -26,6 +26,7 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: (data: CreateProjectInput) => api.post<Project>('/projects', data),
     onSuccess: (project) => {
+      queryClient.setQueryData<Project[]>(['projects'], (old) => [...(old ?? []), project]);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       navigate(`/projects/${project.id}`);
     },
