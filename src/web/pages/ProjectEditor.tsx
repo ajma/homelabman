@@ -10,8 +10,10 @@ import type { CreateProjectInput } from '@shared/schemas';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { load } from 'js-yaml';
 import { ComposeEditor } from '../components/ComposeEditor';
+import { TemplatePickerModal } from '../components/TemplatePickerModal';
 import { api } from '../lib/api';
 import { useWebSocket } from '../hooks/useWebSocket';
+import type { ProjectTemplate } from '@shared/types';
 
 interface ExposureProviderOption {
   id: string;
@@ -159,6 +161,16 @@ export function ProjectEditor() {
   const [deployProgress, setDeployProgress] = useState<DeployProgress[]>([]);
   const [showLogs, setShowLogs] = useState(false);
   const [domainErrors, setDomainErrors] = useState<{ subdomain?: string; domain?: string }>({});
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+
+  function handleTemplateSelect(template: ProjectTemplate) {
+    setValue('name', template.name);
+    setValue('composeContent', template.composeContent);
+    if (template.logoUrl) {
+      setValue('logoUrl', template.logoUrl);
+    }
+    setShowTemplatePicker(false);
+  }
 
   // Container update detection
   const { data: containerUpdates, isLoading: updatesLoading } = useProjectUpdates(id ?? '');
@@ -516,6 +528,15 @@ export function ProjectEditor() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={() => setShowTemplatePicker(true)}
+              className="rounded-lg border border-input px-4 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Use a Template
+            </button>
+          )}
           <button
             type="submit"
             form="project-form"
@@ -983,6 +1004,13 @@ export function ProjectEditor() {
             </div>
           </div>
         </div>
+      )}
+
+      {showTemplatePicker && (
+        <TemplatePickerModal
+          onSelect={handleTemplateSelect}
+          onClose={() => setShowTemplatePicker(false)}
+        />
       )}
     </div>
   );

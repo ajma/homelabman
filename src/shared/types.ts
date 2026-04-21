@@ -74,3 +74,15 @@ export interface ContainerUpdate {
   updateAvailable: boolean;
   checkedAt: number;
 }
+
+export interface ProjectTemplateSummary {
+  id: string;
+  name: string;
+  description: string;
+  categories: string[];
+  logoUrl: string | null;
+}
+
+export interface ProjectTemplate extends ProjectTemplateSummary {
+  composeContent: string;
+}

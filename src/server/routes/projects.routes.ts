@@ -10,6 +10,7 @@ import type { UpdateCheckerService } from '../services/update-checker.service.js
 import type { StatsService } from '../services/stats.service.js';
 import fs from 'fs/promises';
 import path from 'path';
+import type { ProjectTemplateSummary, ProjectTemplate } from '../../shared/types.js';
 
 const projectService = new ProjectService();
 
@@ -44,6 +45,40 @@ export async function projectRoutes(app: FastifyInstance) {
 
   // All project routes require authentication
   app.addHook('preHandler', authenticate);
+
+  const TEMPLATES_DIR = path.join(process.cwd(), 'templates');
+
+  // GET /templates - list all templates
+  app.get('/templates', async (_request, reply) => {
+    try {
+      const raw = await fs.readFile(path.join(TEMPLATES_DIR, 'manifest.json'), 'utf-8');
+      return JSON.parse(raw) as ProjectTemplateSummary[];
+    } catch {
+      return reply.code(500).send({ error: 'Failed to load templates' });
+    }
+  });
+
+  // GET /templates/:id - get single template with compose content
+  app.get<{ Params: { id: string } }>('/templates/:id', async (request, reply) => {
+    try {
+      const raw = await fs.readFile(path.join(TEMPLATES_DIR, 'manifest.json'), 'utf-8');
+      const manifest = JSON.parse(raw) as ProjectTemplateSummary[];
+      const entry = manifest.find((t) => t.id === request.params.id);
+      if (!entry) {
+        return reply.code(404).send({ error: 'Template not found' });
+      }
+      const composeContent = await fs.readFile(
+        path.join(TEMPLATES_DIR, `${entry.id}.yml`),
+        'utf-8',
+      );
+      return { ...entry, composeContent } as ProjectTemplate;
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return reply.code(500).send({ error: 'Template file missing' });
+      }
+      return reply.code(500).send({ error: 'Failed to load template' });
+    }
+  });
 
   // GET / - List all projects for current user
   app.get('/', async (request) => {

@@ -1,0 +1,9 @@
+[
+  {
+    "id": "nginx",
+    "name": "Nginx",
+    "description": "High-performance web server and reverse proxy.",
+    "logoUrl": "https://raw.githubusercontent.com/docker-library/docs/master/nginx/logo.png",
+    "categories": ["web", "proxy"]
+  }
+]
