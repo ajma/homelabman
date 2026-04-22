@@ -4,7 +4,6 @@ interface StatsDisplayProps {
   stats: ContainerStats[];
 }
 
-/** Format bytes into a human-readable string */
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
   const k = 1024;
@@ -16,7 +15,7 @@ function formatBytes(bytes: number): string {
 export function StatsDisplay({ stats }: StatsDisplayProps) {
   if (stats.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">No stats available.</p>
+      <p className="text-[13px] text-[rgba(255,255,255,0.38)]">No stats available.</p>
     );
   }
 
@@ -25,29 +24,29 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
       {stats.map((s) => (
         <div
           key={s.containerId}
-          className="rounded-md border bg-card p-3 text-sm"
+          className="rounded-xl border border-white/[0.08] bg-[rgba(255,255,255,0.03)] p-3"
         >
-          <div className="mb-2 flex items-center justify-between">
-            <span className="font-medium">{s.name}</span>
+          <div className="mb-2.5 flex items-center justify-between">
+            <span className="text-[13px] font-medium text-[rgba(255,255,255,0.85)]">{s.name}</span>
             <span className="flex items-center gap-1.5">
               <span
                 className={`h-2 w-2 rounded-full ${
-                  s.status === 'running' ? 'bg-green-500' : 'bg-gray-400'
+                  s.status === 'running' ? 'bg-[#4ade80]' : 'bg-[rgba(255,255,255,0.25)]'
                 }`}
               />
-              <span className="text-xs text-muted-foreground">{s.status}</span>
+              <span className="text-[12px] text-[rgba(255,255,255,0.38)]">{s.status}</span>
             </span>
           </div>
 
           {/* CPU */}
           <div className="mb-1.5">
-            <div className="mb-0.5 flex justify-between text-xs text-muted-foreground">
+            <div className="mb-1 flex justify-between text-[11px] text-[rgba(255,255,255,0.38)]">
               <span>CPU</span>
               <span>{s.cpuUsage.toFixed(1)}%</span>
             </div>
-            <div className="h-1.5 w-full rounded-full bg-muted">
+            <div className="h-1.5 w-full rounded-full bg-[rgba(255,255,255,0.06)]">
               <div
-                className="h-1.5 rounded-full bg-blue-500 transition-all"
+                className="h-1.5 rounded-full bg-[#649ef5] transition-all"
                 style={{ width: `${Math.min(s.cpuUsage, 100)}%` }}
               />
             </div>
@@ -55,28 +54,22 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
 
           {/* Memory */}
           <div className="mb-1.5">
-            <div className="mb-0.5 flex justify-between text-xs text-muted-foreground">
+            <div className="mb-1 flex justify-between text-[11px] text-[rgba(255,255,255,0.38)]">
               <span>Memory</span>
-              <span>
-                {formatBytes(s.memoryUsage)} / {formatBytes(s.memoryLimit)}
-              </span>
+              <span>{formatBytes(s.memoryUsage)} / {formatBytes(s.memoryLimit)}</span>
             </div>
-            <div className="h-1.5 w-full rounded-full bg-muted">
+            <div className="h-1.5 w-full rounded-full bg-[rgba(255,255,255,0.06)]">
               <div
-                className="h-1.5 rounded-full bg-purple-500 transition-all"
+                className="h-1.5 rounded-full bg-[rgba(100,158,245,0.55)] transition-all"
                 style={{
-                  width: `${
-                    s.memoryLimit > 0
-                      ? Math.min((s.memoryUsage / s.memoryLimit) * 100, 100)
-                      : 0
-                  }%`,
+                  width: `${s.memoryLimit > 0 ? Math.min((s.memoryUsage / s.memoryLimit) * 100, 100) : 0}%`,
                 }}
               />
             </div>
           </div>
 
           {/* Network I/O */}
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-[11px] text-[rgba(255,255,255,0.38)]">
             <span>Net RX: {formatBytes(s.networkRx)}</span>
             <span>Net TX: {formatBytes(s.networkTx)}</span>
           </div>

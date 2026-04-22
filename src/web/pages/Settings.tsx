@@ -1,5 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { Plus } from 'lucide-react';
+import { exposureProviderSchema, type ExposureProviderInput } from '@shared/schemas';
+import type { ExposureProviderConfig, Settings as SettingsType } from '@shared/types';
+import { api } from '../lib/api';
+import { resolveCloudflareBeforeSave, deployCloudflaredProject } from '../lib/cloudflare';
+import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../components/CloudflareProviderForm';
 
 interface SetupCheck {
   name: string;
@@ -13,45 +22,67 @@ interface ProviderSetupResult {
   checks: SetupCheck[];
 }
 
+const inputCls =
+  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-[14px] text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
+
 function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
   return (
     <div className="mt-3 space-y-2">
       {result.checks.map((check) => (
-        <div
-          key={check.name}
-          className={`rounded-md p-2 text-sm ${
-            check.passed
-              ? 'bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-200'
-              : 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-200'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <span>{check.passed ? '✓' : '✗'}</span>
-            <span className="font-medium">{check.name}</span>
-            <span className="text-xs opacity-80">— {check.message}</span>
+        <div key={check.name} className="flex gap-3">
+          <span
+            className={`mt-px shrink-0 text-[13px] font-medium ${
+              check.passed ? 'text-[#4ade80]' : 'text-[rgba(248,113,113,0.85)]'
+            }`}
+          >
+            {check.passed ? '✓' : '✗'}
+          </span>
+          <div>
+            <span className="text-[13px] text-[rgba(255,255,255,0.75)]">{check.name}</span>
+            <span className="text-[13px] text-[rgba(255,255,255,0.35)]"> — {check.message}</span>
+            {!check.passed && check.resolution && (
+              <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">
+                Fix: {check.resolution}
+              </p>
+            )}
           </div>
-          {!check.passed && check.resolution && (
-            <p className="mt-1 pl-5 text-xs opacity-90">
-              <span className="font-medium">Fix:</span> {check.resolution}
-            </p>
-          )}
         </div>
       ))}
     </div>
   );
 }
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { exposureProviderSchema, type ExposureProviderInput } from '@shared/schemas';
-import type { ExposureProviderConfig, Settings as SettingsType } from '@shared/types';
-import { api } from '../lib/api';
-import { resolveCloudflareBeforeSave, deployCloudflaredProject } from '../lib/cloudflare';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../components/CloudflareProviderForm';
+
+function ProviderTypeToggle({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: 'caddy' | 'cloudflare';
+  onChange: (t: 'caddy' | 'cloudflare') => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div
+      className={`inline-flex rounded-xl border border-white/[0.15] p-0.5 ${disabled ? 'opacity-50' : ''}`}
+    >
+      {(['caddy', 'cloudflare'] as const).map((type) => (
+        <button
+          key={type}
+          type="button"
+          disabled={disabled}
+          onClick={() => !disabled && onChange(type)}
+          className={`rounded-[10px] px-4 py-1.5 text-[13px] font-medium capitalize transition-colors ${
+            value === type
+              ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
+              : 'text-[rgba(255,255,255,0.38)] hover:text-[rgba(255,255,255,0.65)]'
+          }`}
+        >
+          {type}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function ProviderForm({
   provider,
@@ -102,10 +133,10 @@ function ProviderForm({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{provider ? 'Edit Provider' : 'Add Provider'}</CardTitle>
-      </CardHeader>
+    <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.02)] p-5">
+      <h3 className="mb-5 text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">
+        {provider ? 'Edit Provider' : 'Add Provider'}
+      </h3>
       <form
         onSubmit={handleSubmit(async (data) => {
           if (providerType === 'cloudflare') {
@@ -147,59 +178,83 @@ function ProviderForm({
           }
           onSave(data);
         })}
+        className="space-y-4"
       >
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="provider-type">Type</Label>
-            <select
-              id="provider-type"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        {/* Provider type */}
+        <div className="space-y-1.5">
+          <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Type</label>
+          <div>
+            <ProviderTypeToggle
               value={providerType}
-              onChange={(e) => handleTypeChange(e.target.value as 'caddy' | 'cloudflare')}
+              onChange={handleTypeChange}
               disabled={!!provider}
-            >
-              <option value="caddy">Caddy</option>
-              <option value="cloudflare">Cloudflare</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="provider-name">Name</Label>
-            <Input
-              id="provider-name"
-              placeholder="e.g. My Caddy Server"
-              {...register('name')}
             />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
           </div>
-
-          {providerType === 'caddy' && (
-            <div className="space-y-2">
-              <Label htmlFor="caddy-api-url">API URL</Label>
-              <Input
-                id="caddy-api-url"
-                placeholder="http://localhost:2019"
-                value={(currentConfig as Record<string, string>).apiUrl ?? ''}
-                onChange={(e) => setValue('configuration', { apiUrl: e.target.value })}
-              />
-            </div>
+          {!!provider && (
+            <p className="text-[12px] text-[rgba(255,255,255,0.28)]">
+              Provider type cannot be changed after creation.
+            </p>
           )}
+        </div>
 
-          {providerType === 'cloudflare' && (
-            <CloudflareProviderForm value={cfFormValue} onChange={setCfFormValue} />
+        {/* Name */}
+        <div className="space-y-1.5">
+          <label htmlFor="provider-name" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+            Name
+          </label>
+          <input
+            id="provider-name"
+            type="text"
+            placeholder="e.g. My Caddy Server"
+            className={inputCls}
+            {...register('name')}
+          />
+          {errors.name && (
+            <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.name.message}</p>
           )}
-        </CardContent>
-        <CardFooter className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onCancel}>
+        </div>
+
+        {/* Caddy fields */}
+        {providerType === 'caddy' && (
+          <div className="space-y-1.5">
+            <label htmlFor="caddy-api-url" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+              API URL
+            </label>
+            <input
+              id="caddy-api-url"
+              type="text"
+              placeholder="http://localhost:2019"
+              className={inputCls}
+              value={(currentConfig as Record<string, string>).apiUrl ?? ''}
+              onChange={(e) => setValue('configuration', { apiUrl: e.target.value })}
+            />
+          </div>
+        )}
+
+        {/* Cloudflare fields */}
+        {providerType === 'cloudflare' && (
+          <CloudflareProviderForm value={cfFormValue} onChange={setCfFormValue} />
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+          >
             Cancel
-          </Button>
-          <Button type="submit" disabled={isPending || isPresaving}>
-            {isPending || isPresaving ? 'Saving...' : 'Save'}
-          </Button>
-        </CardFooter>
+          </button>
+          <button
+            type="submit"
+            disabled={isPending || isPresaving}
+            className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+          >
+            {isPending || isPresaving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
       </form>
-    </Card>
+    </div>
   );
 }
 
@@ -209,6 +264,7 @@ export function Settings() {
   const [isAddingProvider, setIsAddingProvider] = useState(false);
   const [setupResults, setSetupResults] = useState<Record<string, ProviderSetupResult>>({});
   const [checkingSetup, setCheckingSetup] = useState<Record<string, boolean>>({});
+  const [deletingProviderId, setDeletingProviderId] = useState<string | null>(null);
 
   const runCheckSetup = async (provider: ExposureProviderConfig) => {
     setCheckingSetup((prev) => ({ ...prev, [provider.id]: true }));
@@ -264,10 +320,12 @@ export function Settings() {
     mutationFn: (id: string) => api.delete(`/settings/exposure-providers/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
+      setDeletingProviderId(null);
       toast.success('Provider deleted');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete provider');
+      setDeletingProviderId(null);
     },
   });
 
@@ -287,24 +345,32 @@ export function Settings() {
   const settings = settingsQuery.data;
 
   return (
-    <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-bold">Settings</h2>
+    <div className="min-h-full p-6 space-y-8 max-w-3xl">
+      <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)]">Settings</h1>
 
-      {/* Exposure Providers Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Exposure Providers */}
+      <section className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold">Exposure Providers</h3>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-[15px] font-semibold text-[rgba(255,255,255,0.85)]">
+              Exposure Providers
+            </h2>
+            <p className="mt-0.5 text-[13px] text-[rgba(255,255,255,0.38)]">
               Configure how your services are exposed to the internet.
             </p>
           </div>
           {!isAddingProvider && !editingProvider && (
-            <Button onClick={() => setIsAddingProvider(true)}>Add Provider</Button>
+            <button
+              onClick={() => setIsAddingProvider(true)}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-[13px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Provider
+            </button>
           )}
         </div>
 
-        {/* Add Provider Form */}
+        {/* Add provider form */}
         {isAddingProvider && (
           <ProviderForm
             onSave={(data) => createProvider.mutate(data)}
@@ -313,7 +379,7 @@ export function Settings() {
           />
         )}
 
-        {/* Edit Provider Form */}
+        {/* Edit provider form */}
         {editingProvider && (
           <ProviderForm
             provider={editingProvider}
@@ -323,99 +389,127 @@ export function Settings() {
           />
         )}
 
-        {/* Providers List */}
+        {/* Providers list */}
         {providersQuery.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading providers...</p>
-        ) : providers.length === 0 ? (
-          <Card>
-            <CardContent className="py-6">
-              <p className="text-center text-muted-foreground">
-                No exposure providers configured. Add one to enable service exposure.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {providers.map((provider) => (
-              <Card key={provider.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-base">{provider.name}</CardTitle>
-                      <CardDescription>
-                        {provider.providerType === 'caddy' ? 'Caddy Reverse Proxy' : 'Cloudflare Tunnel'}
-                        {!provider.enabled && ' (disabled)'}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {settings?.defaultExposureProviderId === provider.id ? (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-medium">
+          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">Loading providers…</p>
+        ) : providers.length === 0 && !isAddingProvider ? (
+          <div className="rounded-2xl border border-dashed border-white/[0.10] px-6 py-10 text-center">
+            <p className="text-[13px] text-[rgba(255,255,255,0.35)]">
+              No providers yet.{' '}
+              <button
+                onClick={() => setIsAddingProvider(true)}
+                className="text-[#7db0ff] hover:underline"
+              >
+                Add one
+              </button>{' '}
+              to expose your services.
+            </p>
+          </div>
+        ) : providers.length > 0 ? (
+          <div className="rounded-2xl border border-white/[0.10] overflow-hidden">
+            {providers.map((provider, i) => (
+              <div
+                key={provider.id}
+                className={`px-5 py-4 ${i > 0 ? 'border-t border-white/[0.06]' : ''}`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  {/* Left: name + type */}
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[14px] font-medium text-[rgba(255,255,255,0.85)]">
+                        {provider.name}
+                      </span>
+                      {settings?.defaultExposureProviderId === provider.id && (
+                        <span className="rounded-full bg-[rgba(100,158,245,0.12)] px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.12em] text-[#7db0ff]">
                           Default
                         </span>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDefaultProvider.mutate(provider.id)}
-                        >
-                          Set Default
-                        </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => runCheckSetup(provider)}
-                        disabled={checkingSetup[provider.id]}
+                      {!provider.enabled && (
+                        <span className="rounded-full bg-[rgba(255,255,255,0.05)] px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(255,255,255,0.35)]">
+                          Disabled
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.35)]">
+                      {provider.providerType === 'caddy' ? 'Caddy Reverse Proxy' : 'Cloudflare Tunnel'}
+                    </p>
+                  </div>
+
+                  {/* Right: actions */}
+                  <div className="flex flex-wrap items-center gap-1">
+                    {settings?.defaultExposureProviderId !== provider.id && (
+                      <button
+                        onClick={() => setDefaultProvider.mutate(provider.id)}
+                        className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
                       >
-                        {checkingSetup[provider.id] ? 'Checking...' : 'Check Setup'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setIsAddingProvider(false);
-                          setEditingProvider(provider);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this provider?')) {
-                            deleteProvider.mutate(provider.id);
-                          }
-                        }}
+                        Set default
+                      </button>
+                    )}
+                    <button
+                      onClick={() => runCheckSetup(provider)}
+                      disabled={checkingSetup[provider.id]}
+                      className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
+                    >
+                      {checkingSetup[provider.id] ? 'Checking…' : 'Check setup'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsAddingProvider(false);
+                        setEditingProvider(provider);
+                      }}
+                      className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+                    >
+                      Edit
+                    </button>
+
+                    {/* Inline delete confirm */}
+                    {deletingProviderId === provider.id ? (
+                      <div className="flex items-center gap-1.5 pl-1">
+                        <span className="text-[12px] text-[rgba(255,255,255,0.45)]">Delete?</span>
+                        <button
+                          onClick={() => setDeletingProviderId(null)}
+                          className="text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => deleteProvider.mutate(provider.id)}
+                          disabled={deleteProvider.isPending}
+                          className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2.5 py-0.5 text-[12px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+                        >
+                          {deleteProvider.isPending ? 'Deleting…' : 'Confirm'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeletingProviderId(provider.id)}
+                        className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(248,113,113,0.75)]"
                       >
                         Delete
-                      </Button>
-                    </div>
+                      </button>
+                    )}
                   </div>
-                </CardHeader>
+                </div>
+
+                {/* Setup check results */}
                 {setupResults[provider.id] && (
-                  <CardContent className="pt-0">
-                    <SetupCheckDisplay result={setupResults[provider.id]} />
-                  </CardContent>
+                  <SetupCheckDisplay result={setupResults[provider.id]} />
                 )}
-              </Card>
+              </div>
             ))}
           </div>
-        )}
+        ) : null}
 
-        {/* Default Provider Selector */}
+        {/* Clear default */}
         {providers.length > 0 && settings?.defaultExposureProviderId && (
-          <div className="pt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDefaultProvider.mutate(null)}
-            >
-              Clear default provider
-            </Button>
-          </div>
+          <button
+            onClick={() => setDefaultProvider.mutate(null)}
+            className="text-[12px] text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(255,255,255,0.5)]"
+          >
+            Clear default provider
+          </button>
         )}
-      </div>
+      </section>
     </div>
   );
 }

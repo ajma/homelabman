@@ -34,16 +34,11 @@ function formatPorts(ports: DockerContainer['Ports']): string {
 
 function stateColor(state: string): string {
   switch (state) {
-    case 'running':
-      return 'text-green-500';
-    case 'exited':
-      return 'text-red-500';
-    case 'paused':
-      return 'text-yellow-500';
-    case 'restarting':
-      return 'text-blue-500';
-    default:
-      return 'text-muted-foreground';
+    case 'running': return 'text-[#4ade80]';
+    case 'exited': return 'text-[rgba(248,113,113,0.85)]';
+    case 'paused': return 'text-[#facc15]';
+    case 'restarting': return 'text-[#7db0ff]';
+    default: return 'text-[rgba(255,255,255,0.38)]';
   }
 }
 
@@ -71,13 +66,13 @@ export function Containers() {
 
   return (
     <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-bold">Containers</h2>
+      <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)]">Containers</h1>
 
       {!isLoading && containers && containers.length > 0 && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(255,255,255,0.28)]" />
           <Input
-            placeholder="Filter containers by name, image, or ID..."
+            placeholder="Filter by name, image, or ID…"
             value={filter}
             onChange={(e) => { setFilter(e.target.value); setPage(1); }}
             className="pl-10"
@@ -86,50 +81,50 @@ export function Containers() {
       )}
 
       {isLoading && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-lg border bg-muted" />
+            <div key={i} className="h-14 animate-pulse rounded-xl border border-white/[0.06] bg-[rgba(255,255,255,0.03)]" />
           ))}
         </div>
       )}
 
       {!isLoading && containers?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-          <Box className="h-10 w-10 text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">No containers found.</p>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.10] p-12 text-center">
+          <Box className="mb-3 h-8 w-8 text-[rgba(255,255,255,0.20)]" />
+          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">No containers found.</p>
         </div>
       )}
 
       {!isLoading && containers && containers.length > 0 && filtered?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-          <p className="text-muted-foreground">No containers match your filter.</p>
+        <div className="flex items-center justify-center rounded-2xl border border-dashed border-white/[0.10] p-8 text-center">
+          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">No containers match your filter.</p>
         </div>
       )}
 
       {!isLoading && filtered && filtered.length > 0 && (
-        <div className="rounded-lg border">
+        <div className="rounded-2xl border border-white/[0.10] overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Image</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Container ID</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">State</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Ports</th>
+              <tr className="border-b border-white/[0.08] bg-[rgba(255,255,255,0.02)]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Name</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Image</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Container ID</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">State</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Status</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Ports</th>
               </tr>
             </thead>
             <tbody>
               {paginated!.map((container) => (
-                <tr key={container.Id} className="border-b last:border-b-0">
-                  <td className="px-4 py-3 text-sm font-medium">{containerName(container.Names)}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{container.Image}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground font-mono">{shortId(container.Id)}</td>
-                  <td className={`px-4 py-3 text-sm font-medium capitalize ${stateColor(container.State)}`}>
+                <tr key={container.Id} className="border-b border-white/[0.06] last:border-0">
+                  <td className="px-4 py-3 text-[13px] font-medium text-[rgba(255,255,255,0.85)]">{containerName(container.Names)}</td>
+                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.45)]">{container.Image}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-[rgba(255,255,255,0.45)]">{shortId(container.Id)}</td>
+                  <td className={`px-4 py-3 text-[13px] font-medium capitalize ${stateColor(container.State)}`}>
                     {container.State}
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{container.Status}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground font-mono">{formatPorts(container.Ports)}</td>
+                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.45)]">{container.Status}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-[rgba(255,255,255,0.45)]">{formatPorts(container.Ports)}</td>
                 </tr>
               ))}
             </tbody>

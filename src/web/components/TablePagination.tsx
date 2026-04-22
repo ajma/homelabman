@@ -1,4 +1,3 @@
-import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const PAGE_SIZE_OPTIONS = [5, 10, 15, 25, 50] as const;
@@ -17,11 +16,11 @@ export function TablePagination({ page, pageSize, total, onPageChange, onPageSiz
   const to = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex items-center justify-between border-t px-4 py-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="flex items-center justify-between border-t border-white/[0.06] px-4 py-3">
+      <div className="flex items-center gap-2 text-[12px] text-[rgba(255,255,255,0.38)]">
         <span>Rows per page:</span>
         <select
-          className="h-8 rounded border border-input bg-background px-2 text-sm"
+          className="h-7 rounded-lg border border-white/[0.14] bg-[rgba(4,7,15,0.78)] px-2 text-[12px] text-[rgba(255,255,255,0.75)] outline-none focus:border-[rgba(100,158,245,0.4)]"
           value={pageSize}
           onChange={(e) => {
             onPageSizeChange(Number(e.target.value));
@@ -34,26 +33,24 @@ export function TablePagination({ page, pageSize, total, onPageChange, onPageSiz
         </select>
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-muted-foreground">
+        <span className="text-[12px] text-[rgba(255,255,255,0.38)]">
           {from}–{to} of {total}
         </span>
         <div className="flex gap-1">
-          <Button
-            variant="outline"
-            size="icon"
+          <button
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.12] text-[rgba(255,255,255,0.45)] transition-colors hover:border-white/[0.20] hover:text-[rgba(255,255,255,0.75)] disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+          <button
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.12] text-[rgba(255,255,255,0.45)] transition-colors hover:border-white/[0.20] hover:text-[rgba(255,255,255,0.75)] disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </div>

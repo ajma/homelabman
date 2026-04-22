@@ -7,7 +7,6 @@ import { useProjects } from '../hooks/useProjects';
 import { useWebSocket } from '../hooks/useWebSocket';
 import type { ContainerStats } from '../hooks/useStats';
 import { ProjectCard } from '../components/ProjectCard';
-import { Button } from '../components/ui/button';
 import { api } from '../lib/api';
 
 export function Dashboard() {
@@ -17,7 +16,6 @@ export function Dashboard() {
   const ws = useWebSocket();
   const [projectStats, setProjectStats] = useState<Map<string, ContainerStats[]>>(new Map());
 
-  // Subscribe to stats for all running projects
   useEffect(() => {
     if (!ws.connected || !projects) return;
 
@@ -81,38 +79,41 @@ export function Dashboard() {
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Dashboard</h2>
-        <Button onClick={() => navigate('/projects/new')}>
-          <Plus className="mr-2 h-4 w-4" />
+        <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)]">Dashboard</h1>
+        <button
+          onClick={() => navigate('/projects/new')}
+          className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+        >
+          <Plus className="h-3.5 w-3.5" />
           New Project
-        </Button>
+        </button>
       </div>
 
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-40 animate-pulse rounded-lg border bg-muted"
-            />
+            <div key={i} className="h-40 animate-pulse rounded-2xl border border-white/[0.06] bg-[rgba(255,255,255,0.03)]" />
           ))}
         </div>
       )}
 
       {!isLoading && projects?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-          <p className="text-muted-foreground">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.10] p-16 text-center">
+          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">
             No projects yet. Create your first project to get started.
           </p>
-          <Button className="mt-4" onClick={() => navigate('/projects/new')}>
-            <Plus className="mr-2 h-4 w-4" />
+          <button
+            onClick={() => navigate('/projects/new')}
+            className="mt-4 flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+          >
+            <Plus className="h-3.5 w-3.5" />
             Create Project
-          </Button>
+          </button>
         </div>
       )}
 
       {!isLoading && projects && projects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <ProjectCard
               key={project.id}

@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
+import { ChevronDown } from 'lucide-react';
 import { Input } from './ui/input';
-import { Label } from './ui/label';
 import { api } from '../lib/api';
 
 export interface CloudflareProviderFormValue {
@@ -26,6 +25,9 @@ interface Props {
   value: CloudflareProviderFormValue;
   onChange: (value: CloudflareProviderFormValue) => void;
 }
+
+const selectCls =
+  'w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(4,7,15,0.78)] px-4 py-2 text-[14px] text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] pr-9';
 
 export function CloudflareProviderForm({ value, onChange }: Props) {
   const [accounts, setAccounts] = useState<CfAccount[]>([]);
@@ -75,8 +77,10 @@ export function CloudflareProviderForm({ value, onChange }: Props) {
   return (
     <div className="space-y-4">
       {/* API Token */}
-      <div className="space-y-2">
-        <Label htmlFor="cf-api-token">API Token</Label>
+      <div className="space-y-1.5">
+        <label htmlFor="cf-api-token" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+          API Token
+        </label>
         <div className="flex gap-2">
           <Input
             id="cf-api-token"
@@ -90,105 +94,121 @@ export function CloudflareProviderForm({ value, onChange }: Props) {
               onChange({ ...value, apiToken: e.target.value, accountId: '', tunnelId: '__new__', tunnelName: '' });
             }}
           />
-          <Button
+          <button
             type="button"
-            variant="outline"
             onClick={handleConnect}
             disabled={!value.apiToken || isConnecting}
+            className="shrink-0 rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-[13px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)] disabled:opacity-40"
           >
             {isConnecting ? 'Connecting…' : 'Connect'}
-          </Button>
+          </button>
         </div>
-        {connectError && <p className="text-sm text-destructive">{connectError}</p>}
+        {connectError && (
+          <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{connectError}</p>
+        )}
         {value.accountId && accounts.length === 0 && !isConnecting && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[12px] text-[rgba(255,255,255,0.35)]">
             Click Connect to reload your accounts and tunnels.
           </p>
         )}
-        <div className="text-xs text-muted-foreground space-y-1">
+        <div className="space-y-1 text-[12px] text-[rgba(255,255,255,0.38)]">
           <p>
             Create an API token (
             <a
               href="https://dash.cloudflare.com/profile/api-tokens"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline"
+              className="text-[#7db0ff] hover:underline"
             >
               Open Cloudflare dashboard
             </a>
             ) with these permissions:
           </p>
           <ul className="list-disc list-inside space-y-0.5">
-            <li><strong>Account → Cloudflare Tunnel → Edit</strong></li>
-            <li><strong>Account → Account Settings → Read</strong></li>
-            <li><strong>Zone → Zone → Read</strong></li>
-            <li><strong>Zone → DNS → Edit</strong></li>
+            <li><span className="text-[rgba(255,255,255,0.55)]">Account → Cloudflare Tunnel → Edit</span></li>
+            <li><span className="text-[rgba(255,255,255,0.55)]">Account → Account Settings → Read</span></li>
+            <li><span className="text-[rgba(255,255,255,0.55)]">Zone → Zone → Read</span></li>
+            <li><span className="text-[rgba(255,255,255,0.55)]">Zone → DNS → Edit</span></li>
           </ul>
         </div>
       </div>
 
       {/* Account dropdown */}
       {accounts.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="cf-account">Account</Label>
+            <label htmlFor="cf-account" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+              Account
+            </label>
             <button
               type="button"
-              className="text-xs text-muted-foreground hover:text-foreground"
               onClick={handleConnect}
               disabled={isConnecting}
+              className="text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
             >
-              {isConnecting ? 'Refreshing…' : 'refresh'}
+              {isConnecting ? 'Refreshing…' : 'Refresh'}
             </button>
           </div>
-          <select
-            id="cf-account"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            value={value.accountId}
-            onChange={(e) => handleAccountChange(e.target.value)}
-          >
-            <option value="">Select an account…</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id="cf-account"
+              className={selectCls}
+              value={value.accountId}
+              onChange={(e) => handleAccountChange(e.target.value)}
+            >
+              <option value="">Select an account…</option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(255,255,255,0.35)]" />
+          </div>
         </div>
       )}
 
       {/* Tunnel dropdown */}
       {value.accountId && accounts.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="cf-tunnel">Tunnel</Label>
+            <label htmlFor="cf-tunnel" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+              Tunnel
+            </label>
             <button
               type="button"
-              className="text-xs text-muted-foreground hover:text-foreground"
               onClick={() => handleAccountChange(value.accountId)}
               disabled={isLoadingTunnels}
+              className="text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
             >
-              {isLoadingTunnels ? 'Refreshing…' : 'refresh'}
+              {isLoadingTunnels ? 'Refreshing…' : 'Refresh'}
             </button>
           </div>
-          <select
-            id="cf-tunnel"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            value={value.tunnelId}
-            onChange={(e) => handleTunnelChange(e.target.value)}
-            disabled={isLoadingTunnels}
-          >
-            <option value="__new__">✦ Create new tunnel…</option>
-            {tunnels.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-          {isLoadingTunnels && <p className="text-xs text-muted-foreground">Loading tunnels…</p>}
+          <div className="relative">
+            <select
+              id="cf-tunnel"
+              className={selectCls}
+              value={value.tunnelId}
+              onChange={(e) => handleTunnelChange(e.target.value)}
+              disabled={isLoadingTunnels}
+            >
+              <option value="__new__">✦ Create new tunnel…</option>
+              {tunnels.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(255,255,255,0.35)]" />
+          </div>
+          {isLoadingTunnels && (
+            <p className="text-[12px] text-[rgba(255,255,255,0.35)]">Loading tunnels…</p>
+          )}
         </div>
       )}
 
       {/* Tunnel name — only when creating new */}
       {value.accountId && accounts.length > 0 && value.tunnelId === '__new__' && (
-        <div className="flex items-center gap-3">
-          <Label htmlFor="cf-tunnel-name" className="whitespace-nowrap">Tunnel Name:</Label>
+        <div className="space-y-1.5">
+          <label htmlFor="cf-tunnel-name" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+            Tunnel Name
+          </label>
           <Input
             id="cf-tunnel-name"
             placeholder="e.g. homelab-tunnel"
@@ -201,18 +221,20 @@ export function CloudflareProviderForm({ value, onChange }: Props) {
       {/* Deploy checkbox */}
       {value.accountId && accounts.length > 0 && (
         <>
-          <hr className="border-border" />
+          <div className="border-t border-white/[0.08]" />
           <div className="flex items-start gap-3">
             <input
               id="cf-deploy-container"
               type="checkbox"
-              className="mt-0.5 h-4 w-4 accent-primary"
+              className="mt-0.5 h-4 w-4 accent-[#649ef5] cursor-pointer"
               checked={value.deployContainer}
               onChange={(e) => onChange({ ...value, deployContainer: e.target.checked })}
             />
-            <label htmlFor="cf-deploy-container" className="space-y-1 cursor-pointer">
-              <span className="text-sm font-medium">Deploy cloudflared container</span>
-              <p className="text-xs text-muted-foreground">
+            <label htmlFor="cf-deploy-container" className="cursor-pointer space-y-0.5">
+              <span className="text-[13px] font-medium text-[rgba(255,255,255,0.75)]">
+                Deploy cloudflared container
+              </span>
+              <p className="text-[12px] text-[rgba(255,255,255,0.38)]">
                 Creates a &quot;Cloudflare Tunnel&quot; project and starts the cloudflared Docker
                 container using the tunnel token. Required for traffic to flow.
               </p>

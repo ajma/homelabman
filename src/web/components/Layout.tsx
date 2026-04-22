@@ -15,9 +15,6 @@ const dockerNavItems = [
   { to: '/networks', icon: Network, label: 'Networks' },
 ];
 
-const bottomNavItems = [
-  { to: '/settings', icon: Settings, label: 'Settings' },
-];
 
 function NavItem({
   item,
@@ -32,14 +29,14 @@ function NavItem({
       end={item.to === '/'}
       onClick={onNavClick}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+        `flex items-center gap-3 rounded-lg px-3 py-[8px] text-[13px] transition-all ${
           isActive
-            ? 'bg-primary text-primary-foreground'
-            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+            ? 'bg-[rgba(100,158,245,0.10)] text-[#7db0ff]'
+            : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
         }`
       }
     >
-      <item.icon className="h-4 w-4" />
+      <item.icon className="h-4 w-4 shrink-0" />
       {item.label}
     </NavLink>
   );
@@ -60,11 +57,11 @@ function SidebarContent({
 
   return (
     <>
-      <div className="flex h-14 items-center border-b px-4">
-        <h1 className="text-lg font-semibold">HomelabMan</h1>
+      <div className="flex h-14 items-center border-b border-[rgba(255,255,255,0.12)] px-4">
+        <h1 className="text-[15px] font-semibold text-[rgba(255,255,255,0.92)]">HomelabMan</h1>
       </div>
       <nav className="flex-1 overflow-y-auto p-2">
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {topNavItems.map((item) => (
             <NavItem key={item.to} item={item} onNavClick={onNavClick} />
           ))}
@@ -72,78 +69,76 @@ function SidebarContent({
           {/* Docker expandable section */}
           <button
             onClick={() => setDockerOpen(!dockerOpen)}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-[8px] text-[13px] transition-all ${
               isDockerRoute
-                ? 'text-primary'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                ? 'text-[#7db0ff]'
+                : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
             }`}
           >
-            <Container className="h-4 w-4" />
+            <Container className="h-4 w-4 shrink-0" />
             Docker
             {dockerOpen ? (
-              <ChevronDown className="ml-auto h-3.5 w-3.5" />
+              <ChevronDown className="ml-auto h-3.5 w-3.5 opacity-50" />
             ) : (
-              <ChevronRight className="ml-auto h-3.5 w-3.5" />
+              <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-50" />
             )}
           </button>
           {dockerOpen && (
-            <div className="ml-3 space-y-1 border-l border-border pl-2">
+            <div className="ml-3 space-y-0.5 border-l border-[rgba(255,255,255,0.12)] pl-2">
               {dockerNavItems.map((item) => (
                 <NavItem key={item.to} item={item} onNavClick={onNavClick} />
               ))}
             </div>
           )}
 
-          {bottomNavItems.map((item) => (
-            <NavItem key={item.to} item={item} onNavClick={onNavClick} />
-          ))}
         </div>
 
         {/* Projects section */}
         <div className="mt-4">
           <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgba(255,255,255,0.28)]">
               Projects
             </span>
             <NavLink
               to="/projects/new"
               onClick={onNavClick}
-              className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              className="rounded-md p-1 text-[rgba(255,255,255,0.3)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.6)] transition-all"
               title="New Project"
             >
               <Plus className="h-3.5 w-3.5" />
             </NavLink>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {projects?.map((project) => (
               <NavLink
                 key={project.id}
                 to={`/projects/${project.id}`}
                 onClick={onNavClick}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  `flex items-center gap-3 rounded-lg px-3 py-[8px] text-[13px] transition-all ${
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-[rgba(100,158,245,0.10)] text-[#7db0ff]'
+                      : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
                   }`
                 }
               >
-                <FolderOpen className="h-4 w-4" />
+                <FolderOpen className="h-4 w-4 shrink-0" />
                 <span className="truncate">{project.name}</span>
               </NavLink>
             ))}
             {projects?.length === 0 && (
-              <p className="px-3 py-2 text-xs text-muted-foreground">No projects yet</p>
+              <p className="px-3 py-2 text-[12px] text-[rgba(255,255,255,0.28)]">No projects yet</p>
             )}
           </div>
         </div>
       </nav>
-      <div className="border-t p-2">
+      <div className="border-t border-[rgba(255,255,255,0.12)] p-2 space-y-0.5">
+        <NavItem item={{ to: '/settings', icon: Settings, label: 'Settings' }} onNavClick={onNavClick} />
         <button
           onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-[8px] text-[13px] text-[rgba(255,255,255,0.35)] transition-all hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.6)]"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4 shrink-0" />
           Logout
         </button>
       </div>
@@ -165,29 +160,29 @@ export function Layout() {
   return (
     <div className="flex h-screen flex-col md:flex-row">
       {/* Mobile top bar */}
-      <header className="flex h-14 items-center border-b px-4 md:hidden">
+      <header className="flex h-14 items-center border-b border-[rgba(255,255,255,0.12)] px-4 md:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          className="rounded-md p-2 text-[rgba(255,255,255,0.35)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.6)] transition-all"
           aria-label="Open navigation"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="ml-3 text-lg font-semibold">HomelabMan</h1>
+        <h1 className="ml-3 text-[15px] font-semibold text-[rgba(255,255,255,0.92)]">HomelabMan</h1>
       </header>
 
       {/* Mobile drawer overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-[rgba(0,0,0,0.55)] transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 flex h-full w-64 flex-col bg-card border-r shadow-lg animate-in slide-in-from-left duration-200">
+          <aside className="absolute left-0 top-0 flex h-full w-64 flex-col border-r border-[rgba(255,255,255,0.12)] bg-[rgba(4,7,15,0.98)] shadow-[4px_0_24px_rgba(0,0,0,0.4)] animate-in slide-in-from-left duration-200">
             <div className="absolute right-2 top-3">
               <button
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                className="rounded-md p-1 text-[rgba(255,255,255,0.35)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.6)] transition-all"
                 aria-label="Close navigation"
               >
                 <X className="h-4 w-4" />
@@ -203,7 +198,7 @@ export function Layout() {
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r bg-card md:flex">
+      <aside className="hidden w-64 flex-col border-r border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.015)] md:flex">
         <SidebarContent projects={projects} onLogout={handleLogout} />
       </aside>
 

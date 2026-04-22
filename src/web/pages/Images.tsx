@@ -4,10 +4,7 @@ import { Download, Trash2, HardDrive, Search } from 'lucide-react';
 import { TablePagination } from '../components/TablePagination';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
 
 interface DockerImage {
   Id: string;
@@ -47,8 +44,7 @@ function useImages() {
 function usePullImage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) =>
-      api.post(`/docker/images/${encodeURIComponent(name)}/pull`),
+    mutationFn: (name: string) => api.post(`/docker/images/${encodeURIComponent(name)}/pull`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['images'] });
       toast.success('Image pulled');
@@ -101,10 +97,7 @@ export function Images() {
   const deleteImage = useDeleteImage();
   const pruneImages = usePruneImages();
 
-  const usedImageIds = new Set(
-    containers?.flatMap((c) => [c.ImageID, c.Image]) ?? [],
-  );
-
+  const usedImageIds = new Set(containers?.flatMap((c) => [c.ImageID, c.Image]) ?? []);
   const containerCountByImage = new Map<string, number>();
   containers?.forEach((c) => {
     containerCountByImage.set(c.ImageID, (containerCountByImage.get(c.ImageID) || 0) + 1);
@@ -115,6 +108,8 @@ export function Images() {
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showPruneConfirm, setShowPruneConfirm] = useState(false);
 
   const handlePull = () => {
     if (!pullName.trim()) return;
@@ -124,18 +119,6 @@ export function Images() {
         setIsPulling(false);
       },
     });
-  };
-
-  const handleDelete = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete image "${name}"?`)) {
-      deleteImage.mutate(id);
-    }
-  };
-
-  const handlePrune = () => {
-    if (confirm('Are you sure you want to prune all unused images? This cannot be undone.')) {
-      pruneImages.mutate();
-    }
   };
 
   const filteredImages = images?.filter((image) => {
@@ -150,66 +133,86 @@ export function Images() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Images</h2>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handlePrune}
-            disabled={pruneImages.isPending}
-          >
-            {pruneImages.isPending ? 'Pruning...' : 'Prune Unused'}
-          </Button>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)]">Images</h1>
+        <div className="flex items-center gap-2">
+          {showPruneConfirm ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-[rgba(255,255,255,0.45)]">Prune unused images?</span>
+              <button
+                onClick={() => setShowPruneConfirm(false)}
+                className="text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { pruneImages.mutate(); setShowPruneConfirm(false); }}
+                disabled={pruneImages.isPending}
+                className="rounded-xl border border-[rgba(248,113,113,0.36)] px-3 py-1.5 text-[12px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+              >
+                {pruneImages.isPending ? 'Pruning…' : 'Confirm'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowPruneConfirm(true)}
+              className="rounded-xl border border-white/[0.14] px-3 py-1.5 text-[13px] text-[rgba(255,255,255,0.45)] transition-colors hover:border-white/[0.22] hover:text-[rgba(255,255,255,0.7)]"
+            >
+              Prune Unused
+            </button>
+          )}
           {!isPulling && (
-            <Button onClick={() => setIsPulling(true)}>
-              <Download className="mr-2 h-4 w-4" />
+            <button
+              onClick={() => setIsPulling(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-3 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+            >
+              <Download className="h-3.5 w-3.5" />
               Pull Image
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
       {/* Pull Image Form */}
       {isPulling && (
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="image-name">Image Name</Label>
-              <Input
-                id="image-name"
-                placeholder="e.g. nginx:latest"
-                value={pullName}
-                onChange={(e) => setPullName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handlePull()}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setIsPulling(false);
-                  setPullName('');
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handlePull}
-                disabled={!pullName.trim() || pullImage.isPending}
-              >
-                {pullImage.isPending ? 'Pulling...' : 'Pull'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.02)] p-5">
+          <h3 className="mb-4 text-[14px] font-medium text-[rgba(255,255,255,0.85)]">Pull Image</h3>
+          <div className="space-y-1.5">
+            <label htmlFor="image-name" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+              Image Name
+            </label>
+            <Input
+              id="image-name"
+              placeholder="e.g. nginx:latest"
+              value={pullName}
+              onChange={(e) => setPullName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handlePull()}
+            />
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              onClick={() => { setIsPulling(false); setPullName(''); }}
+              className="rounded-xl px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePull}
+              disabled={!pullName.trim() || pullImage.isPending}
+              className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+            >
+              {pullImage.isPending ? 'Pulling…' : 'Pull'}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Search Filter */}
       {!isLoading && images && images.length > 0 && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(255,255,255,0.28)]" />
           <Input
-            placeholder="Filter images by name or ID..."
+            placeholder="Filter by name or ID…"
             value={filter}
             onChange={(e) => { setFilter(e.target.value); setPage(1); }}
             className="pl-10"
@@ -217,90 +220,79 @@ export function Images() {
         </div>
       )}
 
-      {/* Loading State */}
+      {/* Loading */}
       {isLoading && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-16 animate-pulse rounded-lg border bg-muted"
-            />
+            <div key={i} className="h-14 animate-pulse rounded-xl border border-white/[0.06] bg-[rgba(255,255,255,0.03)]" />
           ))}
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty */}
       {!isLoading && images?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-          <HardDrive className="h-10 w-10 text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">No images found.</p>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.10] p-12 text-center">
+          <HardDrive className="mb-3 h-8 w-8 text-[rgba(255,255,255,0.20)]" />
+          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">No images found.</p>
         </div>
       )}
 
-      {/* No Filter Results */}
+      {/* No filter results */}
       {!isLoading && images && images.length > 0 && filteredImages?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-          <p className="text-muted-foreground">No images match your filter.</p>
+        <div className="flex items-center justify-center rounded-2xl border border-dashed border-white/[0.10] p-8">
+          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">No images match your filter.</p>
         </div>
       )}
 
-      {/* Images Table */}
+      {/* Table */}
       {!isLoading && filteredImages && filteredImages.length > 0 && (
-        <div className="rounded-lg border">
+        <div className="rounded-2xl border border-white/[0.10] overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Repository / Tag
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Image ID
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Size
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Created
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Containers
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Actions
-                </th>
+              <tr className="border-b border-white/[0.08] bg-[rgba(255,255,255,0.02)]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Repository / Tag</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Image ID</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Size</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Created</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Containers</th>
+                <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Actions</th>
               </tr>
             </thead>
             <tbody>
               {paginatedImages!.map((image) => (
-                <tr key={image.Id} className="border-b last:border-b-0">
-                  <td className="px-4 py-3 text-sm font-medium">
-                    {getRepoTag(image)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground font-mono">
-                    {shortId(image.Id)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {formatBytes(image.Size)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {formatDate(image.Created)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {containerCountByImage.get(image.Id) || 0}
-                  </td>
+                <tr key={image.Id} className="border-b border-white/[0.06] last:border-0">
+                  <td className="px-4 py-3 text-[13px] font-medium text-[rgba(255,255,255,0.85)]">{getRepoTag(image)}</td>
+                  <td className="px-4 py-3 font-mono text-[12px] text-[rgba(255,255,255,0.45)]">{shortId(image.Id)}</td>
+                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.45)]">{formatBytes(image.Size)}</td>
+                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.45)]">{formatDate(image.Created)}</td>
+                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.45)]">{containerCountByImage.get(image.Id) || 0}</td>
                   <td className="px-4 py-3 text-right">
                     {!usedImageIds.has(image.Id) && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          handleDelete(image.Id, getRepoTag(image))
-                        }
-                        disabled={deleteImage.isPending}
-                        title="Delete image"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      deletingId === image.Id ? (
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => setDeletingId(null)}
+                            className="text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => { deleteImage.mutate(image.Id); setDeletingId(null); }}
+                            disabled={deleteImage.isPending}
+                            className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2 py-0.5 text-[12px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setDeletingId(image.Id)}
+                          className="rounded-lg p-1.5 text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(248,113,113,0.75)]"
+                          title="Delete image"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )
                     )}
                   </td>
                 </tr>

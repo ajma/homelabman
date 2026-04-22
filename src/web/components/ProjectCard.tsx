@@ -1,7 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { Play, Square, RotateCcw, ExternalLink, Globe, ArrowUpCircle } from 'lucide-react';
-import { Card, CardHeader, CardContent, CardFooter } from './ui/card';
-import { Button } from './ui/button';
 import type { Project } from '@shared/types';
 import { useProjectUpdates } from '../hooks/useProjects';
 import type { ContainerStats } from '../hooks/useStats';
@@ -14,7 +12,6 @@ interface ProjectCardProps {
   onRestart: (id: string) => void;
 }
 
-/** Format bytes into a human-readable string */
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
   const k = 1024;
@@ -23,11 +20,11 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-const statusConfig: Record<Project['status'], { color: string; label: string }> = {
-  running: { color: 'bg-green-500', label: 'Running' },
-  stopped: { color: 'bg-gray-400', label: 'Stopped' },
-  starting: { color: 'bg-yellow-500 animate-pulse', label: 'Starting' },
-  error: { color: 'bg-red-500', label: 'Error' },
+const statusConfig: Record<Project['status'], { dot: string; label: string }> = {
+  running: { dot: 'bg-[#4ade80]', label: 'Running' },
+  stopped: { dot: 'bg-[rgba(255,255,255,0.25)]', label: 'Stopped' },
+  starting: { dot: 'bg-[#facc15] animate-pulse', label: 'Starting' },
+  error: { dot: 'bg-[rgba(248,113,113,0.85)]', label: 'Error' },
 };
 
 function timeAgo(timestamp: number | null): string {
@@ -45,155 +42,129 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
   const { data: updates } = useProjectUpdates(project.id);
   const hasUpdates = updates?.some((u) => u.updateAvailable) ?? false;
 
-  const handleCardClick = () => {
-    navigate(`/projects/${project.id}`);
-  };
-
   return (
-    <Card
-      className="cursor-pointer transition-shadow hover:shadow-md"
-      onClick={handleCardClick}
+    <div
+      className="flex cursor-pointer flex-col rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.03)] transition-colors hover:bg-[rgba(255,255,255,0.05)]"
+      onClick={() => navigate(`/projects/${project.id}`)}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {project.logoUrl && (
-              <img
-                src={project.logoUrl}
-                alt={`${project.name} logo`}
-                className="h-8 w-8 shrink-0 rounded object-contain"
-              />
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 p-4 pb-3">
+        <div className="flex min-w-0 items-center gap-3">
+          {project.logoUrl && (
+            <img
+              src={project.logoUrl}
+              alt={`${project.name} logo`}
+              className="h-8 w-8 shrink-0 rounded object-contain"
+            />
+          )}
+          <div className="min-w-0">
+            <h3 className="truncate text-[14px] font-semibold text-[rgba(255,255,255,0.88)]">
+              {project.name}
+            </h3>
+            {project.domainName && (
+              <div className="mt-0.5 flex items-center gap-1 text-[12px] text-[rgba(255,255,255,0.35)]">
+                <Globe className="h-3 w-3 shrink-0" />
+                <a
+                  href={`https://${project.domainName}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate hover:text-[#7db0ff] transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {project.domainName}
+                </a>
+              </div>
             )}
-            <div className="min-w-0">
-              <h3 className="truncate text-base font-semibold leading-tight">
-                {project.name}
-              </h3>
-              {project.domainName && (
-                <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                  <Globe className="h-3 w-3 shrink-0" />
-                  <a
-                    href={`https://${project.domainName}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="truncate hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {project.domainName}
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {hasUpdates && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                <ArrowUpCircle className="h-3 w-3" />
-                Update
-              </span>
-            )}
-            <div className="flex items-center gap-1.5">
-              <span className={`h-2.5 w-2.5 rounded-full ${status.color}`} />
-              <span className="text-xs text-muted-foreground">{status.label}</span>
-            </div>
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="pb-3">
-        <p className="text-xs text-muted-foreground">
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {hasUpdates && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(250,204,21,0.25)] bg-[rgba(250,204,21,0.10)] px-2 py-0.5 text-[10px] font-medium text-[#facc15]">
+              <ArrowUpCircle className="h-3 w-3" />
+              Update
+            </span>
+          )}
+          <div className="flex items-center gap-1.5">
+            <span className={`h-2 w-2 rounded-full ${status.dot}`} />
+            <span className="text-[12px] text-[rgba(255,255,255,0.45)]">{status.label}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats / Last deployed */}
+      <div className="px-4 pb-3">
+        <p className="text-[12px] text-[rgba(255,255,255,0.35)]">
           Last deployed: {timeAgo(project.deployedAt)}
         </p>
 
-        {/* Live stats preview for running projects */}
         {project.status === 'running' && stats && stats.length > 0 && (() => {
           const totalCpu = stats.reduce((sum, s) => sum + s.cpuUsage, 0);
           const totalMem = stats.reduce((sum, s) => sum + s.memoryUsage, 0);
           const totalMemLimit = stats.reduce((sum, s) => sum + s.memoryLimit, 0);
           return (
             <div className="mt-2 space-y-1.5">
-              {/* CPU bar */}
               <div>
-                <div className="mb-0.5 flex justify-between text-[10px] text-muted-foreground">
+                <div className="mb-0.5 flex justify-between text-[11px] text-[rgba(255,255,255,0.35)]">
                   <span>CPU</span>
                   <span>{totalCpu.toFixed(1)}%</span>
                 </div>
-                <div className="h-1 w-full rounded-full bg-muted">
+                <div className="h-1 w-full rounded-full bg-[rgba(255,255,255,0.06)]">
                   <div
-                    className="h-1 rounded-full bg-blue-500 transition-all"
+                    className="h-1 rounded-full bg-[#649ef5] transition-all"
                     style={{ width: `${Math.min(totalCpu, 100)}%` }}
                   />
                 </div>
               </div>
-              {/* Memory text */}
-              <div className="flex justify-between text-[10px] text-muted-foreground">
+              <div className="flex justify-between text-[11px] text-[rgba(255,255,255,0.35)]">
                 <span>Memory</span>
                 <span>{formatBytes(totalMem)} / {formatBytes(totalMemLimit)}</span>
               </div>
             </div>
           );
         })()}
-      </CardContent>
+      </div>
 
-      <CardFooter className="gap-2">
+      {/* Footer actions */}
+      <div className="mt-auto flex items-center gap-1.5 border-t border-white/[0.06] px-4 py-2.5">
         {(project.status === 'stopped' || project.status === 'error') && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeploy(project.id);
-            }}
-            title="Deploy"
+          <button
+            onClick={(e) => { e.stopPropagation(); onDeploy(project.id); }}
+            className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] font-medium text-[#4ade80] transition-colors hover:bg-[rgba(74,222,128,0.08)]"
           >
-            <Play className="mr-1 h-3.5 w-3.5" />
+            <Play className="h-3 w-3" />
             Deploy
-          </Button>
+          </button>
         )}
         {project.status === 'running' && (
           <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onStop(project.id);
-              }}
-              title="Stop"
+            <button
+              onClick={(e) => { e.stopPropagation(); onStop(project.id); }}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.45)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.75)]"
             >
-              <Square className="mr-1 h-3.5 w-3.5" />
+              <Square className="h-3 w-3" />
               Stop
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRestart(project.id);
-              }}
-              title="Restart"
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onRestart(project.id); }}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.45)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.75)]"
             >
-              <RotateCcw className="mr-1 h-3.5 w-3.5" />
+              <RotateCcw className="h-3 w-3" />
               Restart
-            </Button>
+            </button>
           </>
         )}
         {project.status === 'starting' && (
-          <span className="text-xs text-muted-foreground">Deploying...</span>
+          <span className="text-[12px] text-[rgba(255,255,255,0.35)]">Deploying…</span>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="ml-auto"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/projects/${project.id}`);
-          }}
-          title="Open project editor"
+        <button
+          onClick={(e) => { e.stopPropagation(); navigate(`/projects/${project.id}`); }}
+          className="ml-auto flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.65)]"
         >
-          <ExternalLink className="mr-1 h-3.5 w-3.5" />
+          <ExternalLink className="h-3 w-3" />
           Open
-        </Button>
-      </CardFooter>
-    </Card>
+        </button>
+      </div>
+    </div>
   );
 }

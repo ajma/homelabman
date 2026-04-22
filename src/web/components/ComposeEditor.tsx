@@ -3,15 +3,71 @@ import { EditorView, basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { yaml } from '@codemirror/lang-yaml';
 import { ViewUpdate } from '@codemirror/view';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 
 interface ComposeEditorProps {
   value: string;
   onChange: (value: string) => void;
   errors?: Array<{ line?: number; message: string }>;
   warnings?: Array<{ line?: number; message: string }>;
+  minHeight?: string;
 }
 
-export function ComposeEditor({ value, onChange, errors = [], warnings = [] }: ComposeEditorProps) {
+const yamlHighlight = HighlightStyle.define([
+  // YAML keys → soft blue
+  { tag: t.propertyName, color: '#7db0ff' },
+  // Strings → muted teal-green
+  { tag: t.string, color: '#6ee7b7' },
+  // Numbers, booleans, null → amber
+  { tag: [t.number, t.bool, t.null], color: '#fbbf24' },
+  // Comments → dim
+  { tag: t.comment, color: 'rgba(255,255,255,0.30)', fontStyle: 'italic' },
+  // Punctuation (colons, dashes) → mid-muted
+  { tag: t.punctuation, color: 'rgba(255,255,255,0.40)' },
+  // Anchors & aliases → lavender
+  { tag: t.labelName, color: '#c084fc' },
+  // Tags (!!str etc) → same lavender
+  { tag: t.typeName, color: '#c084fc' },
+  // Operators → same as punctuation
+  { tag: t.operator, color: 'rgba(255,255,255,0.40)' },
+]);
+
+const darkTheme = EditorView.theme({
+  '&': {
+    background: 'rgba(4, 7, 15, 0.78)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255,255,255,0.10)',
+    overflow: 'hidden',
+  },
+  '&.cm-focused': {
+    outline: 'none',
+    border: '1px solid rgba(125,176,255,0.36)',
+  },
+  '.cm-scroller': { overflow: 'auto' },
+  '.cm-content': {
+    fontFamily: 'monospace',
+    fontSize: '13px',
+    padding: '12px 16px',
+    color: 'rgba(255,255,255,0.88)',
+    caretColor: '#649ef5',
+  },
+  '.cm-gutters': {
+    background: 'rgba(4, 7, 15, 0.6)',
+    border: 'none',
+    borderRight: '1px solid rgba(255,255,255,0.06)',
+    color: 'rgba(255,255,255,0.22)',
+    padding: '0 8px',
+  },
+  '.cm-activeLineGutter': { background: 'rgba(255,255,255,0.04)' },
+  '.cm-activeLine': { background: 'rgba(255,255,255,0.03)' },
+  '.cm-selectionBackground, ::selection': { background: 'rgba(100,158,245,0.20)' },
+  '.cm-cursor': { borderLeftColor: '#649ef5' },
+  '.cm-matchingBracket': { background: 'rgba(100,158,245,0.15)', outline: 'none' },
+  '.cm-line': { padding: '0' },
+}, { dark: true });
+
+export function ComposeEditor({ value, onChange, errors = [], warnings = [], minHeight = '460px' }: ComposeEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 
@@ -33,11 +89,9 @@ export function ComposeEditor({ value, onChange, errors = [], warnings = [] }: C
         basicSetup,
         yaml(),
         EditorView.updateListener.of(onUpdate),
-        EditorView.theme({
-          '&': { height: '400px', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' },
-          '.cm-scroller': { overflow: 'auto' },
-          '.cm-content': { fontFamily: 'monospace', fontSize: '14px' },
-        }),
+        darkTheme,
+        syntaxHighlighting(yamlHighlight),
+        EditorView.contentAttributes.of({ style: `min-height: ${minHeight}` }),
       ],
     });
 
@@ -50,7 +104,6 @@ export function ComposeEditor({ value, onChange, errors = [], warnings = [] }: C
     };
   }, []); // Only create once
 
-  // Update editor content when value changes externally
   useEffect(() => {
     const view = viewRef.current;
     if (view && value !== view.state.doc.toString()) {
@@ -66,7 +119,7 @@ export function ComposeEditor({ value, onChange, errors = [], warnings = [] }: C
       {errors.length > 0 && (
         <div className="space-y-1">
           {errors.map((err, i) => (
-            <p key={i} className="text-sm text-destructive">
+            <p key={i} className="text-[12px] text-[rgba(254,202,202,0.85)]">
               {err.line ? `Line ${err.line}: ` : ''}{err.message}
             </p>
           ))}
@@ -75,7 +128,7 @@ export function ComposeEditor({ value, onChange, errors = [], warnings = [] }: C
       {warnings.length > 0 && (
         <div className="space-y-1">
           {warnings.map((warn, i) => (
-            <p key={i} className="text-sm text-yellow-600">
+            <p key={i} className="text-[12px] text-[#fcd34d]">
               {warn.line ? `Line ${warn.line}: ` : ''}{warn.message}
             </p>
           ))}

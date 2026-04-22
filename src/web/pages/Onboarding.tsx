@@ -1,57 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-interface SetupCheck {
-  name: string;
-  passed: boolean;
-  message: string;
-  resolution?: string;
-}
-
-interface ProviderSetupResult {
-  allPassed: boolean;
-  checks: SetupCheck[];
-}
-
-function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
-  return (
-    <div className="mt-3 space-y-2">
-      {result.checks.map((check) => (
-        <div
-          key={check.name}
-          className={`rounded-md p-2 text-sm ${
-            check.passed
-              ? 'bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-200'
-              : 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-200'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <span>{check.passed ? '✓' : '✗'}</span>
-            <span className="font-medium">{check.name}</span>
-            <span className="text-xs opacity-80">— {check.message}</span>
-          </div>
-          {!check.passed && check.resolution && (
-            <p className="mt-1 pl-5 text-xs opacity-90">
-              <span className="font-medium">Fix:</span> {check.resolution}
-            </p>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { registerSchema, type ExposureProviderInput } from '@shared/schemas';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRegister, useAuthStatus } from '../hooks/useAuth';
 import { api } from '../lib/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
 import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../components/CloudflareProviderForm';
 import { resolveCloudflareBeforeSave, deployCloudflaredProject } from '../lib/cloudflare';
 
@@ -71,6 +28,42 @@ interface ProviderConfig {
   cloudflare?: CloudflareProviderFormValue;
 }
 
+interface SetupCheck {
+  name: string;
+  passed: boolean;
+  message: string;
+  resolution?: string;
+}
+
+interface ProviderSetupResult {
+  allPassed: boolean;
+  checks: SetupCheck[];
+}
+
+const inputCls =
+  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-[14px] text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
+
+function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
+  return (
+    <div className="mt-3 space-y-2">
+      {result.checks.map((check) => (
+        <div key={check.name} className="flex gap-3">
+          <span className={`mt-px shrink-0 text-[13px] font-medium ${check.passed ? 'text-[#4ade80]' : 'text-[rgba(248,113,113,0.85)]'}`}>
+            {check.passed ? '✓' : '✗'}
+          </span>
+          <div>
+            <span className="text-[13px] text-[rgba(255,255,255,0.75)]">{check.name}</span>
+            <span className="text-[13px] text-[rgba(255,255,255,0.35)]"> — {check.message}</span>
+            {!check.passed && check.resolution && (
+              <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">Fix: {check.resolution}</p>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function StepIndicator({ currentStep }: { currentStep: OnboardingStep }) {
   const steps = [
     { step: 1, label: 'Account' },
@@ -79,28 +72,30 @@ function StepIndicator({ currentStep }: { currentStep: OnboardingStep }) {
   ] as const;
 
   return (
-    <div className="flex items-center justify-center gap-2 mb-6">
+    <div className="mb-6 flex items-center justify-center gap-2">
       {steps.map(({ step, label }) => (
         <div key={step} className="flex items-center gap-2">
           <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+            className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-semibold ${
               step === currentStep
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-[#649ef5] text-[#101827]'
                 : step < currentStep
-                  ? 'bg-primary/20 text-primary'
-                  : 'bg-muted text-muted-foreground'
+                  ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
+                  : 'bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.35)]'
             }`}
           >
             {step}
           </div>
           <span
-            className={`text-sm ${
-              step === currentStep ? 'font-medium' : 'text-muted-foreground'
+            className={`text-[13px] ${
+              step === currentStep
+                ? 'font-medium text-[rgba(255,255,255,0.85)]'
+                : 'text-[rgba(255,255,255,0.38)]'
             }`}
           >
             {label}
           </span>
-          {step < 3 && <div className="mx-2 h-px w-8 bg-border" />}
+          {step < 3 && <div className="mx-2 h-px w-8 bg-[rgba(255,255,255,0.08)]" />}
         </div>
       ))}
     </div>
@@ -128,58 +123,36 @@ function CreateAccountStep({ onComplete }: { onComplete: () => void }) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Admin Account</CardTitle>
-        <CardDescription>
-          Set up the administrator account for your HomelabMan instance.
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              placeholder="Choose a username"
-              {...register('username')}
-            />
-            {errors.username && (
-              <p className="text-sm text-destructive">{errors.username.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Choose a strong password"
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              placeholder="Re-enter your password"
-              {...register('confirmPassword')}
-            />
-            {errors.confirmPassword && (
-              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-            {registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
-          </Button>
-        </CardFooter>
+    <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.03)] p-6">
+      <h2 className="mb-1 text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">Create Admin Account</h2>
+      <p className="mb-5 text-[13px] text-[rgba(255,255,255,0.38)]">
+        Set up the administrator account for your HomelabMan instance.
+      </p>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1.5">
+          <label htmlFor="username" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Username</label>
+          <Input id="username" placeholder="Choose a username" {...register('username')} />
+          {errors.username && <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.username.message}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="password" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Password</label>
+          <Input id="password" type="password" placeholder="Choose a strong password" {...register('password')} />
+          {errors.password && <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.password.message}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="confirm-password" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Confirm Password</label>
+          <Input id="confirm-password" type="password" placeholder="Re-enter your password" {...register('confirmPassword')} />
+          {errors.confirmPassword && <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.confirmPassword.message}</p>}
+        </div>
+        <button
+          type="submit"
+          disabled={registerMutation.isPending}
+          className="mt-2 w-full rounded-xl bg-[#649ef5] py-2 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+        >
+          {registerMutation.isPending ? 'Creating Account…' : 'Create Account'}
+        </button>
       </form>
-    </Card>
+    </div>
   );
 }
 
@@ -213,9 +186,7 @@ function ConfigureProvidersStep({
     }
   };
 
-  const [caddyApiUrl, setCaddyApiUrl] = useState(
-    providerConfig.caddy?.apiUrl ?? 'http://localhost:2019',
-  );
+  const [caddyApiUrl, setCaddyApiUrl] = useState(providerConfig.caddy?.apiUrl ?? 'http://localhost:2019');
   const [cfFormValue, setCfFormValue] = useState<CloudflareProviderFormValue>({
     apiToken: providerConfig.cloudflare?.apiToken ?? '',
     accountId: providerConfig.cloudflare?.accountId ?? '',
@@ -257,131 +228,140 @@ function ConfigureProvidersStep({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Configure Exposure Providers</CardTitle>
-        <CardDescription>
-          Optionally configure how your services are exposed to the internet. You can skip this and configure later in Settings.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.03)] p-6">
+      <h2 className="mb-1 text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">Configure Exposure Providers</h2>
+      <p className="mb-5 text-[13px] text-[rgba(255,255,255,0.38)]">
+        Optionally configure how your services are exposed to the internet. You can skip this and configure later in Settings.
+      </p>
+
+      <div className="space-y-3">
         {/* Caddy Provider */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Caddy</CardTitle>
-                <CardDescription>Reverse proxy with automatic HTTPS</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                {providerConfig.caddy && (
-                  <Button variant="ghost" size="sm" onClick={removeCaddy}>
-                    Remove
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setExpandedProvider(expandedProvider === 'caddy' ? null : 'caddy')
-                  }
-                >
-                  {providerConfig.caddy ? 'Edit' : 'Configure'}
-                </Button>
-              </div>
-            </div>
-            {providerConfig.caddy && expandedProvider !== 'caddy' && (
-              <>
-                <p className="text-xs text-muted-foreground mt-1">
+        <div className="rounded-xl border border-white/[0.08] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="text-[13px] font-medium text-[rgba(255,255,255,0.85)]">Caddy</p>
+              <p className="text-[12px] text-[rgba(255,255,255,0.35)]">Reverse proxy with automatic HTTPS</p>
+              {providerConfig.caddy && expandedProvider !== 'caddy' && (
+                <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">
                   Configured: {providerConfig.caddy.apiUrl}
                 </p>
-                <div className="mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => runCheckSetup('caddy', { apiUrl: providerConfig.caddy!.apiUrl })}
-                    disabled={checkingSetup['caddy']}
-                  >
-                    {checkingSetup['caddy'] ? 'Checking...' : 'Check Setup'}
-                  </Button>
-                </div>
-                {setupResults['caddy'] && <SetupCheckDisplay result={setupResults['caddy']} />}
-              </>
-            )}
-          </CardHeader>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {providerConfig.caddy && (
+                <button
+                  onClick={removeCaddy}
+                  className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+                >
+                  Remove
+                </button>
+              )}
+              {providerConfig.caddy && expandedProvider !== 'caddy' && (
+                <button
+                  onClick={() => runCheckSetup('caddy', { apiUrl: providerConfig.caddy!.apiUrl })}
+                  disabled={checkingSetup['caddy']}
+                  className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
+                >
+                  {checkingSetup['caddy'] ? 'Checking…' : 'Check Setup'}
+                </button>
+              )}
+              <button
+                onClick={() => setExpandedProvider(expandedProvider === 'caddy' ? null : 'caddy')}
+                className="rounded-lg border border-[rgba(100,158,245,0.4)] px-3 py-1 text-[12px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+              >
+                {providerConfig.caddy ? 'Edit' : 'Configure'}
+              </button>
+            </div>
+          </div>
+          {setupResults['caddy'] && expandedProvider !== 'caddy' && (
+            <div className="border-t border-white/[0.06] px-4 pb-3">
+              <SetupCheckDisplay result={setupResults['caddy']} />
+            </div>
+          )}
           {expandedProvider === 'caddy' && (
-            <CardContent className="space-y-3 pt-0">
-              <div className="space-y-2">
-                <Label htmlFor="caddy-api-url">API URL</Label>
-                <Input
+            <div className="border-t border-white/[0.06] px-4 py-4 space-y-3">
+              <div className="space-y-1.5">
+                <label htmlFor="caddy-api-url" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">API URL</label>
+                <input
                   id="caddy-api-url"
+                  type="text"
                   placeholder="http://localhost:2019"
                   value={caddyApiUrl}
                   onChange={(e) => setCaddyApiUrl(e.target.value)}
+                  className={inputCls}
                 />
               </div>
-              <Button size="sm" onClick={saveCaddy}>
+              <button
+                onClick={saveCaddy}
+                className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+              >
                 Save
-              </Button>
-            </CardContent>
+              </button>
+            </div>
           )}
-        </Card>
+        </div>
 
         {/* Cloudflare Provider */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Cloudflare</CardTitle>
-                <CardDescription>Tunnel-based exposure via Cloudflare</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                {providerConfig.cloudflare && (
-                  <Button variant="ghost" size="sm" onClick={removeCloudflare}>
-                    Remove
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setExpandedProvider(expandedProvider === 'cloudflare' ? null : 'cloudflare')
-                  }
-                >
-                  {providerConfig.cloudflare ? 'Edit' : 'Configure'}
-                </Button>
-              </div>
+        <div className="rounded-xl border border-white/[0.08] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="text-[13px] font-medium text-[rgba(255,255,255,0.85)]">Cloudflare</p>
+              <p className="text-[12px] text-[rgba(255,255,255,0.35)]">Tunnel-based exposure via Cloudflare</p>
+              {providerConfig.cloudflare && expandedProvider !== 'cloudflare' && (
+                <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">
+                  Account {providerConfig.cloudflare.accountId}
+                  {providerConfig.cloudflare.tunnelId !== '__new__'
+                    ? ` · Tunnel ${providerConfig.cloudflare.tunnelId}`
+                    : ` · New tunnel "${providerConfig.cloudflare.tunnelName}"`}
+                </p>
+              )}
             </div>
-            {providerConfig.cloudflare && expandedProvider !== 'cloudflare' && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Configured: Account {providerConfig.cloudflare.accountId}
-                {providerConfig.cloudflare.tunnelId !== '__new__'
-                  ? ` · Tunnel ${providerConfig.cloudflare.tunnelId}`
-                  : ` · New tunnel "${providerConfig.cloudflare.tunnelName}"`}
-              </p>
-            )}
-          </CardHeader>
+            <div className="flex items-center gap-2">
+              {providerConfig.cloudflare && (
+                <button
+                  onClick={removeCloudflare}
+                  className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+                >
+                  Remove
+                </button>
+              )}
+              <button
+                onClick={() => setExpandedProvider(expandedProvider === 'cloudflare' ? null : 'cloudflare')}
+                className="rounded-lg border border-[rgba(100,158,245,0.4)] px-3 py-1 text-[12px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+              >
+                {providerConfig.cloudflare ? 'Edit' : 'Configure'}
+              </button>
+            </div>
+          </div>
           {expandedProvider === 'cloudflare' && (
-            <CardContent className="space-y-3 pt-0">
+            <div className="border-t border-white/[0.06] px-4 py-4 space-y-4">
               <CloudflareProviderForm value={cfFormValue} onChange={setCfFormValue} />
-              <div className="flex gap-2 pt-2">
-                <Button size="sm" onClick={saveCloudflare}>
-                  Save
-                </Button>
-              </div>
-            </CardContent>
+              <button
+                onClick={saveCloudflare}
+                className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+              >
+                Save
+              </button>
+            </div>
           )}
-        </Card>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="ghost" onClick={onSkip}>
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-center justify-between">
+        <button
+          onClick={onSkip}
+          className="rounded-xl px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.38)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+        >
           Skip
-        </Button>
-        <Button onClick={onNext}>
+        </button>
+        <button
+          onClick={onNext}
+          className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+        >
           Next
-        </Button>
-      </CardFooter>
-    </Card>
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -399,32 +379,28 @@ function CompleteStep({
   if (providerConfig.cloudflare) configuredProviders.push('Cloudflare');
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Setup Complete</CardTitle>
-        <CardDescription>Your HomelabMan instance is ready to use.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="rounded-lg bg-muted p-4 space-y-2">
-          <h4 className="text-sm font-medium">Configuration Summary</h4>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>Admin account created</li>
-            {configuredProviders.length > 0 ? (
-              <li>
-                Exposure providers configured: {configuredProviders.join(', ')}
-              </li>
-            ) : (
-              <li>No exposure providers configured (can be added in Settings)</li>
-            )}
-          </ul>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button className="w-full" onClick={onFinish} disabled={isSubmitting}>
-          {isSubmitting ? 'Finishing Setup...' : 'Get Started'}
-        </Button>
-      </CardFooter>
-    </Card>
+    <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.03)] p-6">
+      <h2 className="mb-1 text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">Setup Complete</h2>
+      <p className="mb-5 text-[13px] text-[rgba(255,255,255,0.38)]">Your HomelabMan instance is ready to use.</p>
+      <div className="mb-5 rounded-xl border border-white/[0.08] bg-[rgba(255,255,255,0.02)] px-4 py-3">
+        <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Configuration Summary</p>
+        <ul className="space-y-1 text-[13px] text-[rgba(255,255,255,0.55)]">
+          <li>Admin account created</li>
+          {configuredProviders.length > 0 ? (
+            <li>Exposure providers configured: {configuredProviders.join(', ')}</li>
+          ) : (
+            <li>No exposure providers configured (can be added in Settings)</li>
+          )}
+        </ul>
+      </div>
+      <button
+        onClick={onFinish}
+        disabled={isSubmitting}
+        className="w-full rounded-xl bg-[#649ef5] py-2 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+      >
+        {isSubmitting ? 'Finishing Setup…' : 'Get Started'}
+      </button>
+    </div>
   );
 }
 
@@ -437,6 +413,7 @@ export function Onboarding() {
   useEffect(() => {
     if (authStatus?.authenticated) setStep((s) => s === 1 ? 2 : s);
   }, [authStatus?.authenticated]);
+
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -456,13 +433,10 @@ export function Onboarding() {
 
       if (providerConfig.cloudflare) {
         const cf = providerConfig.cloudflare;
-
         const { tunnelId, tunnelToken } = await resolveCloudflareBeforeSave(cf);
-
         if (cf.deployContainer && tunnelToken) {
           await deployCloudflaredProject(tunnelToken);
         }
-
         exposureProviders.push({
           providerType: 'cloudflare',
           name: 'Cloudflare',
@@ -489,8 +463,10 @@ export function Onboarding() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        <h1 className="text-2xl font-bold text-center mb-2">Welcome to HomelabMan</h1>
-        <p className="text-center text-muted-foreground mb-6">
+        <h1 className="mb-1 text-center text-[22px] font-semibold text-[rgba(255,255,255,0.92)]">
+          Welcome to HomelabMan
+        </h1>
+        <p className="mb-6 text-center text-[13px] text-[rgba(255,255,255,0.38)]">
           Let&apos;s get your instance set up.
         </p>
         <StepIndicator currentStep={step} />

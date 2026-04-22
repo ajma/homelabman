@@ -18,8 +18,8 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: (data: LoginInput) => api.post('/auth/login', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['auth'] });
       navigate('/');
     },
     onError: (error: Error) => {
