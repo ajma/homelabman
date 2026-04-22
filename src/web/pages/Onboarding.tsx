@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -409,13 +409,16 @@ export function Onboarding() {
   const queryClient = useQueryClient();
   const { data: authStatus } = useAuthStatus();
   const [step, setStep] = useState<OnboardingStep>(1);
+  const [providerConfig, setProviderConfig] = useState<ProviderConfig>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (authStatus?.authenticated) setStep((s) => s === 1 ? 2 : s);
   }, [authStatus?.authenticated]);
 
-  const [providerConfig, setProviderConfig] = useState<ProviderConfig>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  if (authStatus && !authStatus.needsOnboarding) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleFinish = async () => {
     setIsSubmitting(true);
@@ -450,7 +453,7 @@ export function Onboarding() {
       }
 
       await api.post('/settings/onboarding', { exposureProviders });
-      queryClient.invalidateQueries({ queryKey: ['auth'] });
+      await queryClient.invalidateQueries({ queryKey: ['auth'] });
       toast.success('Setup complete! Welcome to HomelabMan.');
       navigate('/');
     } catch (error) {

@@ -1,13 +1,13 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { loginSchema, type LoginInput } from '@shared/schemas';
-import { useLogin } from '../hooks/useAuth';
+import { useLogin, useAuthStatus } from '../hooks/useAuth';
 import { Input } from '../components/ui/input';
 
 export function Login() {
+  const { data: authStatus, isLoading: authLoading } = useAuthStatus();
   const login = useLogin();
-
   const {
     register,
     handleSubmit,
@@ -15,6 +15,18 @@ export function Login() {
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
   });
+
+  if (authLoading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
+  if (authStatus?.needsOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  if (authStatus?.authenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   const onSubmit = (data: LoginInput) => {
     login.mutate(data);
@@ -62,15 +74,6 @@ export function Login() {
           >
             {login.isPending ? 'Signing in…' : 'Sign In'}
           </button>
-          <p className="text-center text-[12px] text-[rgba(255,255,255,0.35)]">
-            First time?{' '}
-            <Link
-              to="/onboarding"
-              className="text-[#7db0ff] hover:underline"
-            >
-              Set up your instance
-            </Link>
-          </p>
         </form>
       </div>
     </div>
