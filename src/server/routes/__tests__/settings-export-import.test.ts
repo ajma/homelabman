@@ -96,3 +96,89 @@ describe('GET /export', () => {
     expect(res.json().settings.defaultExposureProviderName).toBeNull();
   });
 });
+
+const VALID_BACKUP = {
+  version: 1 as const,
+  exportedAt: '2026-04-21T12:00:00.000Z',
+  settings: { defaultExposureProviderName: 'My Caddy' },
+  providers: [
+    { providerType: 'caddy', name: 'My Caddy', enabled: true, configuration: { apiUrl: 'http://localhost:2019' } },
+  ],
+  projects: [
+    {
+      name: 'Nextcloud',
+      logoUrl: null,
+      domainName: null,
+      composeContent: 'services:\n  nextcloud:\n    image: nextcloud\n',
+      exposureEnabled: true,
+      exposureProviderName: 'My Caddy',
+      exposureConfig: {},
+      isInfrastructure: false,
+    },
+  ],
+};
+
+describe('POST /import', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('returns 400 when body is missing version', async () => {
+    const db = makeSelectChain(MOCK_SETTINGS, MOCK_PROVIDERS, MOCK_PROJECTS);
+    const app = await buildApp(db);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/import',
+      payload: { notABackup: true },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error).toContain('Invalid backup');
+  });
+
+  it('returns 400 when version is not 1', async () => {
+    const db = makeSelectChain(MOCK_SETTINGS, MOCK_PROVIDERS, MOCK_PROJECTS);
+    const app = await buildApp(db);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/import',
+      payload: { ...VALID_BACKUP, version: 99 },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('returns 200 and deletes+inserts data on valid backup', async () => {
+    const deletedCalls: string[] = [];
+    const insertedCalls: string[] = [];
+
+    const db = {
+      delete: vi.fn().mockImplementation(() => {
+        deletedCalls.push('delete');
+        return { where: vi.fn().mockResolvedValue([]) };
+      }),
+      insert: vi.fn().mockImplementation(() => {
+        insertedCalls.push('insert');
+        return {
+          values: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([{ id: 'new-provider-1', name: 'My Caddy' }]),
+          }),
+        };
+      }),
+      update: vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
+      }),
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([MOCK_SETTINGS]) }),
+      }),
+    };
+
+    const app = await buildApp(db as any);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/import',
+      payload: VALID_BACKUP,
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ success: true });
+    expect(db.delete).toHaveBeenCalledTimes(2); // projects + providers
+    expect(db.insert).toHaveBeenCalled();
+  });
+});

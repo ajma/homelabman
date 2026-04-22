@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { settingsSchema, onboardingSchema, exposureProviderSchema } from '../../shared/schemas.js';
 import { getDatabase } from '../db/index.js';
 import { settings, exposureProviders, projects } from '../db/schema.js';
@@ -9,6 +10,32 @@ import { ExposureProviderRegistry } from '../services/exposure/provider-registry
 export async function settingsRoutes(app: FastifyInstance) {
   // All routes require authentication
   app.addHook('preHandler', authenticate);
+
+  const backupProjectSchema = z.object({
+    name: z.string().min(1),
+    logoUrl: z.string().nullable().optional(),
+    domainName: z.string().nullable().optional(),
+    composeContent: z.string(),
+    exposureEnabled: z.boolean().optional().default(false),
+    exposureProviderName: z.string().nullable().optional(),
+    exposureConfig: z.record(z.any()).optional().default({}),
+    isInfrastructure: z.boolean().optional().default(false),
+  });
+
+  const backupSchema = z.object({
+    version: z.literal(1),
+    exportedAt: z.string(),
+    settings: z.object({
+      defaultExposureProviderName: z.string().nullable().optional(),
+    }),
+    providers: z.array(z.object({
+      providerType: z.string(),
+      name: z.string(),
+      enabled: z.boolean().optional().default(true),
+      configuration: z.record(z.any()),
+    })),
+    projects: z.array(backupProjectSchema).optional().default([]),
+  });
 
   // GET / - Get settings
   app.get('/', async (request) => {
@@ -287,5 +314,74 @@ export async function settingsRoutes(app: FastifyInstance) {
     reply.header('Content-Disposition', `attachment; filename="homelabman-backup-${date}.json"`);
     reply.header('Content-Type', 'application/json');
     return backup;
+  });
+
+  // POST /import - Restore all user data from backup (full replace)
+  app.post('/import', async (request, reply) => {
+    const parsed = backupSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'Invalid backup file', details: parsed.error.flatten() });
+    }
+
+    const db = getDatabase();
+    const { id: userId } = request.user as { id: string; username: string };
+    const { settings: backupSettings, providers: backupProviders, projects: backupProjects } = parsed.data;
+
+    // Delete existing data (projects first — they reference providers)
+    await db.delete(projects).where(eq(projects.userId, userId));
+    await db.delete(exposureProviders).where(eq(exposureProviders.userId, userId));
+
+    // Insert providers, collecting name → new ID map
+    const nameToId = new Map<string, string>();
+    for (const provider of backupProviders) {
+      const [created] = await db
+        .insert(exposureProviders)
+        .values({
+          userId,
+          providerType: provider.providerType,
+          name: provider.name,
+          enabled: provider.enabled,
+          configuration: JSON.stringify(provider.configuration),
+        })
+        .returning();
+      nameToId.set(provider.name, created.id);
+    }
+
+    // Slug helper — same logic as project.service.ts
+    function slugify(name: string): string {
+      return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    // Insert projects, remapping exposureProviderName → new ID
+    for (const project of backupProjects) {
+      const exposureProviderId = project.exposureProviderName
+        ? (nameToId.get(project.exposureProviderName) ?? null)
+        : null;
+
+      await db.insert(projects).values({
+        userId,
+        name: project.name,
+        slug: `${slugify(project.name)}-${Math.random().toString(36).slice(2, 8)}`,
+        logoUrl: project.logoUrl ?? null,
+        domainName: project.domainName ?? null,
+        composeContent: project.composeContent,
+        exposureEnabled: project.exposureEnabled,
+        exposureProviderId,
+        exposureConfig: JSON.stringify(project.exposureConfig ?? {}),
+        isInfrastructure: project.isInfrastructure,
+      });
+    }
+
+    // Resolve default provider name → new ID and update settings
+    const defaultProviderId = backupSettings.defaultExposureProviderName
+      ? (nameToId.get(backupSettings.defaultExposureProviderName) ?? null)
+      : null;
+
+    await db
+      .update(settings)
+      .set({ defaultExposureProviderId: defaultProviderId, updatedAt: Date.now() })
+      .where(eq(settings.userId, userId));
+
+    return { success: true };
   });
 }
