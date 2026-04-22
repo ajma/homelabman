@@ -87,6 +87,274 @@ function Section({
   );
 }
 
+// ─── setup check display ─────────────────────────────────────────────────────
+
+interface SetupCheck {
+  name: string;
+  passed: boolean;
+  message: string;
+  resolution?: string;
+}
+
+interface ProviderSetupResult {
+  allPassed: boolean;
+  checks: SetupCheck[];
+}
+
+function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
+  return (
+    <div className="mt-3 space-y-2">
+      {result.checks.map((check) => (
+        <div key={check.name} className="flex gap-3">
+          <span className={`mt-px shrink-0 text-[13px] font-medium ${check.passed ? 'text-[#4ade80]' : 'text-[rgba(248,113,113,0.85)]'}`}>
+            {check.passed ? '✓' : '✗'}
+          </span>
+          <div>
+            <span className="text-[13px] text-[rgba(255,255,255,0.75)]">{check.name}</span>
+            <span className="text-[13px] text-[rgba(255,255,255,0.35)]"> — {check.message}</span>
+            {!check.passed && check.resolution && (
+              <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">Fix: {check.resolution}</p>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── provider type toggle ─────────────────────────────────────────────────────
+
+function ProviderTypeToggle({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: 'caddy' | 'cloudflare';
+  onChange: (t: 'caddy' | 'cloudflare') => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className={`inline-flex rounded-xl border border-white/[0.15] p-0.5 ${disabled ? 'opacity-50' : ''}`}>
+      {(['caddy', 'cloudflare'] as const).map((type) => (
+        <button
+          key={type}
+          type="button"
+          disabled={disabled}
+          onClick={() => !disabled && onChange(type)}
+          className={`rounded-[10px] px-4 py-1.5 text-[13px] font-medium capitalize transition-colors ${
+            value === type
+              ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
+              : 'text-[rgba(255,255,255,0.38)] hover:text-[rgba(255,255,255,0.65)]'
+          }`}
+        >
+          {type}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── provider form ────────────────────────────────────────────────────────────
+
+function ProviderForm({
+  provider,
+  formRef,
+  onSubmit,
+  onDirty,
+}: {
+  provider?: ExposureProviderConfig;
+  formRef: React.RefObject<HTMLFormElement | null>;
+  onSubmit: (data: ExposureProviderInput) => void;
+  onDirty: () => void;
+}) {
+  const [providerType, setProviderType] = useState<'caddy' | 'cloudflare'>(
+    (provider?.providerType as 'caddy' | 'cloudflare') ?? 'caddy',
+  );
+  const [isPresaving, setIsPresaving] = useState(false);
+
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ExposureProviderInput>({
+    resolver: zodResolver(exposureProviderSchema),
+    defaultValues: {
+      providerType: (provider?.providerType as 'caddy' | 'cloudflare') ?? 'caddy',
+      name: provider?.name ?? '',
+      enabled: provider?.enabled ?? true,
+      configuration: provider?.configuration ?? {},
+    },
+  });
+
+  const currentConfig = watch('configuration');
+
+  const [cfFormValue, setCfFormValue] = useState<CloudflareProviderFormValue>({
+    apiToken: (provider?.configuration as any)?.apiToken ?? '',
+    accountId: (provider?.configuration as any)?.accountId ?? '',
+    tunnelId: (provider?.configuration as any)?.tunnelId ?? '__new__',
+    tunnelName: '',
+    deployContainer: true,
+  });
+
+  const handleTypeChange = (type: 'caddy' | 'cloudflare') => {
+    setProviderType(type);
+    setValue('providerType', type);
+    setValue('configuration', type === 'caddy' ? { apiUrl: 'http://localhost:2019' } : {});
+  };
+
+  const handleFormSubmit = handleSubmit(async (data) => {
+    if (providerType === 'cloudflare') {
+      if (!cfFormValue.apiToken || !cfFormValue.accountId) {
+        toast.error('Connect your token and select an account before saving');
+        return;
+      }
+      if (cfFormValue.tunnelId === '__new__' && !cfFormValue.tunnelName.trim()) {
+        toast.error('Enter a tunnel name');
+        return;
+      }
+      setIsPresaving(true);
+      try {
+        const { tunnelId, tunnelToken } = await resolveCloudflareBeforeSave(cfFormValue);
+        if (cfFormValue.deployContainer && tunnelToken) await deployCloudflaredProject(tunnelToken);
+        onSubmit({ ...data, configuration: { apiToken: cfFormValue.apiToken, accountId: cfFormValue.accountId, tunnelId } });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to create tunnel');
+      } finally {
+        setIsPresaving(false);
+      }
+      return;
+    }
+    onSubmit(data);
+  });
+
+  return (
+    <form ref={formRef} onSubmit={handleFormSubmit} onChange={onDirty} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Type</label>
+        <div>
+          <ProviderTypeToggle value={providerType} onChange={handleTypeChange} disabled={!!provider} />
+        </div>
+        {!!provider && (
+          <p className="text-[12px] text-[rgba(255,255,255,0.28)]">Provider type cannot be changed after creation.</p>
+        )}
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Name</label>
+        <input type="text" placeholder="e.g. My Caddy Server" className={inputCls} {...register('name')} />
+        {errors.name && <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.name.message}</p>}
+      </div>
+
+      {providerType === 'caddy' && (
+        <div className="space-y-1.5">
+          <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">API URL</label>
+          <input
+            type="text"
+            placeholder="http://localhost:2019"
+            className={inputCls}
+            value={(currentConfig as Record<string, string>).apiUrl ?? ''}
+            onChange={(e) => { setValue('configuration', { apiUrl: e.target.value }); onDirty(); }}
+          />
+        </div>
+      )}
+
+      {providerType === 'cloudflare' && (
+        <CloudflareProviderForm value={cfFormValue} onChange={setCfFormValue} />
+      )}
+
+      {/* Hidden submit used by modal footer Save button via formRef.current.requestSubmit() */}
+      <button type="submit" className="hidden" disabled={isPresaving} aria-hidden="true" />
+    </form>
+  );
+}
+
+// ─── provider modal ───────────────────────────────────────────────────────────
+
+function ProviderModal({
+  provider,
+  onClose,
+  onSave,
+  isPending,
+}: {
+  provider?: ExposureProviderConfig;
+  onClose: () => void;
+  onSave: (data: ExposureProviderInput) => void;
+  isPending: boolean;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const isDirtyRef = useRef(false);
+
+  useEffect(() => {
+    dialogRef.current?.showModal();
+    return () => dialogRef.current?.close();
+  }, []);
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+    if (e.target !== dialogRef.current) return;
+    if (isDirtyRef.current && !window.confirm('Discard unsaved changes?')) return;
+    onClose();
+  };
+
+  const handleCancel = () => {
+    if (isDirtyRef.current && !window.confirm('Discard unsaved changes?')) return;
+    onClose();
+  };
+
+  return (
+    <dialog
+      ref={dialogRef}
+      onClick={handleBackdropClick}
+      onCancel={(e) => {
+        e.preventDefault();
+        handleCancel();
+      }}
+      className="m-auto w-full max-w-lg rounded-2xl border border-white/[0.10] bg-[#0a1020] p-0 shadow-2xl backdrop:bg-black/60"
+    >
+      <div className="flex flex-col" style={{ maxHeight: '90vh' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-4 shrink-0">
+          <h3 className="text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">
+            {provider ? 'Edit Provider' : 'Add Provider'}
+          </h3>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.65)]"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto px-6 py-5 flex-1">
+          <ProviderForm
+            provider={provider}
+            formRef={formRef}
+            onSubmit={(data) => { isDirtyRef.current = false; onSave(data); }}
+            onDirty={() => { isDirtyRef.current = true; }}
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 border-t border-white/[0.08] px-6 py-4 shrink-0">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="rounded-xl px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => formRef.current?.requestSubmit()}
+            className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+          >
+            {isPending ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
 // ─── account section ─────────────────────────────────────────────────────────
 
 function AccountSection() {
