@@ -4,10 +4,10 @@
 
 ## Features
 
-- **Docker Compose Management** — Create, deploy, and manage compose stacks
+- **Docker Compose Management** — Create, deploy, and manage compose stacks from a browser-based YAML editor
 - **Flexible Exposure** — Caddy, Cloudflare Tunnels, or custom providers
-- **Real-time Monitoring** — Container stats, uptime, and update detection
-- **Version Control** — Snapshot and restore compose configurations
+- **Adopt Existing Stacks** — Import unmanaged Docker Compose stacks already running on the host
+- **Real-time Monitoring** — Container stats, uptime, and image update detection
 - **Responsive UI** — Optimized for desktop and mobile
 - **Extensible** — Plugin-based exposure provider system
 
@@ -35,6 +35,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - homelabman-data:/data
     environment:
+      DATABASE_PATH: /data/homelabman.db
       JWT_SECRET: ${JWT_SECRET}
     restart: unless-stopped
 
@@ -63,11 +64,11 @@ Then open http://localhost:3000 in your browser.
 
 ## Technology Stack
 
-- **Frontend**: React 18, TypeScript, Vite, shadcn/ui, TailwindCSS
+- **Frontend**: React 18, TypeScript, Vite, Radix UI, TailwindCSS
 - **Backend**: Node.js, Fastify, TypeScript
-- **Database**: SQLite with better-sqlite3
+- **Database**: SQLite via libSQL + Drizzle ORM
 - **Docker**: dockerode for Docker API integration
-- **Real-time**: Socket.io for live container stats
+- **Real-time**: WebSockets via @fastify/websocket
 
 ## Development
 

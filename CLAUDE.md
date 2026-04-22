@@ -10,9 +10,12 @@ pnpm build        # vite build → dist/web/ && tsup → dist/server/
 pnpm preview      # Run production build: node dist/server/index.js
 pnpm test         # vitest (all tests)
 pnpm test -- --run src/server/services/__tests__/cloudflare-setup.test.ts  # Single test file
+pnpm test:e2e     # Playwright e2e tests (starts its own server on port 3001)
+pnpm test:e2e:ui  # Playwright e2e tests with interactive UI
 pnpm lint         # eslint src/
 pnpm db:generate  # drizzle-kit generate (creates SQL migration from schema changes)
 pnpm db:migrate   # drizzle-kit migrate (applies pending migrations)
+pnpm db:reset     # delete local DB, regenerate and re-migrate (dev only)
 ```
 
 Package manager is **pnpm**. Do not use npm or yarn.
@@ -52,11 +55,15 @@ The provider system is the core extensibility mechanism:
 
 To add a new provider: implement `ExposureProvider` extending `BaseProvider`, register in `index.ts`.
 
+### Adopt Stacks
+
+`POST /api/projects/adopt` detects unmanaged Docker Compose stacks running on the host (containers with `com.docker.compose.project` label but no `homelabman.managed` label) and imports them as projects. `GET /api/projects/adoptable` returns the current list. The adopt service (`src/server/services/adopt.service.ts`) handles slug conflict detection and restores metadata from homelabman Docker labels (`homelabman.logo_url`, etc.) if present.
+
 ### Frontend
 
 **API client** (`src/web/lib/api.ts`) — Thin `fetch` wrapper. Requests go to `/api` (Vite proxies to `:3000` in dev). Cookie-based auth with `credentials: 'include'`. Errors throw `ApiError(status, message)`. Methods: `api.get/post/put/delete<T>()`.
 
-**Data fetching** — TanStack Query v5 wraps all `api.*` calls in hooks (`src/web/hooks/`). Query keys: `['projects']`, `['projects', id]`, `['updates', projectId]`. QueryClient: `retry: 1`, `refetchOnWindowFocus: false`.
+**Data fetching** — TanStack Query v5 wraps all `api.*` calls in hooks (`src/web/hooks/`). Common query keys: `['projects']`, `['projects', id]`, `['projects', 'adoptable']`, `['templates']`, `['templates', id]`, `['updates', projectId]`, `['stats', projectId, range]`, `['uptime', projectId]`, `['auth', 'status']`. QueryClient: `retry: 1`, `refetchOnWindowFocus: false`.
 
 **Routing** — React Router v6, `BrowserRouter`. `ProtectedRoute` in `App.tsx` redirects unauthenticated users to `/login` or `/onboarding` based on `useAuthStatus`. All management pages are nested under the protected route.
 
