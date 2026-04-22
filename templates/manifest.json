@@ -5,8 +5,7 @@
     "description": "Media server that organizes and streams your movies, TV, and music to any device.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/plex.png",
     "categories": [
-      "media",
-      "streaming"
+      "media"
     ]
   },
   {
@@ -15,8 +14,7 @@
     "description": "Free, open-source media server with no subscriptions or tracking. Stream anywhere.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png",
     "categories": [
-      "media",
-      "streaming"
+      "media"
     ]
   },
   {
@@ -25,8 +23,7 @@
     "description": "Personal media server with a Netflix-like interface, live TV support, and multi-device streaming.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/emby.png",
     "categories": [
-      "media",
-      "streaming"
+      "media"
     ]
   },
   {
@@ -45,8 +42,7 @@
     "description": "Request management for Jellyfin and Plex. Users request media through a polished interface.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyseerr.png",
     "categories": [
-      "media",
-      "requests"
+      "media"
     ]
   },
   {
@@ -64,8 +60,7 @@
     "description": "Self-hosted digital library for manga, comics, and books with a clean reading interface.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/kavita.png",
     "categories": [
-      "media",
-      "books"
+      "media"
     ]
   },
   {
@@ -74,8 +69,7 @@
     "description": "Self-hosted audiobook and podcast server with cross-device progress tracking and podcast feeds.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/audiobookshelf.png",
     "categories": [
-      "media",
-      "audio"
+      "media"
     ]
   },
   {
@@ -84,8 +78,7 @@
     "description": "Cloud-native reverse proxy that auto-discovers Docker services and provisions SSL certificates automatically.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/traefik.png",
     "categories": [
-      "networking",
-      "proxy"
+      "networking"
     ]
   },
   {
@@ -94,8 +87,7 @@
     "description": "GUI for managing Nginx reverse proxies and Let's Encrypt SSL certs without editing config files.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/nginx-proxy-manager.png",
     "categories": [
-      "networking",
-      "proxy"
+      "networking"
     ]
   },
   {
@@ -104,8 +96,7 @@
     "description": "Web server and reverse proxy with automatic HTTPS via Let's Encrypt built in by default.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/caddy.png",
     "categories": [
-      "networking",
-      "proxy"
+      "networking"
     ]
   },
   {
@@ -114,8 +105,7 @@
     "description": "Network-level DNS ad blocker that removes ads on every device without client-side software.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/pi-hole.png",
     "categories": [
-      "networking",
-      "dns"
+      "networking"
     ]
   },
   {
@@ -124,8 +114,7 @@
     "description": "Network-wide DNS ad blocker with parental controls, per-device stats, and encrypted DNS support.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png",
     "categories": [
-      "networking",
-      "dns"
+      "networking"
     ]
   },
   {
@@ -134,8 +123,7 @@
     "description": "WireGuard VPN server with a built-in web UI for managing clients and QR code setup.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/wireguard.png",
     "categories": [
-      "networking",
-      "vpn"
+      "networking"
     ]
   },
   {
@@ -144,8 +132,7 @@
     "description": "Zero-config mesh VPN built on WireGuard. Connects devices securely without port forwarding.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/tailscale.png",
     "categories": [
-      "networking",
-      "vpn"
+      "networking"
     ]
   },
   {
@@ -154,8 +141,7 @@
     "description": "Cloudflare Tunnel daemon that exposes local services to the internet without opening firewall ports.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/cloudflare.png",
     "categories": [
-      "networking",
-      "tunnel"
+      "networking"
     ]
   },
   {
@@ -164,8 +150,7 @@
     "description": "Open-source analytics platform for building dashboards from metrics, logs, and dozens of data sources.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/grafana.png",
     "categories": [
-      "monitoring",
-      "dashboards"
+      "monitoring"
     ]
   },
   {
@@ -201,8 +186,7 @@
     "description": "Grafana's log aggregation system. Stores and queries logs efficiently using labels, not full-text indexing.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/loki.png",
     "categories": [
-      "monitoring",
-      "logging"
+      "monitoring"
     ]
   },
   {
@@ -211,8 +195,7 @@
     "description": "Lightweight real-time Docker log viewer accessible from the browser. No storage required.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/dozzle.png",
     "categories": [
-      "monitoring",
-      "logging"
+      "monitoring"
     ]
   },
   {
@@ -249,8 +232,7 @@
     "description": "The leading open-source home automation platform. Local control, no cloud dependency or subscriptions.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/home-assistant.png",
     "categories": [
-      "automation",
-      "iot"
+      "automation"
     ]
   },
   {
@@ -268,8 +250,7 @@
     "description": "Lightweight MQTT broker. The real-time messaging backbone for IoT and home automation setups.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/mosquitto.png",
     "categories": [
-      "automation",
-      "iot"
+      "automation"
     ]
   },
   {
@@ -278,8 +259,7 @@
     "description": "Bridges Zigbee devices to MQTT without proprietary hubs. Supports hundreds of devices locally.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/zigbee2mqtt.png",
     "categories": [
-      "automation",
-      "iot"
+      "automation"
     ]
   },
   {
@@ -324,8 +304,7 @@
     "description": "Automatically updates running Docker containers when new image versions are published.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/watchtower.png",
     "categories": [
-      "management",
-      "docker"
+      "management"
     ]
   },
   {
@@ -334,8 +313,7 @@
     "description": "Lightweight Bitwarden-compatible password manager server written in Rust. Works with all Bitwarden clients.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/vaultwarden.png",
     "categories": [
-      "security",
-      "passwords"
+      "security"
     ]
   },
   {
@@ -344,8 +322,7 @@
     "description": "Open-source SSO and two-factor authentication gateway for securing your self-hosted services.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/authelia.png",
     "categories": [
-      "security",
-      "auth"
+      "security"
     ]
   },
   {
@@ -354,8 +331,7 @@
     "description": "Flexible identity provider with SSO, MFA, and support for SAML, OAuth2, OIDC, and LDAP.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/authentik.png",
     "categories": [
-      "security",
-      "auth"
+      "security"
     ]
   },
   {
@@ -364,8 +340,7 @@
     "description": "Enterprise identity and access management with SSO, OAuth2, OIDC, and LDAP federation.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/keycloak.png",
     "categories": [
-      "security",
-      "auth"
+      "security"
     ]
   },
   {
@@ -384,8 +359,7 @@
     "description": "High-performance self-hosted photo backup with facial recognition and automatic album creation.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/immich.png",
     "categories": [
-      "storage",
-      "photos"
+      "storage"
     ]
   },
   {
@@ -403,8 +377,7 @@
     "description": "Peer-to-peer file sync between devices with no central server or cloud service required.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/syncthing.png",
     "categories": [
-      "storage",
-      "sync"
+      "storage"
     ]
   },
   {
@@ -413,8 +386,7 @@
     "description": "Encrypted, incremental backup client supporting cloud storage, FTP, and local destinations.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/duplicati.png",
     "categories": [
-      "storage",
-      "backup"
+      "storage"
     ]
   },
   {
@@ -423,8 +395,7 @@
     "description": "Lightweight self-hosted Git service with repos, issues, pull requests, and Actions CI/CD.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/gitea.png",
     "categories": [
-      "development",
-      "git"
+      "development"
     ]
   },
   {
@@ -433,8 +404,7 @@
     "description": "Community-governed Gitea fork focused on software freedom and open development. Fully API-compatible.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/forgejo.png",
     "categories": [
-      "development",
-      "git"
+      "development"
     ]
   },
   {
@@ -443,8 +413,7 @@
     "description": "Self-hosted CI/CD platform where pipelines run in isolated Docker containers, defined as YAML.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/drone.png",
     "categories": [
-      "development",
-      "ci-cd"
+      "development"
     ]
   },
   {
@@ -453,8 +422,7 @@
     "description": "Document management system that OCRs scanned papers into a searchable, auto-tagged digital archive.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/paperless-ngx.png",
     "categories": [
-      "productivity",
-      "documents"
+      "productivity"
     ]
   },
   {
@@ -472,8 +440,16 @@
     "description": "Self-hosted recipe manager and meal planner. Import recipes from any URL and generate shopping lists.",
     "logoUrl": "https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/mealie.png",
     "categories": [
-      "productivity",
-      "food"
+      "productivity"
+    ]
+  },
+  {
+    "id": "hello-world",
+    "name": "Hello World",
+    "description": "Minimal HTTP server that responds with a hello-world page. Useful for testing.",
+    "logoUrl": "",
+    "categories": [
+      "example"
     ]
   }
 ]

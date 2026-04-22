@@ -1,0 +1,7 @@
+services:
+  hello-world:
+    container_name: hello-world
+    image: crccheck/hello-world
+    ports:
+      - "8000:8000"
+    restart: always
