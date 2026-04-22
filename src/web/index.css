@@ -48,6 +48,12 @@
   }
 }
 
+/* Sonner toast icon colors */
+[data-sonner-toast][data-type='success'] [data-icon] { color: #4ade80; }
+[data-sonner-toast][data-type='error']   [data-icon] { color: #f87171; }
+[data-sonner-toast][data-type='warning'] [data-icon] { color: #facc15; }
+[data-sonner-toast][data-type='info']    [data-icon] { color: #7db0ff; }
+
 @layer base {
   * {
     @apply border-border;

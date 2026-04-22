@@ -32,7 +32,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export function App() {
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          classNames: {
+            toast:
+              'group flex items-center gap-3 rounded-2xl border border-white/[0.12] bg-[rgba(18,26,42,0.96)] px-4 py-3 text-[13px] text-[rgba(255,255,255,0.85)] shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md',
+            title: 'font-medium text-[rgba(255,255,255,0.88)]',
+            description: 'text-[rgba(255,255,255,0.50)]',
+            success: 'border-[rgba(74,222,128,0.25)] bg-[rgba(18,26,42,0.96)]',
+            error: 'border-[rgba(248,113,113,0.25)] bg-[rgba(18,26,42,0.96)]',
+            warning: 'border-[rgba(250,204,21,0.25)] bg-[rgba(18,26,42,0.96)]',
+            icon: 'text-[rgba(255,255,255,0.50)]',
+            closeButton:
+              'rounded-lg border border-white/[0.10] bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.40)] hover:bg-[rgba(255,255,255,0.10)] hover:text-[rgba(255,255,255,0.70)]',
+          },
+        }}
+      />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
