@@ -16,7 +16,24 @@ export class MockDockerService {
   async listManagedContainers() {
     return this.containers.filter((c) => c.Labels?.['homelabman.managed'] === 'true');
   }
-  async getContainer(_id: string) { return {} as Dockerode.ContainerInspectInfo; }
+  async listComposeContainers() {
+    return this.containers.filter(
+      (c) => c.Labels?.['com.docker.compose.project'] !== undefined,
+    );
+  }
+  async getContainer(id: string) {
+    const c = this.containers.find((c) => c.Id === id);
+    if (!c) return {} as Dockerode.ContainerInspectInfo;
+    return {
+      Name: c.Names?.[0] ?? `/${id}`,
+      Config: { Image: c.Image, Env: [] },
+      HostConfig: {
+        PortBindings: {},
+        Binds: [],
+        RestartPolicy: { Name: 'no', MaximumRetryCount: 0 },
+      },
+    } as unknown as Dockerode.ContainerInspectInfo;
+  }
   async startContainer(_id: string) {}
   async stopContainer(_id: string) {}
   async restartContainer(_id: string) {}

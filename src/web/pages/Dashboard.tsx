@@ -5,8 +5,10 @@ import { Plus, Server } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProjects } from '../hooks/useProjects';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useAdoptable } from '../hooks/useAdoptable';
 import type { ContainerStats } from '../hooks/useStats';
 import { ProjectCard } from '../components/ProjectCard';
+import { AdoptableStacksList } from '../components/AdoptableStacksList';
 import { api } from '../lib/api';
 
 export function Dashboard() {
@@ -14,6 +16,7 @@ export function Dashboard() {
   const queryClient = useQueryClient();
   const { data: projects, isLoading } = useProjects();
   const ws = useWebSocket();
+  const { data: adoptable } = useAdoptable();
   const [projectStats, setProjectStats] = useState<Map<string, ContainerStats[]>>(new Map());
 
   useEffect(() => {
@@ -106,13 +109,22 @@ export function Dashboard() {
           <p className="mt-1 text-[13px] text-[rgba(255,255,255,0.35)]">
             Create a project to start self-hosting.
           </p>
-          <button
-            onClick={() => navigate('/projects/new')}
-            className="mt-5 flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Create Project
-          </button>
+          {adoptable && adoptable.length > 0 ? (
+            <div className="mt-6 w-full max-w-sm text-left">
+              <p className="mb-3 text-[13px] font-medium text-[rgba(255,255,255,0.55)]">
+                Or adopt an existing stack:
+              </p>
+              <AdoptableStacksList stacks={adoptable} />
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate('/projects/new')}
+              className="mt-5 flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Create Project
+            </button>
+          )}
         </div>
       )}
 

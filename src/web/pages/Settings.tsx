@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Plus, CheckCircle2 } from 'lucide-react';
+import { Plus, CheckCircle2, XCircle, FileCheck, X } from 'lucide-react';
 import {
   exposureProviderSchema,
   changePasswordSchema,
@@ -37,21 +37,23 @@ function AnchorNav({ active }: { active: SectionId }) {
   };
 
   return (
-    <nav className="flex items-center gap-6 pb-4 mb-8 border-b border-white/[0.06] sticky top-0 bg-[#04070f] z-10 pt-1">
+    <nav className="flex items-stretch gap-6 px-6 mb-8 border-b border-white/[0.10] sticky top-0 bg-[#04070f] z-10">
       {SECTIONS.map((s) => (
         <button
           key={s.id}
           onClick={() => scrollTo(s.id)}
-          className={`relative text-[13px] font-medium pb-1 transition-colors ${
+          className={`relative flex items-center py-3 text-[13px] font-medium transition-colors ${
             active === s.id
               ? 'text-[rgba(255,255,255,0.92)]'
               : 'text-[rgba(255,255,255,0.35)] hover:text-[rgba(255,255,255,0.65)]'
           }`}
         >
           {s.label}
-          {active === s.id && (
-            <span className="absolute bottom-0 left-0 right-0 h-px bg-[rgba(100,158,245,0.7)]" />
-          )}
+          <span
+            className={`absolute bottom-0 left-0 right-0 h-0.5 bg-[#649ef5] transition-opacity duration-200 ${
+              active === s.id ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
         </button>
       ))}
     </nav>
@@ -76,7 +78,7 @@ function Section({
   return (
     <>
       {!first && <div className="h-px bg-white/[0.06] my-16" />}
-      <section id={id} className="scroll-mt-12">
+      <section id={id} className="scroll-mt-14">
         <div className="mb-6">
           <h2 className="text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">{heading}</h2>
           <p className="mt-0.5 text-[13px] text-[rgba(255,255,255,0.38)]">{description}</p>
@@ -106,9 +108,11 @@ function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
     <div className="mt-3 space-y-2">
       {result.checks.map((check) => (
         <div key={check.name} className="flex gap-3">
-          <span className={`mt-px shrink-0 text-[13px] font-medium ${check.passed ? 'text-[#4ade80]' : 'text-[rgba(248,113,113,0.85)]'}`}>
-            {check.passed ? '✓' : '✗'}
-          </span>
+          {check.passed ? (
+            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4ade80]" />
+          ) : (
+            <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgba(248,113,113,0.85)]" />
+          )}
           <div>
             <span className="text-[13px] text-[rgba(255,255,255,0.75)]">{check.name}</span>
             <span className="text-[13px] text-[rgba(255,255,255,0.35)]"> — {check.message}</span>
@@ -135,7 +139,7 @@ function ProviderTypeToggle({
 }) {
   return (
     <div className={`inline-flex rounded-xl border border-white/[0.15] p-0.5 ${disabled ? 'opacity-50' : ''}`}>
-      {(['caddy', 'cloudflare'] as const).map((type) => (
+      {(['cloudflare', 'caddy'] as const).map((type) => (
         <button
           key={type}
           type="button"
@@ -167,16 +171,17 @@ function ProviderForm({
   onSubmit: (data: ExposureProviderInput) => void;
   onDirty: () => void;
 }) {
-  const [providerType, setProviderType] = useState<'caddy' | 'cloudflare'>(
-    (provider?.providerType as 'caddy' | 'cloudflare') ?? 'caddy',
-  );
+  const defaultType: 'caddy' | 'cloudflare' = (provider?.providerType as 'caddy' | 'cloudflare') ?? 'cloudflare';
+  const typeLabel = (t: 'caddy' | 'cloudflare') => t === 'cloudflare' ? 'Cloudflare' : 'Caddy';
+
+  const [providerType, setProviderType] = useState<'caddy' | 'cloudflare'>(defaultType);
   const [isPresaving, setIsPresaving] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ExposureProviderInput>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch, getValues } = useForm<ExposureProviderInput>({
     resolver: zodResolver(exposureProviderSchema),
     defaultValues: {
-      providerType: (provider?.providerType as 'caddy' | 'cloudflare') ?? 'caddy',
-      name: provider?.name ?? '',
+      providerType: defaultType,
+      name: provider?.name ?? typeLabel(defaultType),
       enabled: provider?.enabled ?? true,
       configuration: provider?.configuration ?? {},
     },
@@ -193,6 +198,9 @@ function ProviderForm({
   });
 
   const handleTypeChange = (type: 'caddy' | 'cloudflare') => {
+    if (!provider && getValues('name') === typeLabel(providerType)) {
+      setValue('name', typeLabel(type));
+    }
     setProviderType(type);
     setValue('providerType', type);
     setValue('configuration', type === 'caddy' ? { apiUrl: 'http://localhost:2019' } : {});
@@ -654,14 +662,37 @@ function DataSection() {
         <p className="text-[13px] font-medium text-[rgba(255,255,255,0.6)] mb-3">Restore from backup</p>
 
         <div
-          onClick={() => { if (!isImporting) fileInputRef.current?.click(); }}
-          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/[0.15] px-6 py-8 transition-colors hover:border-white/[0.25] hover:bg-[rgba(255,255,255,0.02)]"
+          onClick={() => { if (!isImporting && !importFile) fileInputRef.current?.click(); }}
+          className={`rounded-2xl border border-dashed px-6 transition-colors ${
+            importFile
+              ? 'flex items-center py-5 cursor-default border-white/[0.20]'
+              : 'flex flex-col items-center justify-center gap-2 py-8 cursor-pointer border-white/[0.15] hover:border-white/[0.25] hover:bg-[rgba(255,255,255,0.02)]'
+          }`}
         >
-          <p className="text-[13px] text-[rgba(255,255,255,0.45)]">
-            {importFile ? importFile.name : 'Choose a backup file'}
-          </p>
-          {!importFile && (
-            <p className="text-[12px] text-[rgba(255,255,255,0.25)]">Click to browse</p>
+          {importFile ? (
+            <>
+              <FileCheck className="h-4 w-4 shrink-0 text-[#4ade80]" />
+              <span className="ml-3 flex-1 truncate text-[13px] text-[rgba(255,255,255,0.75)]">{importFile.name}</span>
+              <button
+                type="button"
+                disabled={isImporting}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setImportFile(null);
+                  setImportConfirming(false);
+                  setImportError(null);
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="ml-3 shrink-0 text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-[13px] text-[rgba(255,255,255,0.45)]">Choose a backup file</p>
+              <p className="text-[12px] text-[rgba(255,255,255,0.25)]">Click to browse</p>
+            </>
           )}
         </div>
         <input
@@ -776,12 +807,14 @@ function AccountSection() {
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-1">
-        {successVisible && (
-          <span className="flex items-center gap-1.5 text-[13px] text-[#4ade80]">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Password updated.
-          </span>
-        )}
+        <span
+          className={`flex items-center gap-1.5 text-[13px] text-[#4ade80] transition-opacity duration-300 ${
+            successVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Password updated.
+        </span>
         <button
           type="submit"
           disabled={isSubmitting || changePassword.isPending}
@@ -815,10 +848,13 @@ export function Settings() {
   }, []);
 
   return (
-    <div className="min-h-full p-6 max-w-2xl">
-      <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)] mb-6">Settings</h1>
+    <div className="min-h-full max-w-2xl">
+      <div className="px-6 pt-6">
+        <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)] mb-6">Settings</h1>
+      </div>
       <AnchorNav active={activeSection} />
 
+      <div className="px-6 pb-6">
       <Section id="account" heading="Account" description="Change your login credentials." first>
         <AccountSection />
       </Section>
@@ -830,6 +866,7 @@ export function Settings() {
       <Section id="data" heading="Data" description="Back up or restore your HomelabMan configuration — projects, providers, and settings.">
         <DataSection />
       </Section>
+      </div>
     </div>
   );
 }

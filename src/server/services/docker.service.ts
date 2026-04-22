@@ -38,6 +38,14 @@ export class DockerService {
     });
   }
 
+  /** List containers that belong to any Docker Compose stack */
+  async listComposeContainers(): Promise<Dockerode.ContainerInfo[]> {
+    return this.docker.listContainers({
+      all: true,
+      filters: { label: ['com.docker.compose.project'] },
+    });
+  }
+
   /** Get container by ID */
   async getContainer(containerId: string): Promise<Dockerode.ContainerInspectInfo> {
     const container = this.docker.getContainer(containerId);

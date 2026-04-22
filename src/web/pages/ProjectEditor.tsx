@@ -11,8 +11,10 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { load } from 'js-yaml';
 import { ComposeEditor } from '../components/ComposeEditor';
 import { TemplatePickerModal } from '../components/TemplatePickerModal';
+import { AdoptStacksDialog } from '../components/AdoptStacksDialog';
 import { api } from '../lib/api';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useAdoptable } from '../hooks/useAdoptable';
 import type { ProjectTemplate } from '@shared/types';
 
 interface ExposureProviderOption {
@@ -278,6 +280,10 @@ export function ProjectEditor() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEditing = !!id;
+  const isCreate = !id;
+
+  const { data: adoptable } = useAdoptable();
+  const [adoptDialogOpen, setAdoptDialogOpen] = useState(false);
 
   const { data: project, isLoading } = useProject(id ?? '');
   const createMutation = useCreateProject();
@@ -590,6 +596,22 @@ export function ProjectEditor() {
 
   return (
     <div className="flex min-h-full flex-col">
+
+      {isCreate && adoptable && adoptable.length > 0 && (
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-[rgba(100,158,245,0.18)] bg-[rgba(100,158,245,0.04)] px-4 py-3">
+          <p className="text-[13px] text-[rgba(255,255,255,0.65)]">
+            {adoptable.length} existing stack{adoptable.length > 1 ? 's' : ''} can be adopted
+          </p>
+          <button
+            type="button"
+            onClick={() => setAdoptDialogOpen(true)}
+            className="rounded-xl bg-[#649ef5] px-3 py-1 text-[12px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+          >
+            Adopt
+          </button>
+        </div>
+      )}
+      <AdoptStacksDialog open={adoptDialogOpen} onClose={() => setAdoptDialogOpen(false)} />
 
       {/* ── Sticky header ── */}
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/[0.08] bg-[rgba(9,14,25,0.92)] px-6 py-3 backdrop-blur-md">

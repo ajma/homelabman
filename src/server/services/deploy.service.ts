@@ -29,7 +29,7 @@ export class DeployService {
   }
 
   /** Inject homelabman labels into compose YAML so containers are trackable */
-  private injectLabels(composeContent: string, projectId: string): string {
+  private injectLabels(composeContent: string, projectId: string, logoUrl?: string | null): string {
     const parsed = yaml.load(composeContent) as any;
     if (parsed?.services) {
       for (const serviceName of Object.keys(parsed.services)) {
@@ -42,9 +42,15 @@ export class DeployService {
             `homelabman.managed=true`,
             `homelabman.project_id=${projectId}`,
           );
+          if (logoUrl) {
+            parsed.services[serviceName].labels.push(`homelabman.logo_url=${logoUrl}`);
+          }
         } else {
           parsed.services[serviceName].labels['homelabman.managed'] = 'true';
           parsed.services[serviceName].labels['homelabman.project_id'] = projectId;
+          if (logoUrl) {
+            parsed.services[serviceName].labels['homelabman.logo_url'] = logoUrl;
+          }
         }
       }
     }
@@ -67,7 +73,7 @@ export class DeployService {
     try {
       // Inject labels
       listener?.onProgress('labels', 'Injecting management labels...');
-      const labeledCompose = this.injectLabels(project.composeContent, projectId);
+      const labeledCompose = this.injectLabels(project.composeContent, projectId, project.logoUrl);
 
       // Write compose file
       const projectDir = path.join(COMPOSE_DIR, project.slug);

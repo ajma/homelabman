@@ -4,6 +4,7 @@ import { authenticate } from '../middleware/auth.middleware.js';
 import { ProjectService } from '../services/project.service.js';
 import { ComposeValidatorService } from '../services/compose-validator.service.js';
 import { DeployService } from '../services/deploy.service.js';
+import { AdoptService } from '../services/adopt.service.js';
 import { DockerService } from '../services/docker.service.js';
 import type { ExposureService } from '../services/exposure/exposure.service.js';
 import type { UpdateCheckerService } from '../services/update-checker.service.js';
@@ -43,8 +44,31 @@ export async function projectRoutes(app: FastifyInstance) {
     }
   }
 
+  let adoptService: AdoptService | null = null;
+  if (dockerService) {
+    adoptService = new AdoptService(dockerService);
+  }
+
   // All project routes require authentication
   app.addHook('preHandler', authenticate);
+
+  // GET /adoptable — list compose stacks not managed by homelabman
+  app.get('/adoptable', async (request, reply) => {
+    if (!adoptService) return reply.code(503).send({ error: 'Docker not available' });
+    const userId = (request.user as any).id;
+    return adoptService.listAdoptable(userId);
+  });
+
+  // POST /adopt — adopt selected stacks into homelabman projects
+  app.post<{ Body: { stackNames: string[] } }>('/adopt', async (request, reply) => {
+    if (!adoptService) return reply.code(503).send({ error: 'Docker not available' });
+    const { stackNames } = request.body;
+    if (!Array.isArray(stackNames) || stackNames.length === 0) {
+      return reply.code(400).send({ error: 'stackNames must be a non-empty array' });
+    }
+    const userId = (request.user as any).id;
+    return adoptService.adoptStacks(stackNames, userId);
+  });
 
   const TEMPLATES_DIR = path.join(process.cwd(), 'templates');
 

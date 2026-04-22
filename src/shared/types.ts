@@ -86,3 +86,14 @@ export interface ProjectTemplateSummary {
 export interface ProjectTemplate extends ProjectTemplateSummary {
   composeContent: string;
 }
+
+export interface AdoptableStack {
+  stackName: string;
+  workingDir: string;
+  containerCount: number;
+}
+
+export interface AdoptResult {
+  adopted: string[];
+  failed: { stackName: string; reason: string }[];
+}
