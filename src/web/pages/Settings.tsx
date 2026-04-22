@@ -565,6 +565,154 @@ function ProvidersSection() {
   );
 }
 
+// ─── data section ────────────────────────────────────────────────────────────
+
+function DataSection() {
+  const [isExporting, setIsExporting] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importConfirming, setImportConfirming] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const res = await fetch('/api/settings/export', { credentials: 'include' });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const date = new Date().toISOString().slice(0, 10);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `homelabman-backup-${date}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Export failed. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImportFile(file);
+    setImportConfirming(false);
+    setImportError(null);
+  };
+
+  const handleImport = async () => {
+    if (!importFile) return;
+    setIsImporting(true);
+    setImportError(null);
+    try {
+      const text = await importFile.text();
+      const json = JSON.parse(text);
+      const res = await fetch('/api/settings/import', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(json),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Import failed');
+      }
+      toast.success('Backup restored.');
+      window.location.reload();
+    } catch (err: any) {
+      if (err.message?.includes('Invalid backup') || err.message?.includes('JSON')) {
+        setImportError("That file doesn't look like a valid HomelabMan backup.");
+      } else {
+        setImportError(err.message || 'Import failed. Please try again.');
+      }
+    } finally {
+      setIsImporting(false);
+      setImportConfirming(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Export */}
+      <div>
+        <p className="text-[13px] font-medium text-[rgba(255,255,255,0.6)] mb-3">Export backup</p>
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="rounded-xl border border-white/[0.15] px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.75)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.9)] disabled:opacity-40"
+        >
+          {isExporting ? 'Exporting…' : 'Export backup'}
+        </button>
+      </div>
+
+      {/* Import */}
+      <div>
+        <p className="text-[13px] font-medium text-[rgba(255,255,255,0.6)] mb-3">Restore from backup</p>
+
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/[0.15] px-6 py-8 transition-colors hover:border-white/[0.25] hover:bg-[rgba(255,255,255,0.02)]"
+        >
+          <p className="text-[13px] text-[rgba(255,255,255,0.45)]">
+            {importFile ? importFile.name : 'Choose a backup file'}
+          </p>
+          {!importFile && (
+            <p className="text-[12px] text-[rgba(255,255,255,0.25)]">Click to browse</p>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        {/* Warning + import button */}
+        {importFile && !importConfirming && (
+          <div className="mt-4 space-y-3">
+            <p className="text-[13px] text-[rgba(248,113,113,0.85)]">
+              This will replace all projects, providers, and settings. Your current data cannot be recovered.
+            </p>
+            <button
+              onClick={() => setImportConfirming(true)}
+              className="rounded-xl border border-[rgba(248,113,113,0.36)] px-4 py-1.5 text-[13px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)]"
+            >
+              Import
+            </button>
+          </div>
+        )}
+
+        {/* Two-step confirmation */}
+        {importConfirming && (
+          <div className="mt-4 flex items-center gap-3">
+            <span className="text-[13px] text-[rgba(255,255,255,0.65)]">Replace everything?</span>
+            <button
+              onClick={() => setImportConfirming(false)}
+              className="text-[13px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleImport}
+              disabled={isImporting}
+              className="rounded-xl border border-[rgba(248,113,113,0.36)] px-4 py-1.5 text-[13px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+            >
+              {isImporting ? 'Importing…' : 'Yes, replace it'}
+            </button>
+          </div>
+        )}
+
+        {importError && (
+          <p className="mt-3 text-[13px] text-[rgba(248,113,113,0.85)]">{importError}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── account section ─────────────────────────────────────────────────────────
 
 function AccountSection() {
@@ -678,7 +826,7 @@ export function Settings() {
       </Section>
 
       <Section id="data" heading="Data" description="Back up or restore your HomelabMan configuration — projects, providers, and settings.">
-        <p className="text-[13px] text-[rgba(255,255,255,0.38)]">Data section — coming soon.</p>
+        <DataSection />
       </Section>
     </div>
   );
