@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { registerSchema, loginSchema } from '../../shared/schemas.js';
 import { getDatabase } from '../db/index.js';
 import { users, settings } from '../db/schema.js';
@@ -114,6 +115,41 @@ export async function authRoutes(app: FastifyInstance) {
   // GET /me - Get current user (protected)
   app.get('/me', { preHandler: [authenticate] }, async (request) => {
     return request.user;
+  });
+
+  const changePasswordServerSchema = z.object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(8).max(128),
+  });
+
+  // PUT /password - Change password (protected)
+  app.put('/password', { preHandler: [authenticate] }, async (request, reply) => {
+    const parsed = changePasswordServerSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'Invalid input', details: parsed.error.flatten() });
+    }
+
+    const db = getDatabase();
+    const { id: userId } = request.user as { id: string; username: string };
+    const { currentPassword, newPassword } = parsed.data;
+
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      return reply.code(401).send({ error: 'Current password is incorrect' });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, BCRYPT_COST);
+    await db
+      .update(users)
+      .set({ passwordHash: newHash, updatedAt: Date.now() })
+      .where(eq(users.id, userId));
+
+    return { success: true };
   });
 
   // GET /status - Auth status check (unauthenticated)
