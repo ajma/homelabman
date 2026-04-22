@@ -73,4 +73,19 @@ describe('PUT /password', () => {
     expect(res.json()).toEqual({ success: true });
     expect(bcrypt.hash).toHaveBeenCalledWith('newpassword123', 12);
   });
+
+  it('returns 404 when user is not found in the database', async () => {
+    const { getDatabase } = await import('../../db/index.js');
+    vi.mocked(getDatabase).mockReturnValue({
+      select: () => ({ from: () => ({ where: () => Promise.resolve([]) }) }),
+    } as any);
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/password',
+      payload: { currentPassword: 'oldpass123', newPassword: 'newpassword123' },
+    });
+    expect(res.statusCode).toBe(404);
+  });
 });

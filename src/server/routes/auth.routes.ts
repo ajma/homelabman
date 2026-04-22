@@ -117,6 +117,7 @@ export async function authRoutes(app: FastifyInstance) {
     return request.user;
   });
 
+  // confirmPassword is a UI-only field; server only validates currentPassword and newPassword
   const changePasswordServerSchema = z.object({
     currentPassword: z.string().min(1),
     newPassword: z.string().min(8).max(128),
