@@ -42,7 +42,7 @@ const stateStyles: Record<string, { bg: string; text: string; border: string; do
 function StateBadge({ state }: { state: string }) {
   const s = stateStyles[state] ?? { bg: 'bg-[rgba(255,255,255,0.04)]', text: 'text-[rgba(255,255,255,0.38)]', border: 'border-[rgba(255,255,255,0.10)]', dot: 'bg-[rgba(255,255,255,0.20)]' };
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[12px] font-medium capitalize ${s.bg} ${s.text} ${s.border}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${s.bg} ${s.text} ${s.border}`}>
       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.dot}`} />
       {state}
     </span>
@@ -73,7 +73,7 @@ export function Containers() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)]">Containers</h1>
+      <h1 className="text-xl font-semibold text-[rgba(255,255,255,0.92)]">Containers</h1>
 
       {!isLoading && containers && containers.length > 0 && (
         <div className="relative">
@@ -98,13 +98,13 @@ export function Containers() {
       {!isLoading && containers?.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(100,158,245,0.15)] bg-[rgba(100,158,245,0.02)] p-12 text-center">
           <Box className="mb-3 h-8 w-8 text-[#649ef5] opacity-40" />
-          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">No containers running.</p>
+          <p className="text-sm text-[rgba(255,255,255,0.35)]">No containers running.</p>
         </div>
       )}
 
       {!isLoading && containers && containers.length > 0 && filtered?.length === 0 && (
         <div className="flex items-center justify-center rounded-2xl border border-dashed border-white/[0.10] p-8 text-center">
-          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">No containers match your filter.</p>
+          <p className="text-sm text-[rgba(255,255,255,0.35)]">No containers match your filter.</p>
         </div>
       )}
 
@@ -113,12 +113,12 @@ export function Containers() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.08] bg-[rgba(255,255,255,0.02)]">
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Name</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Image</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Container ID</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">State</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Status</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Ports</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Name</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Image</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Container ID</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">State</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Status</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Ports</th>
               </tr>
             </thead>
             <tbody>
@@ -127,14 +127,14 @@ export function Containers() {
                   key={container.Id}
                   className={`border-b border-white/[0.06] last:border-0 ${container.State === 'running' ? 'bg-[rgba(74,222,128,0.015)]' : ''}`}
                 >
-                  <td className="px-4 py-3 text-[13px] font-medium text-[rgba(255,255,255,0.85)]">{containerName(container.Names)}</td>
-                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.45)]">{container.Image}</td>
-                  <td className="px-4 py-3 font-mono text-[12px] text-[rgba(255,255,255,0.35)]">{shortId(container.Id)}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-[rgba(255,255,255,0.85)]">{containerName(container.Names)}</td>
+                  <td className="px-4 py-3 text-sm text-[rgba(255,255,255,0.45)]">{container.Image}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[rgba(255,255,255,0.35)]">{shortId(container.Id)}</td>
                   <td className="px-4 py-3">
                     <StateBadge state={container.State} />
                   </td>
-                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.38)]">{container.Status}</td>
-                  <td className="px-4 py-3 font-mono text-[12px] text-[rgba(255,255,255,0.45)]">{formatPorts(container.Ports)}</td>
+                  <td className="px-4 py-3 text-sm text-[rgba(255,255,255,0.38)]">{container.Status}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[rgba(255,255,255,0.45)]">{formatPorts(container.Ports)}</td>
                 </tr>
               ))}
             </tbody>

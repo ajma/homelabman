@@ -86,11 +86,11 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
             />
           )}
           <div className="min-w-0">
-            <h3 className="truncate text-[14px] font-semibold text-[rgba(255,255,255,0.88)]">
+            <h3 className="truncate text-md font-semibold text-[rgba(255,255,255,0.88)]">
               {project.name}
             </h3>
             {project.domainName && (
-              <div className="mt-0.5 flex items-center gap-1 text-[12px] text-[rgba(255,255,255,0.35)]">
+              <div className="mt-0.5 flex items-center gap-1 text-xs text-[rgba(255,255,255,0.35)]">
                 <Globe className="h-3 w-3 shrink-0" />
                 <a
                   href={`https://${project.domainName}`}
@@ -108,21 +108,21 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
 
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           {hasUpdates && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(250,204,21,0.25)] bg-[rgba(250,204,21,0.10)] px-2 py-0.5 text-[10px] font-medium text-[#facc15]">
+            <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(250,204,21,0.25)] bg-[rgba(250,204,21,0.10)] px-2 py-0.5 text-2xs font-medium text-[#facc15]">
               <ArrowUpCircle className="h-3 w-3" />
               Update
             </span>
           )}
           <div className="flex items-center gap-1.5">
             <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-            <span className={`text-[12px] ${status.labelColor}`}>{status.label}</span>
+            <span className={`text-xs ${status.labelColor}`}>{status.label}</span>
           </div>
         </div>
       </div>
 
       {/* Stats / Last deployed */}
       <div className="px-4 pb-3">
-        <p className="text-[12px] text-[rgba(255,255,255,0.35)]">
+        <p className="text-xs text-[rgba(255,255,255,0.35)]">
           Last deployed: {timeAgo(project.deployedAt)}
         </p>
 
@@ -134,7 +134,7 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
           return (
             <div className="mt-2 space-y-1.5">
               <div>
-                <div className="mb-0.5 flex justify-between text-[11px] text-[rgba(255,255,255,0.35)]">
+                <div className="mb-0.5 flex justify-between text-2xs text-[rgba(255,255,255,0.35)]">
                   <span>CPU</span>
                   <span>{totalCpu.toFixed(1)}%</span>
                 </div>
@@ -145,7 +145,7 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
                   />
                 </div>
               </div>
-              <div className="flex justify-between text-[11px] text-[rgba(255,255,255,0.35)]">
+              <div className="flex justify-between text-2xs text-[rgba(255,255,255,0.35)]">
                 <span>Memory</span>
                 <span>{formatBytes(totalMem)} / {formatBytes(totalMemLimit)}</span>
               </div>
@@ -159,7 +159,7 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
         {(project.status === 'stopped' || project.status === 'error') && (
           <button
             onClick={(e) => { e.stopPropagation(); onDeploy(project.id); }}
-            className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] font-medium text-[#4ade80] transition-colors hover:bg-[rgba(74,222,128,0.08)]"
+            className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-[#4ade80] transition-colors hover:bg-[rgba(74,222,128,0.08)]"
           >
             <Play className="h-3 w-3" />
             Deploy
@@ -169,14 +169,14 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
           <>
             <button
               onClick={(e) => { e.stopPropagation(); onStop(project.id); }}
-              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.45)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.75)]"
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.45)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.75)]"
             >
               <Square className="h-3 w-3" />
               Stop
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onRestart(project.id); }}
-              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.45)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.75)]"
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.45)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.75)]"
             >
               <RotateCcw className="h-3 w-3" />
               Restart
@@ -184,11 +184,11 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
           </>
         )}
         {project.status === 'starting' && (
-          <span className="text-[12px] text-[#facc15]">Deploying…</span>
+          <span className="text-xs text-[#facc15]">Deploying…</span>
         )}
         <button
           onClick={(e) => { e.stopPropagation(); navigate(`/projects/${project.id}`); }}
-          className="ml-auto flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.65)]"
+          className="ml-auto flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.65)]"
         >
           <ExternalLink className="h-3 w-3" />
           Open

@@ -35,7 +35,7 @@ export function AdoptStacksDialog({ open, onClose }: Props) {
       }}
     >
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold text-[rgba(255,255,255,0.92)]">Adopt stacks</h2>
+        <h2 className="text-lg font-semibold text-[rgba(255,255,255,0.92)]">Adopt stacks</h2>
         <button
           onClick={onClose}
           className="text-[rgba(255,255,255,0.38)] hover:text-[rgba(255,255,255,0.65)]"
@@ -44,13 +44,13 @@ export function AdoptStacksDialog({ open, onClose }: Props) {
         </button>
       </div>
       {isLoading && (
-        <p className="text-[13px] text-[rgba(255,255,255,0.38)]">Loading…</p>
+        <p className="text-sm text-[rgba(255,255,255,0.38)]">Loading…</p>
       )}
       {stacks && stacks.length > 0 && (
         <AdoptableStacksList stacks={stacks} onAdopted={onClose} />
       )}
       {stacks && stacks.length === 0 && (
-        <p className="text-[13px] text-[rgba(255,255,255,0.38)]">No adoptable stacks found.</p>
+        <p className="text-sm text-[rgba(255,255,255,0.38)]">No adoptable stacks found.</p>
       )}
     </dialog>
   );

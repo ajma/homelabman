@@ -47,7 +47,7 @@ const darkTheme = EditorView.theme({
   '.cm-scroller': { overflow: 'auto' },
   '.cm-content': {
     fontFamily: 'monospace',
-    fontSize: '13px',
+    fontSize: '0.8125rem',
     padding: '12px 16px',
     color: 'rgba(255,255,255,0.88)',
     caretColor: '#649ef5',
@@ -119,7 +119,7 @@ export function ComposeEditor({ value, onChange, errors = [], warnings = [], min
       {errors.length > 0 && (
         <div className="space-y-1">
           {errors.map((err, i) => (
-            <p key={i} className="text-[12px] text-[rgba(254,202,202,0.85)]">
+            <p key={i} className="text-xs text-[rgba(254,202,202,0.85)]">
               {err.line ? `Line ${err.line}: ` : ''}{err.message}
             </p>
           ))}
@@ -128,7 +128,7 @@ export function ComposeEditor({ value, onChange, errors = [], warnings = [], min
       {warnings.length > 0 && (
         <div className="space-y-1">
           {warnings.map((warn, i) => (
-            <p key={i} className="text-[12px] text-[#fcd34d]">
+            <p key={i} className="text-xs text-[#fcd34d]">
               {warn.line ? `Line ${warn.line}: ` : ''}{warn.message}
             </p>
           ))}

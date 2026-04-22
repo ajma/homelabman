@@ -65,6 +65,7 @@ select option {
     @apply border-border;
   }
   html {
+    font-size: 16px;
     background-color: #04070f;
   }
   body {

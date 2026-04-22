@@ -4,6 +4,15 @@ export default {
   darkMode: 'class',
   content: ['./src/web/**/*.{ts,tsx}'],
   theme: {
+    fontSize: {
+      '2xs': ['0.75rem',   { lineHeight: '1.125rem' }],
+      'xs':  ['0.8125rem', { lineHeight: '1.25rem' }],
+      'sm':  ['0.875rem',  { lineHeight: '1.375rem' }],
+      'md':  ['0.9375rem', { lineHeight: '1.5rem' }],
+      'lg':  ['1.125rem',  { lineHeight: '1.75rem' }],
+      'xl':  ['1.375rem',  { lineHeight: '2rem' }],
+      '2xl': ['1.6875rem', { lineHeight: '2.25rem' }],
+    },
     extend: {
       fontFamily: {
         rubik: ['Rubik', 'sans-serif'],

@@ -36,12 +36,12 @@ export function Login() {
     <div className="flex h-screen items-center justify-center">
       <div className="w-full max-w-sm rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.03)] p-8">
         <div className="mb-6 text-center">
-          <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)]">HomelabMan</h1>
-          <p className="mt-1 text-[13px] text-[rgba(255,255,255,0.38)]">Sign in to manage your homelab</p>
+          <h1 className="text-xl font-semibold text-[rgba(255,255,255,0.92)]">HomelabMan</h1>
+          <p className="mt-1 text-sm text-[rgba(255,255,255,0.38)]">Sign in to manage your homelab</p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="username" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+            <label htmlFor="username" className="text-xs font-medium text-[rgba(255,255,255,0.6)]">
               Username
             </label>
             <Input
@@ -50,11 +50,11 @@ export function Login() {
               {...register('username')}
             />
             {errors.username && (
-              <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.username.message}</p>
+              <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.username.message}</p>
             )}
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="password" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+            <label htmlFor="password" className="text-xs font-medium text-[rgba(255,255,255,0.6)]">
               Password
             </label>
             <Input
@@ -64,13 +64,13 @@ export function Login() {
               {...register('password')}
             />
             {errors.password && (
-              <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.password.message}</p>
+              <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.password.message}</p>
             )}
           </div>
           <button
             type="submit"
             disabled={login.isPending}
-            className="mt-2 w-full rounded-xl bg-[#649ef5] py-2 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+            className="mt-2 w-full rounded-xl bg-[#649ef5] py-2 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
           >
             {login.isPending ? 'Signing in…' : 'Sign In'}
           </button>

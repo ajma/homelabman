@@ -57,7 +57,7 @@ function useDeleteNetwork() {
 const DRIVER_OPTIONS = ['bridge', 'overlay', 'macvlan', 'host', 'none'] as const;
 
 const selectCls =
-  'h-10 w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 pr-9 text-[14px] text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]';
+  'h-10 w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 pr-9 text-md text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]';
 
 const driverStyles: Record<string, string> = {
   bridge: 'bg-[rgba(100,158,245,0.10)] text-[#7db0ff] border-[rgba(100,158,245,0.25)]',
@@ -70,7 +70,7 @@ const driverStyles: Record<string, string> = {
 function DriverBadge({ driver }: { driver: string }) {
   const cls = driverStyles[driver] ?? 'bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.55)] border-[rgba(255,255,255,0.14)]';
   return (
-    <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-[12px] font-medium ${cls}`}>
+    <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-medium ${cls}`}>
       {driver}
     </span>
   );
@@ -80,7 +80,7 @@ function ContainerCountBadge({ network }: { network: DockerNetwork }) {
   const count = network.Containers ? Object.keys(network.Containers).length : 0;
   if (count === 0) return <span className="text-[rgba(255,255,255,0.28)]">0</span>;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-2 py-0.5 text-[12px] font-medium text-[#4ade80]">
+    <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(74,222,128,0.25)] bg-[rgba(74,222,128,0.08)] px-2 py-0.5 text-xs font-medium text-[#4ade80]">
       {count}
     </span>
   );
@@ -117,11 +117,11 @@ export function Networks() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)]">Networks</h1>
+        <h1 className="text-xl font-semibold text-[rgba(255,255,255,0.92)]">Networks</h1>
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-3 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+            className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-3 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
           >
             <Plus className="h-3.5 w-3.5" />
             Create Network
@@ -132,10 +132,10 @@ export function Networks() {
       {/* Create Network Form */}
       {isCreating && (
         <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.02)] p-5">
-          <h3 className="mb-4 text-[14px] font-medium text-[rgba(255,255,255,0.85)]">Create Network</h3>
+          <h3 className="mb-4 text-md font-medium text-[rgba(255,255,255,0.85)]">Create Network</h3>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="network-name" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+              <label htmlFor="network-name" className="text-xs font-medium text-[rgba(255,255,255,0.6)]">
                 Network Name
               </label>
               <Input
@@ -147,7 +147,7 @@ export function Networks() {
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="network-driver" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+              <label htmlFor="network-driver" className="text-xs font-medium text-[rgba(255,255,255,0.6)]">
                 Driver
               </label>
               <div className="relative">
@@ -168,14 +168,14 @@ export function Networks() {
           <div className="mt-4 flex justify-end gap-2">
             <button
               onClick={() => { setIsCreating(false); setNewName(''); setNewDriver('bridge'); }}
-              className="rounded-xl px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+              className="rounded-xl px-4 py-1.5 text-sm text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
             >
               Cancel
             </button>
             <button
               onClick={handleCreate}
               disabled={!newName.trim() || createNetwork.isPending}
-              className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+              className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
             >
               {createNetwork.isPending ? 'Creating…' : 'Create'}
             </button>
@@ -196,7 +196,7 @@ export function Networks() {
       {!isLoading && networks?.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(100,158,245,0.15)] bg-[rgba(100,158,245,0.02)] p-12 text-center">
           <Network className="mb-3 h-8 w-8 text-[#649ef5] opacity-40" />
-          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">No networks found.</p>
+          <p className="text-sm text-[rgba(255,255,255,0.35)]">No networks found.</p>
         </div>
       )}
 
@@ -206,23 +206,23 @@ export function Networks() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.08] bg-[rgba(255,255,255,0.02)]">
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Name</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Driver</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Scope</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Created</th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Containers</th>
-                <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Actions</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Name</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Driver</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Scope</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Created</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Containers</th>
+                <th className="px-4 py-3 text-right text-2xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Actions</th>
               </tr>
             </thead>
             <tbody>
               {networks.map((network) => (
                 <tr key={network.Id} className="border-b border-white/[0.06] last:border-0">
-                  <td className="px-4 py-3 text-[13px] font-medium text-[rgba(255,255,255,0.85)]">{network.Name}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-[rgba(255,255,255,0.85)]">{network.Name}</td>
                   <td className="px-4 py-3">
                     <DriverBadge driver={network.Driver} />
                   </td>
-                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.45)]">{network.Scope}</td>
-                  <td className="px-4 py-3 text-[13px] text-[rgba(255,255,255,0.45)]">{formatDate(network.Created)}</td>
+                  <td className="px-4 py-3 text-sm text-[rgba(255,255,255,0.45)]">{network.Scope}</td>
+                  <td className="px-4 py-3 text-sm text-[rgba(255,255,255,0.45)]">{formatDate(network.Created)}</td>
                   <td className="px-4 py-3">
                     <ContainerCountBadge network={network} />
                   </td>
@@ -231,14 +231,14 @@ export function Networks() {
                       <div className="inline-flex items-center gap-2">
                         <button
                           onClick={() => setDeletingId(null)}
-                          className="text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+                          className="text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => { deleteNetwork.mutate(network.Id); setDeletingId(null); }}
                           disabled={deleteNetwork.isPending}
-                          className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2 py-0.5 text-[12px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+                          className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
                         >
                           Delete
                         </button>

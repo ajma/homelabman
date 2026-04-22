@@ -29,7 +29,7 @@ function NavItem({
       end={item.to === '/'}
       onClick={onNavClick}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-lg px-3 py-[8px] text-[13px] transition-all ${
+        `flex items-center gap-3 rounded-lg px-3 py-[8px] text-sm transition-all ${
           isActive
             ? 'bg-[rgba(100,158,245,0.12)] text-[#7db0ff] shadow-[inset_2px_0_0_#649ef5]'
             : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
@@ -58,7 +58,7 @@ function SidebarContent({
   return (
     <>
       <div className="flex h-14 items-center border-b border-[rgba(255,255,255,0.12)] px-4">
-        <h1 className="text-[15px] font-semibold text-[#7db0ff]">HomelabMan</h1>
+        <h1 className="text-lg font-semibold text-[#7db0ff]">HomelabMan</h1>
       </div>
       <nav className="flex-1 overflow-y-auto p-2">
         <div className="space-y-0.5">
@@ -69,7 +69,7 @@ function SidebarContent({
           {/* Docker expandable section */}
           <button
             onClick={() => setDockerOpen(!dockerOpen)}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-[8px] text-[13px] transition-all ${
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-[8px] text-sm transition-all ${
               isDockerRoute
                 ? 'text-[#7db0ff]'
                 : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
@@ -96,7 +96,7 @@ function SidebarContent({
         {/* Projects section */}
         <div className="mt-4">
           <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgba(255,255,255,0.28)]">
+            <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-[rgba(255,255,255,0.28)]">
               Projects
             </span>
             <NavLink
@@ -122,7 +122,7 @@ function SidebarContent({
                   to={`/projects/${project.id}`}
                   onClick={onNavClick}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-[8px] text-[13px] transition-all ${
+                    `flex items-center gap-3 rounded-lg px-3 py-[8px] text-sm transition-all ${
                       isActive
                         ? 'bg-[rgba(100,158,245,0.12)] text-[#7db0ff] shadow-[inset_2px_0_0_#649ef5]'
                         : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
@@ -138,7 +138,7 @@ function SidebarContent({
               );
             })}
             {projects?.length === 0 && (
-              <p className="px-3 py-2 text-[12px] text-[rgba(255,255,255,0.28)]">No projects yet</p>
+              <p className="px-3 py-2 text-xs text-[rgba(255,255,255,0.28)]">No projects yet</p>
             )}
           </div>
         </div>
@@ -147,7 +147,7 @@ function SidebarContent({
         <NavItem item={{ to: '/settings', icon: Settings, label: 'Settings' }} onNavClick={onNavClick} />
         <button
           onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-[8px] text-[13px] text-[rgba(255,255,255,0.35)] transition-all hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.6)]"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-[8px] text-sm text-[rgba(255,255,255,0.35)] transition-all hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.6)]"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           Logout
@@ -179,7 +179,7 @@ export function Layout() {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="ml-3 text-[15px] font-semibold text-[#7db0ff]">HomelabMan</h1>
+        <h1 className="ml-3 text-lg font-semibold text-[#7db0ff]">HomelabMan</h1>
       </header>
 
       {/* Mobile drawer overlay */}

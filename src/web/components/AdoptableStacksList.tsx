@@ -59,10 +59,10 @@ export function AdoptableStacksList({ stacks, onAdopted }: Props) {
               className="h-4 w-4 rounded border-white/20 accent-[#649ef5]"
             />
             <div className="flex flex-col">
-              <span className="text-[13px] font-medium text-[rgba(255,255,255,0.85)]">
+              <span className="text-sm font-medium text-[rgba(255,255,255,0.85)]">
                 {stack.stackName}
               </span>
-              <span className="text-[11px] text-[rgba(255,255,255,0.38)]">
+              <span className="text-2xs text-[rgba(255,255,255,0.38)]">
                 {stack.containerCount} container{stack.containerCount !== 1 ? 's' : ''}
                 {stack.workingDir ? ` · ${stack.workingDir}` : ''}
               </span>
@@ -73,7 +73,7 @@ export function AdoptableStacksList({ stacks, onAdopted }: Props) {
       <button
         onClick={() => adoptMutation.mutate([...selected])}
         disabled={selected.size === 0 || adoptMutation.isPending}
-        className="mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {adoptMutation.isPending ? 'Adopting…' : `Adopt selected (${selected.size})`}
       </button>

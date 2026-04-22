@@ -18,7 +18,7 @@ import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../com
 // ─── shared input class ──────────────────────────────────────────────────────
 
 const inputCls =
-  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-[14px] text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
+  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
 
 // ─── anchor sections ─────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ function AnchorNav({ active }: { active: SectionId }) {
         <button
           key={s.id}
           onClick={() => scrollTo(s.id)}
-          className={`relative flex items-center py-3 text-[13px] font-medium transition-colors ${
+          className={`relative flex items-center py-3 text-sm font-medium transition-colors ${
             active === s.id
               ? 'text-[rgba(255,255,255,0.92)]'
               : 'text-[rgba(255,255,255,0.35)] hover:text-[rgba(255,255,255,0.65)]'
@@ -80,8 +80,8 @@ function Section({
       {!first && <div className="h-px bg-white/[0.06] my-16" />}
       <section id={id} className="scroll-mt-14">
         <div className="mb-6">
-          <h2 className="text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">{heading}</h2>
-          <p className="mt-0.5 text-[13px] text-[rgba(255,255,255,0.38)]">{description}</p>
+          <h2 className="text-lg font-semibold text-[rgba(255,255,255,0.88)]">{heading}</h2>
+          <p className="mt-0.5 text-sm text-[rgba(255,255,255,0.38)]">{description}</p>
         </div>
         {children}
       </section>
@@ -114,10 +114,10 @@ function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
             <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgba(248,113,113,0.85)]" />
           )}
           <div>
-            <span className="text-[13px] text-[rgba(255,255,255,0.75)]">{check.name}</span>
-            <span className="text-[13px] text-[rgba(255,255,255,0.35)]"> — {check.message}</span>
+            <span className="text-sm text-[rgba(255,255,255,0.75)]">{check.name}</span>
+            <span className="text-sm text-[rgba(255,255,255,0.35)]"> — {check.message}</span>
             {!check.passed && check.resolution && (
-              <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">Fix: {check.resolution}</p>
+              <p className="mt-0.5 text-xs text-[rgba(255,255,255,0.38)]">Fix: {check.resolution}</p>
             )}
           </div>
         </div>
@@ -145,7 +145,7 @@ function ProviderTypeToggle({
           type="button"
           disabled={disabled}
           onClick={() => !disabled && onChange(type)}
-          className={`rounded-[10px] px-4 py-1.5 text-[13px] font-medium capitalize transition-colors ${
+          className={`rounded-[10px] px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
             value === type
               ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
               : 'text-[rgba(255,255,255,0.38)] hover:text-[rgba(255,255,255,0.65)]'
@@ -234,24 +234,24 @@ function ProviderForm({
   return (
     <form ref={formRef} onSubmit={handleFormSubmit} onChange={onDirty} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Type</label>
+        <label className="text-xs font-medium text-[rgba(255,255,255,0.6)]">Type</label>
         <div>
           <ProviderTypeToggle value={providerType} onChange={handleTypeChange} disabled={!!provider} />
         </div>
         {!!provider && (
-          <p className="text-[12px] text-[rgba(255,255,255,0.28)]">Provider type cannot be changed after creation.</p>
+          <p className="text-xs text-[rgba(255,255,255,0.28)]">Provider type cannot be changed after creation.</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Name</label>
+        <label className="text-xs font-medium text-[rgba(255,255,255,0.6)]">Name</label>
         <input type="text" placeholder="e.g. My Caddy Server" className={inputCls} {...register('name')} />
-        {errors.name && <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.name.message}</p>}
+        {errors.name && <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.name.message}</p>}
       </div>
 
       {providerType === 'caddy' && (
         <div className="space-y-1.5">
-          <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">API URL</label>
+          <label className="text-xs font-medium text-[rgba(255,255,255,0.6)]">API URL</label>
           <input
             type="text"
             placeholder="http://localhost:2019"
@@ -318,7 +318,7 @@ function ProviderModal({
       <div className="flex flex-col" style={{ maxHeight: '90vh' }}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-4 shrink-0">
-          <h3 className="text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">
+          <h3 className="text-lg font-semibold text-[rgba(255,255,255,0.88)]">
             {provider ? 'Edit Provider' : 'Add Provider'}
           </h3>
           <button
@@ -345,7 +345,7 @@ function ProviderModal({
           <button
             type="button"
             onClick={handleCancel}
-            className="rounded-xl px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+            className="rounded-xl px-4 py-1.5 text-sm text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
           >
             Cancel
           </button>
@@ -353,7 +353,7 @@ function ProviderModal({
             type="button"
             disabled={isPending}
             onClick={() => formRef.current?.requestSubmit()}
-            className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+            className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
           >
             {isPending ? 'Saving…' : 'Save'}
           </button>
@@ -454,7 +454,7 @@ function ProvidersSection() {
       <div className="flex items-center justify-end gap-4 mb-4">
         <button
           onClick={() => setModalState({ mode: 'add' })}
-          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-[13px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-sm text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
         >
           <Plus className="h-3.5 w-3.5" />
           Add Provider
@@ -462,10 +462,10 @@ function ProvidersSection() {
       </div>
 
       {providersQuery.isLoading ? (
-        <p className="text-[13px] text-[rgba(255,255,255,0.35)]">Loading providers…</p>
+        <p className="text-sm text-[rgba(255,255,255,0.35)]">Loading providers…</p>
       ) : providers.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/[0.10] px-6 py-10 text-center">
-          <p className="text-[13px] text-[rgba(255,255,255,0.35)]">
+          <p className="text-sm text-[rgba(255,255,255,0.35)]">
             No providers yet.{' '}
             <button onClick={() => setModalState({ mode: 'add' })} className="text-[#7db0ff] hover:underline">
               Add one
@@ -480,15 +480,15 @@ function ProvidersSection() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[14px] font-medium text-[rgba(255,255,255,0.85)]">{provider.name}</span>
+                    <span className="text-md font-medium text-[rgba(255,255,255,0.85)]">{provider.name}</span>
                     {settings?.defaultExposureProviderId === provider.id && (
-                      <span className="rounded-full bg-[rgba(100,158,245,0.12)] px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.12em] text-[#7db0ff]">Default</span>
+                      <span className="rounded-full bg-[rgba(100,158,245,0.12)] px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-[#7db0ff]">Default</span>
                     )}
                     {!provider.enabled && (
-                      <span className="rounded-full bg-[rgba(255,255,255,0.05)] px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(255,255,255,0.35)]">Disabled</span>
+                      <span className="rounded-full bg-[rgba(255,255,255,0.05)] px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-[rgba(255,255,255,0.35)]">Disabled</span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.35)]">
+                  <p className="mt-0.5 text-xs text-[rgba(255,255,255,0.35)]">
                     {provider.providerType === 'caddy' ? 'Caddy Reverse Proxy' : 'Cloudflare Tunnel'}
                   </p>
                 </div>
@@ -497,7 +497,7 @@ function ProvidersSection() {
                   {settings?.defaultExposureProviderId !== provider.id && (
                     <button
                       onClick={() => setDefaultProvider.mutate(provider.id)}
-                      className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+                      className="rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
                     >
                       Set default
                     </button>
@@ -505,29 +505,29 @@ function ProvidersSection() {
                   <button
                     onClick={() => runCheckSetup(provider)}
                     disabled={checkingSetup[provider.id]}
-                    className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
+                    className="rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
                   >
                     {checkingSetup[provider.id] ? 'Checking…' : 'Check setup'}
                   </button>
                   <button
                     onClick={() => setModalState({ mode: 'edit', provider })}
-                    className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+                    className="rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
                   >
                     Edit
                   </button>
                   {deletingProviderId === provider.id ? (
                     <div className="flex items-center gap-1.5 pl-1">
-                      <span className="text-[12px] text-[rgba(255,255,255,0.45)]">Delete?</span>
+                      <span className="text-xs text-[rgba(255,255,255,0.45)]">Delete?</span>
                       <button
                         onClick={() => setDeletingProviderId(null)}
-                        className="text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+                        className="text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={() => deleteProvider.mutate(provider.id)}
                         disabled={deleteProvider.isPending}
-                        className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2.5 py-0.5 text-[12px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+                        className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2.5 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
                       >
                         {deleteProvider.isPending ? 'Deleting…' : 'Confirm'}
                       </button>
@@ -535,7 +535,7 @@ function ProvidersSection() {
                   ) : (
                     <button
                       onClick={() => setDeletingProviderId(provider.id)}
-                      className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(248,113,113,0.75)]"
+                      className="rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(248,113,113,0.75)]"
                     >
                       Delete
                     </button>
@@ -551,7 +551,7 @@ function ProvidersSection() {
       {providers.length > 0 && settings?.defaultExposureProviderId && (
         <button
           onClick={() => setDefaultProvider.mutate(null)}
-          className="mt-3 text-[12px] text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(255,255,255,0.5)]"
+          className="mt-3 text-xs text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(255,255,255,0.5)]"
         >
           Clear default provider
         </button>
@@ -647,11 +647,11 @@ function DataSection() {
     <div className="space-y-8">
       {/* Export */}
       <div>
-        <p className="text-[13px] font-medium text-[rgba(255,255,255,0.6)] mb-3">Export backup</p>
+        <p className="text-sm font-medium text-[rgba(255,255,255,0.6)] mb-3">Export backup</p>
         <button
           onClick={handleExport}
           disabled={isExporting}
-          className="rounded-xl border border-white/[0.15] px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.75)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.9)] disabled:opacity-40"
+          className="rounded-xl border border-white/[0.15] px-4 py-1.5 text-sm text-[rgba(255,255,255,0.75)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.9)] disabled:opacity-40"
         >
           {isExporting ? 'Exporting…' : 'Export backup'}
         </button>
@@ -659,7 +659,7 @@ function DataSection() {
 
       {/* Import */}
       <div>
-        <p className="text-[13px] font-medium text-[rgba(255,255,255,0.6)] mb-3">Restore from backup</p>
+        <p className="text-sm font-medium text-[rgba(255,255,255,0.6)] mb-3">Restore from backup</p>
 
         <div
           onClick={() => { if (!isImporting && !importFile) fileInputRef.current?.click(); }}
@@ -672,7 +672,7 @@ function DataSection() {
           {importFile ? (
             <>
               <FileCheck className="h-4 w-4 shrink-0 text-[#4ade80]" />
-              <span className="ml-3 flex-1 truncate text-[13px] text-[rgba(255,255,255,0.75)]">{importFile.name}</span>
+              <span className="ml-3 flex-1 truncate text-sm text-[rgba(255,255,255,0.75)]">{importFile.name}</span>
               <button
                 type="button"
                 disabled={isImporting}
@@ -690,8 +690,8 @@ function DataSection() {
             </>
           ) : (
             <>
-              <p className="text-[13px] text-[rgba(255,255,255,0.45)]">Choose a backup file</p>
-              <p className="text-[12px] text-[rgba(255,255,255,0.25)]">Click to browse</p>
+              <p className="text-sm text-[rgba(255,255,255,0.45)]">Choose a backup file</p>
+              <p className="text-xs text-[rgba(255,255,255,0.25)]">Click to browse</p>
             </>
           )}
         </div>
@@ -706,12 +706,12 @@ function DataSection() {
         {/* Warning + import button */}
         {importFile && !importConfirming && (
           <div className="mt-4 space-y-3">
-            <p className="text-[13px] text-[rgba(248,113,113,0.85)]">
+            <p className="text-sm text-[rgba(248,113,113,0.85)]">
               This will replace all projects, providers, and settings. Your current data cannot be recovered.
             </p>
             <button
               onClick={() => setImportConfirming(true)}
-              className="rounded-xl border border-[rgba(248,113,113,0.36)] px-4 py-1.5 text-[13px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)]"
+              className="rounded-xl border border-[rgba(248,113,113,0.36)] px-4 py-1.5 text-sm text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)]"
             >
               Import
             </button>
@@ -721,17 +721,17 @@ function DataSection() {
         {/* Two-step confirmation */}
         {importConfirming && (
           <div className="mt-4 flex items-center gap-3">
-            <span className="text-[13px] text-[rgba(255,255,255,0.65)]">Replace everything?</span>
+            <span className="text-sm text-[rgba(255,255,255,0.65)]">Replace everything?</span>
             <button
               onClick={() => setImportConfirming(false)}
-              className="text-[13px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+              className="text-sm text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
             >
               Cancel
             </button>
             <button
               onClick={handleImport}
               disabled={isImporting}
-              className="rounded-xl border border-[rgba(248,113,113,0.36)] px-4 py-1.5 text-[13px] text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+              className="rounded-xl border border-[rgba(248,113,113,0.36)] px-4 py-1.5 text-sm text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
             >
               {isImporting ? 'Importing…' : 'Yes, replace it'}
             </button>
@@ -739,7 +739,7 @@ function DataSection() {
         )}
 
         {importError && (
-          <p className="mt-3 text-[13px] text-[rgba(248,113,113,0.85)]">{importError}</p>
+          <p className="mt-3 text-sm text-[rgba(248,113,113,0.85)]">{importError}</p>
         )}
       </div>
     </div>
@@ -783,32 +783,32 @@ function AccountSection() {
   return (
     <form onSubmit={handleSubmit((data) => changePassword.mutate(data))} className="space-y-4 max-w-sm">
       <div className="space-y-1.5">
-        <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Current password</label>
+        <label className="text-xs font-medium text-[rgba(255,255,255,0.6)]">Current password</label>
         <input type="password" autoComplete="current-password" className={inputCls} {...register('currentPassword')} />
         {errors.currentPassword && (
-          <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.currentPassword.message}</p>
+          <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.currentPassword.message}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">New password</label>
+        <label className="text-xs font-medium text-[rgba(255,255,255,0.6)]">New password</label>
         <input type="password" autoComplete="new-password" className={inputCls} {...register('newPassword')} />
         {errors.newPassword && (
-          <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.newPassword.message}</p>
+          <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.newPassword.message}</p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Confirm new password</label>
+        <label className="text-xs font-medium text-[rgba(255,255,255,0.6)]">Confirm new password</label>
         <input type="password" autoComplete="new-password" className={inputCls} {...register('confirmPassword')} />
         {errors.confirmPassword && (
-          <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.confirmPassword.message}</p>
+          <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.confirmPassword.message}</p>
         )}
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-1">
         <span
-          className={`flex items-center gap-1.5 text-[13px] text-[#4ade80] transition-opacity duration-300 ${
+          className={`flex items-center gap-1.5 text-sm text-[#4ade80] transition-opacity duration-300 ${
             successVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >
@@ -818,7 +818,7 @@ function AccountSection() {
         <button
           type="submit"
           disabled={isSubmitting || changePassword.isPending}
-          className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+          className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
         >
           {isSubmitting || changePassword.isPending ? 'Saving…' : 'Update password'}
         </button>
@@ -850,7 +850,7 @@ export function Settings() {
   return (
     <div className="min-h-full max-w-2xl">
       <div className="px-6 pt-6">
-        <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)] mb-6">Settings</h1>
+        <h1 className="text-xl font-semibold text-[rgba(255,255,255,0.92)] mb-6">Settings</h1>
       </div>
       <AnchorNav active={activeSection} />
 

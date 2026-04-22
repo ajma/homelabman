@@ -50,7 +50,7 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
       <div className="relative flex h-[80vh] w-full max-w-5xl flex-col rounded-2xl border border-white/[0.12] bg-[rgba(9,14,25,0.97)] shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-4">
-          <h2 className="text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">Choose a Template</h2>
+          <h2 className="text-lg font-semibold text-[rgba(255,255,255,0.88)]">Choose a Template</h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1.5 text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.65)]"
@@ -69,14 +69,14 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
               placeholder="Search templates…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] pl-10 pr-4 py-2 text-[14px] text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]"
+              className="flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] pl-10 pr-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]"
             />
           </div>
           {categories.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setActiveCategory(null)}
-                className={`rounded-full px-3 py-1 text-[12px] font-medium capitalize transition-colors ${
+                className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                   activeCategory === null
                     ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
                     : 'border border-white/[0.14] text-[rgba(255,255,255,0.45)] hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.7)]'
@@ -88,7 +88,7 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
-                  className={`rounded-full px-3 py-1 text-[12px] font-medium capitalize transition-colors ${
+                  className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                     activeCategory === cat
                       ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
                       : 'border border-white/[0.14] text-[rgba(255,255,255,0.45)] hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.7)]'
@@ -104,13 +104,13 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
         {/* Template list */}
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading && (
-            <p className="text-center text-[13px] text-[rgba(255,255,255,0.38)]">Loading templates…</p>
+            <p className="text-center text-sm text-[rgba(255,255,255,0.38)]">Loading templates…</p>
           )}
           {isError && (
-            <p className="text-center text-[13px] text-[rgba(254,202,202,0.85)]">Failed to load templates.</p>
+            <p className="text-center text-sm text-[rgba(254,202,202,0.85)]">Failed to load templates.</p>
           )}
           {!isLoading && !isError && filtered.length === 0 && (
-            <p className="text-center text-[13px] text-[rgba(255,255,255,0.38)]">No templates match your search.</p>
+            <p className="text-center text-sm text-[rgba(255,255,255,0.38)]">No templates match your search.</p>
           )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((template) => (
@@ -127,22 +127,22 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
                     className="h-10 w-10 rounded object-contain"
                   />
                 ) : (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(255,255,255,0.06)] text-[11px] font-bold text-[rgba(255,255,255,0.45)]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(255,255,255,0.06)] text-2xs font-bold text-[rgba(255,255,255,0.45)]">
                     {template.name.slice(0, 2).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <span className="truncate text-[13px] font-medium text-[rgba(255,255,255,0.85)]">
+                  <span className="truncate text-sm font-medium text-[rgba(255,255,255,0.85)]">
                     {loadingId === template.id ? 'Loading…' : template.name}
                   </span>
-                  <p className="mt-0.5 line-clamp-2 text-[12px] text-[rgba(255,255,255,0.40)]">
+                  <p className="mt-0.5 line-clamp-2 text-xs text-[rgba(255,255,255,0.40)]">
                     {template.description}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {template.categories.map((cat) => (
                       <span
                         key={cat}
-                        className="rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-[11px] capitalize text-[rgba(255,255,255,0.40)]"
+                        className="rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-2xs capitalize text-[rgba(255,255,255,0.40)]"
                       >
                         {cat}
                       </span>

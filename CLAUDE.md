@@ -75,6 +75,22 @@ To add a new provider: implement `ExposureProvider` extending `BaseProvider`, re
 - **Backend**: tsup (ESM, node24 target), output to `dist/server/`
 - **Docker**: Two-stage build (node:20-alpine). Requires `/var/run/docker.sock` mount and `JWT_SECRET` env var.
 
+## Font Sizes
+
+Use the 7-step semantic scale defined in `tailwind.config.ts`. Never write `text-[Xpx]` arbitrary Tailwind classes.
+
+| Class | Size | Typical use |
+|-------|------|-------------|
+| `text-2xs` | 12px | Labels, chips, table headers |
+| `text-xs` | 13px | Muted/secondary text |
+| `text-sm` | 14px | Primary body text |
+| `text-md` | 15px | Slightly larger body |
+| `text-lg` | 18px | Section headings |
+| `text-xl` | 22px | Larger headings |
+| `text-2xl` | 27px | Page-level headings |
+
+To scale all text globally, adjust the rem values in `tailwind.config.ts` — not individual files.
+
 ## Key Conventions
 
 - All route files export an async function `xxxRoutes(app: FastifyInstance)` registered as a Fastify plugin.

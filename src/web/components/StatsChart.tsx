@@ -15,7 +15,7 @@ function formatBytes(bytes: number): string {
 export function StatsDisplay({ stats }: StatsDisplayProps) {
   if (stats.length === 0) {
     return (
-      <p className="text-[13px] text-[rgba(255,255,255,0.38)]">No stats available.</p>
+      <p className="text-sm text-[rgba(255,255,255,0.38)]">No stats available.</p>
     );
   }
 
@@ -27,20 +27,20 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
           className="rounded-xl border border-white/[0.08] bg-[rgba(255,255,255,0.03)] p-3"
         >
           <div className="mb-2.5 flex items-center justify-between">
-            <span className="text-[13px] font-medium text-[rgba(255,255,255,0.85)]">{s.name}</span>
+            <span className="text-sm font-medium text-[rgba(255,255,255,0.85)]">{s.name}</span>
             <span className="flex items-center gap-1.5">
               <span
                 className={`h-2 w-2 rounded-full ${
                   s.status === 'running' ? 'bg-[#4ade80]' : 'bg-[rgba(255,255,255,0.25)]'
                 }`}
               />
-              <span className="text-[12px] text-[rgba(255,255,255,0.38)]">{s.status}</span>
+              <span className="text-xs text-[rgba(255,255,255,0.38)]">{s.status}</span>
             </span>
           </div>
 
           {/* CPU */}
           <div className="mb-1.5">
-            <div className="mb-1 flex justify-between text-[11px] text-[rgba(255,255,255,0.38)]">
+            <div className="mb-1 flex justify-between text-2xs text-[rgba(255,255,255,0.38)]">
               <span>CPU</span>
               <span>{s.cpuUsage.toFixed(1)}%</span>
             </div>
@@ -54,7 +54,7 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
 
           {/* Memory */}
           <div className="mb-1.5">
-            <div className="mb-1 flex justify-between text-[11px] text-[rgba(255,255,255,0.38)]">
+            <div className="mb-1 flex justify-between text-2xs text-[rgba(255,255,255,0.38)]">
               <span>Memory</span>
               <span>{formatBytes(s.memoryUsage)} / {formatBytes(s.memoryLimit)}</span>
             </div>
@@ -69,7 +69,7 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
           </div>
 
           {/* Network I/O */}
-          <div className="flex justify-between text-[11px] text-[rgba(255,255,255,0.38)]">
+          <div className="flex justify-between text-2xs text-[rgba(255,255,255,0.38)]">
             <span>Net RX: {formatBytes(s.networkRx)}</span>
             <span>Net TX: {formatBytes(s.networkTx)}</span>
           </div>

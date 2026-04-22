@@ -82,10 +82,10 @@ export function Dashboard() {
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-[18px] font-semibold text-[rgba(255,255,255,0.92)]">Dashboard</h1>
+        <h1 className="text-xl font-semibold text-[rgba(255,255,255,0.92)]">Dashboard</h1>
         <button
           onClick={() => navigate('/projects/new')}
-          className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+          className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
         >
           <Plus className="h-3.5 w-3.5" />
           New Project
@@ -105,13 +105,13 @@ export function Dashboard() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(100,158,245,0.10)] text-[#649ef5]">
             <Server className="h-6 w-6" />
           </div>
-          <p className="text-[14px] font-medium text-[rgba(255,255,255,0.65)]">Nothing deployed yet</p>
-          <p className="mt-1 text-[13px] text-[rgba(255,255,255,0.35)]">
+          <p className="text-md font-medium text-[rgba(255,255,255,0.65)]">Nothing deployed yet</p>
+          <p className="mt-1 text-sm text-[rgba(255,255,255,0.35)]">
             Create a project to start self-hosting.
           </p>
           {adoptable && adoptable.length > 0 ? (
             <div className="mt-6 w-full max-w-sm text-left">
-              <p className="mb-3 text-[13px] font-medium text-[rgba(255,255,255,0.55)]">
+              <p className="mb-3 text-sm font-medium text-[rgba(255,255,255,0.55)]">
                 Or adopt an existing stack:
               </p>
               <AdoptableStacksList stacks={adoptable} />
@@ -119,7 +119,7 @@ export function Dashboard() {
           ) : (
             <button
               onClick={() => navigate('/projects/new')}
-              className="mt-5 flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+              className="mt-5 flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
             >
               <Plus className="h-3.5 w-3.5" />
               Create Project

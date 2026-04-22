@@ -140,10 +140,10 @@ const emptyProjectFormValues: CreateProjectInput = {
 };
 
 const inputCls =
-  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-[14px] text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
+  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
 
 const selectCls =
-  'h-10 w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 pr-9 text-[14px] text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]';
+  'h-10 w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 pr-9 text-md text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]';
 
 const statusStyles: Record<string, string> = {
   running: 'bg-[rgba(74,222,128,0.12)] text-[#4ade80] border-[rgba(74,222,128,0.25)]',
@@ -204,7 +204,7 @@ function LogsModal({
         <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-6 py-4">
           <div className="flex items-center gap-2.5">
             <ScrollText className="h-4 w-4 text-[rgba(255,255,255,0.30)]" />
-            <h2 className="font-rubik text-[14px] font-semibold text-[rgba(255,255,255,0.88)]">
+            <h2 className="font-rubik text-md font-semibold text-[rgba(255,255,255,0.88)]">
               Container Logs
               {projectName && (
                 <span className="ml-2 font-normal text-[rgba(255,255,255,0.35)]">— {projectName}</span>
@@ -216,7 +216,7 @@ function LogsModal({
               type="button"
               onClick={onRefresh}
               disabled={isFetching}
-              className="flex items-center gap-1.5 rounded-lg border border-white/[0.12] px-3 py-1.5 text-[12px] text-[rgba(255,255,255,0.45)] transition-colors hover:border-white/[0.22] hover:text-[rgba(255,255,255,0.7)] disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-lg border border-white/[0.12] px-3 py-1.5 text-xs text-[rgba(255,255,255,0.45)] transition-colors hover:border-white/[0.22] hover:text-[rgba(255,255,255,0.7)] disabled:opacity-40"
             >
               <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin' : ''}`} />
               {isFetching ? 'Refreshing…' : 'Refresh'}
@@ -248,8 +248,8 @@ function LogsModal({
           {!isLoading && (!logs || logs.length === 0) && (
             <div className="flex flex-1 flex-col items-center justify-center text-center">
               <ScrollText className="mb-3 h-8 w-8 text-[rgba(255,255,255,0.12)]" />
-              <p className="text-[14px] text-[rgba(255,255,255,0.38)]">No logs yet.</p>
-              <p className="mt-1 text-[13px] text-[rgba(255,255,255,0.22)]">
+              <p className="text-md text-[rgba(255,255,255,0.38)]">No logs yet.</p>
+              <p className="mt-1 text-sm text-[rgba(255,255,255,0.22)]">
                 Deploy the project first to see container output.
               </p>
             </div>
@@ -259,10 +259,10 @@ function LogsModal({
             <div className="flex min-h-0 flex-1 flex-col gap-4">
               {logs.map((entry, i) => (
                 <div key={i} className="flex min-h-0 flex-1 flex-col">
-                  <p className="mb-2 shrink-0 font-rubik text-[11px] font-semibold uppercase tracking-[0.12em] text-[rgba(255,255,255,0.28)]">
+                  <p className="mb-2 shrink-0 font-rubik text-2xs font-semibold uppercase tracking-[0.12em] text-[rgba(255,255,255,0.28)]">
                     {entry.container}
                   </p>
-                  <pre className="min-h-0 flex-1 overflow-auto rounded-xl bg-[rgba(4,7,15,0.78)] p-4 font-mono text-[12px] leading-relaxed text-[rgba(255,255,255,0.70)]">
+                  <pre className="min-h-0 flex-1 overflow-auto rounded-xl bg-[rgba(4,7,15,0.78)] p-4 font-mono text-xs leading-relaxed text-[rgba(255,255,255,0.70)]">
                     {entry.output || '(no output)'}
                   </pre>
                 </div>
@@ -573,7 +573,7 @@ export function ProjectEditor() {
   if (isEditing && isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <p className="text-[13px] text-[rgba(255,255,255,0.35)]">Loading project…</p>
+        <p className="text-sm text-[rgba(255,255,255,0.35)]">Loading project…</p>
       </div>
     );
   }
@@ -584,7 +584,7 @@ export function ProjectEditor() {
         <p className="text-[rgba(255,255,255,0.6)]">Project not found.</p>
         <button
           onClick={() => navigate('/')}
-          className="mt-4 text-[13px] text-[#7db0ff] transition-colors hover:text-[#9cc3ff]"
+          className="mt-4 text-sm text-[#7db0ff] transition-colors hover:text-[#9cc3ff]"
         >
           ← Back to Dashboard
         </button>
@@ -599,13 +599,13 @@ export function ProjectEditor() {
 
       {isCreate && adoptable && adoptable.length > 0 && (
         <div className="mb-4 flex items-center justify-between rounded-2xl border border-[rgba(100,158,245,0.18)] bg-[rgba(100,158,245,0.04)] px-4 py-3">
-          <p className="text-[13px] text-[rgba(255,255,255,0.65)]">
+          <p className="text-sm text-[rgba(255,255,255,0.65)]">
             {adoptable.length} existing stack{adoptable.length > 1 ? 's' : ''} can be adopted
           </p>
           <button
             type="button"
             onClick={() => setAdoptDialogOpen(true)}
-            className="rounded-xl bg-[#649ef5] px-3 py-1 text-[12px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+            className="rounded-xl bg-[#649ef5] px-3 py-1 text-xs font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
           >
             Adopt
           </button>
@@ -624,13 +624,13 @@ export function ProjectEditor() {
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
             />
           )}
-          <h1 className="font-rubik truncate text-[15px] font-semibold text-[rgba(255,255,255,0.92)]">
+          <h1 className="font-rubik truncate text-lg font-semibold text-[rgba(255,255,255,0.92)]">
             {projectDisplayName}
           </h1>
 
           {isEditing && project?.status && (
             <span
-              className={`font-rubik inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.14em] ${
+              className={`font-rubik inline-flex items-center rounded-full border px-2.5 py-0.5 text-2xs font-medium uppercase tracking-[0.14em] ${
                 statusStyles[project.status] ?? statusStyles.stopped
               } ${project.status === 'starting' ? 'animate-pulse' : ''}`}
             >
@@ -643,7 +643,7 @@ export function ProjectEditor() {
               href={`https://${project.domainName}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[#7db0ff]"
+              className="flex items-center gap-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:text-[#7db0ff]"
             >
               <Globe className="h-3 w-3" />
               {project.domainName}
@@ -657,7 +657,7 @@ export function ProjectEditor() {
             <button
               type="button"
               onClick={() => setShowTemplatePicker(true)}
-              className="rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-[13px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+              className="rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-sm text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
             >
               Use Template
             </button>
@@ -667,7 +667,7 @@ export function ProjectEditor() {
             type="submit"
             form="project-form"
             disabled={isSubmitting}
-            className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+            className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
           >
             {isSubmitting ? 'Saving…' : isEditing ? 'Save' : 'Create'}
           </button>
@@ -675,7 +675,7 @@ export function ProjectEditor() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="rounded-xl px-3 py-1.5 text-[13px] text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+            className="rounded-xl px-3 py-1.5 text-sm text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
           >
             Cancel
           </button>
@@ -693,7 +693,7 @@ export function ProjectEditor() {
 
           {/* Name */}
           <div className="space-y-1.5">
-            <label htmlFor="name" className="font-rubik text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+            <label htmlFor="name" className="font-rubik text-xs font-medium text-[rgba(255,255,255,0.6)]">
               Project Name
             </label>
             <input
@@ -706,13 +706,13 @@ export function ProjectEditor() {
               className={inputCls}
             />
             {errors.name && (
-              <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.name.message}</p>
+              <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.name.message}</p>
             )}
           </div>
 
           {/* Logo URL */}
           <div className="space-y-1.5">
-            <label htmlFor="logoUrl" className="font-rubik text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+            <label htmlFor="logoUrl" className="font-rubik text-xs font-medium text-[rgba(255,255,255,0.6)]">
               Logo URL{' '}
               <span className="font-normal text-[rgba(255,255,255,0.28)]">(optional)</span>
             </label>
@@ -724,7 +724,7 @@ export function ProjectEditor() {
               className={inputCls}
             />
             {errors.logoUrl && (
-              <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.logoUrl.message}</p>
+              <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.logoUrl.message}</p>
             )}
           </div>
 
@@ -732,10 +732,10 @@ export function ProjectEditor() {
           <div className="space-y-3 rounded-2xl border border-white/[0.08] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-rubik text-[13px] font-medium text-[rgba(255,255,255,0.85)]">
+                <p className="font-rubik text-sm font-medium text-[rgba(255,255,255,0.85)]">
                   External Exposure
                 </p>
-                <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">
+                <p className="mt-0.5 text-xs text-[rgba(255,255,255,0.38)]">
                   Expose this service via a reverse proxy
                 </p>
               </div>
@@ -754,7 +754,7 @@ export function ProjectEditor() {
 
                   {/* Provider select */}
                   <div className="space-y-1.5">
-                    <label className="font-rubik text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+                    <label className="font-rubik text-xs font-medium text-[rgba(255,255,255,0.6)]">
                       Provider
                     </label>
                     <div className="relative">
@@ -772,7 +772,7 @@ export function ProjectEditor() {
                       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(255,255,255,0.35)]" />
                     </div>
                     {availableProviders.length === 0 && (
-                      <p className="text-[12px] text-[rgba(255,255,255,0.35)]">
+                      <p className="text-xs text-[rgba(255,255,255,0.35)]">
                         No providers configured.{' '}
                         <button
                           type="button"
@@ -787,7 +787,7 @@ export function ProjectEditor() {
 
                   {/* Domain */}
                   <div className="space-y-1.5">
-                    <label className="font-rubik text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+                    <label className="font-rubik text-xs font-medium text-[rgba(255,255,255,0.6)]">
                       Domain{' '}
                       {isCloudflareProvider ? (
                         <span className="text-[rgba(254,202,202,0.85)]">*</span>
@@ -806,7 +806,7 @@ export function ProjectEditor() {
                         placeholder="myapp"
                         className={`${inputCls} flex-1 ${domainErrors.subdomain ? 'border-[rgba(248,113,113,0.5)]' : ''}`}
                       />
-                      <span className="shrink-0 text-[14px] text-[rgba(255,255,255,0.28)]">.</span>
+                      <span className="shrink-0 text-md text-[rgba(255,255,255,0.28)]">.</span>
                       {availableDomains.length > 0 ? (
                         <div className="relative flex-1">
                           <select
@@ -838,7 +838,7 @@ export function ProjectEditor() {
                       )}
                     </div>
                     {(domainErrors.subdomain || domainErrors.domain) && (
-                      <p className="text-[12px] text-[rgba(254,202,202,0.85)]">
+                      <p className="text-xs text-[rgba(254,202,202,0.85)]">
                         {domainErrors.subdomain && domainErrors.domain
                           ? 'Subdomain and domain are required'
                           : domainErrors.subdomain
@@ -847,7 +847,7 @@ export function ProjectEditor() {
                       </p>
                     )}
                     {!domainErrors.subdomain && !domainErrors.domain && (subdomainPrefix || baseDomain) && (
-                      <p className="text-[12px] text-[rgba(255,255,255,0.35)]">
+                      <p className="text-xs text-[rgba(255,255,255,0.35)]">
                         → {subdomainPrefix || '…'}.{baseDomain || '…'}
                       </p>
                     )}
@@ -855,7 +855,7 @@ export function ProjectEditor() {
 
                   {/* Target port */}
                   <div className="space-y-1.5">
-                    <label htmlFor="exposurePort" className="font-rubik text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+                    <label htmlFor="exposurePort" className="font-rubik text-xs font-medium text-[rgba(255,255,255,0.6)]">
                       Target Port
                     </label>
                     <input
@@ -872,12 +872,12 @@ export function ProjectEditor() {
                       className={`${inputCls} w-28 font-variant-numeric-tabular`}
                     />
                     {composeTargetPorts.length > 0 && (
-                      <p className="text-[12px] text-[rgba(255,255,255,0.35)]">
+                      <p className="text-xs text-[rgba(255,255,255,0.35)]">
                         Detected: {composeTargetPorts.join(', ')}
                       </p>
                     )}
                     {targetPortMissingFromCompose && (
-                      <p className="text-[12px] text-[#fcd34d]">
+                      <p className="text-xs text-[#fcd34d]">
                         Port {targetPort} not found in Compose ports list
                       </p>
                     )}
@@ -886,7 +886,7 @@ export function ProjectEditor() {
                   {/* Exposure status for running projects */}
                   {isEditing && project?.status === 'running' && exposureStatus && (
                     <div
-                      className={`rounded-xl px-3 py-2.5 text-[13px] ${
+                      className={`rounded-xl px-3 py-2.5 text-sm ${
                         exposureStatus.active
                           ? 'bg-[rgba(74,222,128,0.08)] text-[#76e5a2]'
                           : 'bg-[rgba(255,255,255,0.03)] text-[rgba(255,255,255,0.45)]'
@@ -899,7 +899,7 @@ export function ProjectEditor() {
                         <span className="ml-2 opacity-70">({exposureStatus.domain})</span>
                       )}
                       {exposureStatus.message && (
-                        <p className="mt-0.5 text-[12px] opacity-70">{exposureStatus.message}</p>
+                        <p className="mt-0.5 text-xs opacity-70">{exposureStatus.message}</p>
                       )}
                     </div>
                   )}
@@ -924,7 +924,7 @@ export function ProjectEditor() {
                       type="button"
                       onClick={() => deployMutation.mutate()}
                       disabled={isDeploying}
-                      className="rounded-lg bg-[rgba(74,222,128,0.12)] border border-[rgba(74,222,128,0.25)] px-3 py-1 text-[12px] font-medium text-[#4ade80] transition-colors hover:bg-[rgba(74,222,128,0.18)] disabled:opacity-40"
+                      className="rounded-lg bg-[rgba(74,222,128,0.12)] border border-[rgba(74,222,128,0.25)] px-3 py-1 text-xs font-medium text-[#4ade80] transition-colors hover:bg-[rgba(74,222,128,0.18)] disabled:opacity-40"
                     >
                       {isDeploying ? 'Deploying…' : 'Deploy'}
                     </button>
@@ -937,7 +937,7 @@ export function ProjectEditor() {
                           type="button"
                           onClick={handleSaveAndDeploy}
                           disabled={isDeploying || updateMutation.isPending}
-                          className="rounded-lg bg-[#649ef5] px-3 py-1 text-[12px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+                          className="rounded-lg bg-[#649ef5] px-3 py-1 text-xs font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
                         >
                           {updateMutation.isPending || isDeploying ? 'Redeploying…' : 'Save & Redeploy'}
                         </button>
@@ -946,7 +946,7 @@ export function ProjectEditor() {
                         type="button"
                         onClick={() => restartMutation.mutate()}
                         disabled={restartMutation.isPending}
-                        className="rounded-lg border border-[rgba(100,158,245,0.3)] px-3 py-1 text-[12px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)] disabled:opacity-40"
+                        className="rounded-lg border border-[rgba(100,158,245,0.3)] px-3 py-1 text-xs text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)] disabled:opacity-40"
                       >
                         {restartMutation.isPending ? 'Restarting…' : 'Restart'}
                       </button>
@@ -954,7 +954,7 @@ export function ProjectEditor() {
                         type="button"
                         onClick={() => stopMutation.mutate()}
                         disabled={stopMutation.isPending}
-                        className="rounded-lg border border-[rgba(248,113,113,0.28)] px-3 py-1 text-[12px] text-[rgba(254,202,202,0.75)] transition-colors hover:bg-[rgba(127,29,29,0.15)] disabled:opacity-40"
+                        className="rounded-lg border border-[rgba(248,113,113,0.28)] px-3 py-1 text-xs text-[rgba(254,202,202,0.75)] transition-colors hover:bg-[rgba(127,29,29,0.15)] disabled:opacity-40"
                       >
                         {stopMutation.isPending ? 'Stopping…' : 'Stop'}
                       </button>
@@ -962,33 +962,33 @@ export function ProjectEditor() {
                   )}
 
                   {isDeploying && !isStopped && !isRunning && (
-                    <span className="text-[12px] text-[rgba(255,255,255,0.35)]">Deploying…</span>
+                    <span className="text-xs text-[rgba(255,255,255,0.35)]">Deploying…</span>
                   )}
                 </div>
 
                 {/* Middle zone: container update status */}
                 <div className="flex shrink-0 items-center gap-2">
                   {checkUpdatesMutation.isPending ? (
-                    <span className="text-[12px] text-[rgba(255,255,255,0.35)]">Checking…</span>
+                    <span className="text-xs text-[rgba(255,255,255,0.35)]">Checking…</span>
                   ) : hasUpdateData ? (
                     <>
                       {updatesAvailable ? (
                         <div className="flex items-center gap-1.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-[#facc15]" />
-                          <span className="text-[12px] text-[#facc15]">
+                          <span className="text-xs text-[#facc15]">
                             {updatesCount} update{updatesCount !== 1 ? 's' : ''}
                           </span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80]" />
-                          <span className="text-[12px] text-[rgba(255,255,255,0.38)]">Up to date</span>
+                          <span className="text-xs text-[rgba(255,255,255,0.38)]">Up to date</span>
                         </div>
                       )}
                       <button
                         type="button"
                         onClick={() => checkUpdatesMutation.mutate()}
-                        className="text-[12px] text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(255,255,255,0.5)]"
+                        className="text-xs text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(255,255,255,0.5)]"
                       >
                         Check again
                       </button>
@@ -997,7 +997,7 @@ export function ProjectEditor() {
                     <button
                       type="button"
                       onClick={() => checkUpdatesMutation.mutate()}
-                      className="text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+                      className="text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
                     >
                       Check for updates
                     </button>
@@ -1008,7 +1008,7 @@ export function ProjectEditor() {
                 <button
                   type="button"
                   onClick={() => setShowLogsModal(true)}
-                  className="flex shrink-0 items-center gap-1.5 rounded-lg border border-white/[0.12] px-3 py-1 text-[12px] text-[rgba(255,255,255,0.45)] transition-colors hover:border-white/[0.22] hover:text-[rgba(255,255,255,0.7)]"
+                  className="flex shrink-0 items-center gap-1.5 rounded-lg border border-white/[0.12] px-3 py-1 text-xs text-[rgba(255,255,255,0.45)] transition-colors hover:border-white/[0.22] hover:text-[rgba(255,255,255,0.7)]"
                 >
                   <ScrollText className="h-3.5 w-3.5" />
                   Logs
@@ -1023,7 +1023,7 @@ export function ProjectEditor() {
                 <div className="overflow-hidden">
                   <div className="max-h-28 overflow-y-auto rounded-xl bg-[rgba(4,7,15,0.6)] px-4 py-3">
                     {deployProgress.map((p, i) => (
-                      <div key={i} className="flex gap-2 font-mono text-[12px] leading-relaxed">
+                      <div key={i} className="flex gap-2 font-mono text-xs leading-relaxed">
                         <span className="shrink-0 text-[rgba(255,255,255,0.22)]">[{p.stage}]</span>
                         <span className="text-[rgba(255,255,255,0.58)]">{p.message}</span>
                       </div>
@@ -1037,14 +1037,14 @@ export function ProjectEditor() {
           {/* Compose editor */}
           <div className="flex flex-1 flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="font-rubik text-[12px] font-medium text-[rgba(255,255,255,0.6)]">
+              <label className="font-rubik text-xs font-medium text-[rgba(255,255,255,0.6)]">
                 docker-compose.yml
               </label>
               <button
                 type="button"
                 onClick={handleInferDetails}
                 disabled={!composeContent}
-                className="rounded-lg px-3 py-1 text-[12px] text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)] disabled:cursor-not-allowed disabled:opacity-30"
+                className="rounded-lg px-3 py-1 text-xs text-[rgba(255,255,255,0.4)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)] disabled:cursor-not-allowed disabled:opacity-30"
               >
                 Infer details
               </button>
@@ -1057,7 +1057,7 @@ export function ProjectEditor() {
               minHeight="480px"
             />
             {errors.composeContent && (
-              <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.composeContent.message}</p>
+              <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.composeContent.message}</p>
             )}
           </div>
         </div>
@@ -1066,22 +1066,22 @@ export function ProjectEditor() {
       {/* ── Danger zone — edit mode only ── */}
       {isEditing && project && (
         <div className="border-t border-white/[0.08] px-6 py-8">
-          <h3 className="font-rubik text-[14px] font-semibold text-[rgba(248,113,113,0.75)]">
+          <h3 className="font-rubik text-md font-semibold text-[rgba(248,113,113,0.75)]">
             Delete Project
           </h3>
-          <p className="mt-1 max-w-prose text-[13px] leading-relaxed text-[rgba(255,255,255,0.38)]">
+          <p className="mt-1 max-w-prose text-sm leading-relaxed text-[rgba(255,255,255,0.38)]">
             Removes this project and stops all associated containers. This cannot be undone.
           </p>
           <div className="mt-4">
             {showDeleteConfirm ? (
               <div className="flex items-center gap-4">
-                <span className="text-[13px] text-[rgba(255,255,255,0.45)]">
+                <span className="text-sm text-[rgba(255,255,255,0.45)]">
                   Delete &ldquo;{project.name}&rdquo;?
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="text-[13px] text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+                  className="text-sm text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
                 >
                   Cancel
                 </button>
@@ -1089,7 +1089,7 @@ export function ProjectEditor() {
                   type="button"
                   onClick={handleDelete}
                   disabled={deleteMutation.isPending}
-                  className="rounded-xl border border-[rgba(248,113,113,0.36)] bg-[rgba(127,29,29,0.20)] px-4 py-1.5 text-[13px] text-[rgba(254,202,202,0.92)] transition-colors hover:bg-[rgba(127,29,29,0.30)] disabled:opacity-40"
+                  className="rounded-xl border border-[rgba(248,113,113,0.36)] bg-[rgba(127,29,29,0.20)] px-4 py-1.5 text-sm text-[rgba(254,202,202,0.92)] transition-colors hover:bg-[rgba(127,29,29,0.30)] disabled:opacity-40"
                 >
                   {deleteMutation.isPending ? 'Deleting…' : 'Confirm Delete'}
                 </button>
@@ -1098,7 +1098,7 @@ export function ProjectEditor() {
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="rounded-xl border border-[rgba(248,113,113,0.28)] px-4 py-1.5 text-[13px] text-[rgba(248,113,113,0.65)] transition-colors hover:border-[rgba(248,113,113,0.45)] hover:bg-[rgba(127,29,29,0.12)] hover:text-[rgba(254,202,202,0.85)]"
+                className="rounded-xl border border-[rgba(248,113,113,0.28)] px-4 py-1.5 text-sm text-[rgba(248,113,113,0.65)] transition-colors hover:border-[rgba(248,113,113,0.45)] hover:bg-[rgba(127,29,29,0.12)] hover:text-[rgba(254,202,202,0.85)]"
               >
                 Delete Project
               </button>

@@ -41,21 +41,21 @@ interface ProviderSetupResult {
 }
 
 const inputCls =
-  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-[14px] text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
+  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
 
 function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
   return (
     <div className="mt-3 space-y-2">
       {result.checks.map((check) => (
         <div key={check.name} className="flex gap-3">
-          <span className={`mt-px shrink-0 text-[13px] font-medium ${check.passed ? 'text-[#4ade80]' : 'text-[rgba(248,113,113,0.85)]'}`}>
+          <span className={`mt-px shrink-0 text-sm font-medium ${check.passed ? 'text-[#4ade80]' : 'text-[rgba(248,113,113,0.85)]'}`}>
             {check.passed ? '✓' : '✗'}
           </span>
           <div>
-            <span className="text-[13px] text-[rgba(255,255,255,0.75)]">{check.name}</span>
-            <span className="text-[13px] text-[rgba(255,255,255,0.35)]"> — {check.message}</span>
+            <span className="text-sm text-[rgba(255,255,255,0.75)]">{check.name}</span>
+            <span className="text-sm text-[rgba(255,255,255,0.35)]"> — {check.message}</span>
             {!check.passed && check.resolution && (
-              <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">Fix: {check.resolution}</p>
+              <p className="mt-0.5 text-xs text-[rgba(255,255,255,0.38)]">Fix: {check.resolution}</p>
             )}
           </div>
         </div>
@@ -76,7 +76,7 @@ function StepIndicator({ currentStep }: { currentStep: OnboardingStep }) {
       {steps.map(({ step, label }) => (
         <div key={step} className="flex items-center gap-2">
           <div
-            className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-semibold ${
+            className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
               step === currentStep
                 ? 'bg-[#649ef5] text-[#101827]'
                 : step < currentStep
@@ -87,7 +87,7 @@ function StepIndicator({ currentStep }: { currentStep: OnboardingStep }) {
             {step}
           </div>
           <span
-            className={`text-[13px] ${
+            className={`text-sm ${
               step === currentStep
                 ? 'font-medium text-[rgba(255,255,255,0.85)]'
                 : 'text-[rgba(255,255,255,0.38)]'
@@ -124,30 +124,30 @@ function CreateAccountStep({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.03)] p-6">
-      <h2 className="mb-1 text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">Create Admin Account</h2>
-      <p className="mb-5 text-[13px] text-[rgba(255,255,255,0.38)]">
+      <h2 className="mb-1 text-lg font-semibold text-[rgba(255,255,255,0.88)]">Create Admin Account</h2>
+      <p className="mb-5 text-sm text-[rgba(255,255,255,0.38)]">
         Set up the administrator account for your HomelabMan instance.
       </p>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
-          <label htmlFor="username" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Username</label>
+          <label htmlFor="username" className="text-xs font-medium text-[rgba(255,255,255,0.6)]">Username</label>
           <Input id="username" placeholder="Choose a username" {...register('username')} />
-          {errors.username && <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.username.message}</p>}
+          {errors.username && <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.username.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="password" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Password</label>
+          <label htmlFor="password" className="text-xs font-medium text-[rgba(255,255,255,0.6)]">Password</label>
           <Input id="password" type="password" placeholder="Choose a strong password" {...register('password')} />
-          {errors.password && <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.password.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="confirm-password" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">Confirm Password</label>
+          <label htmlFor="confirm-password" className="text-xs font-medium text-[rgba(255,255,255,0.6)]">Confirm Password</label>
           <Input id="confirm-password" type="password" placeholder="Re-enter your password" {...register('confirmPassword')} />
-          {errors.confirmPassword && <p className="text-[12px] text-[rgba(254,202,202,0.85)]">{errors.confirmPassword.message}</p>}
+          {errors.confirmPassword && <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.confirmPassword.message}</p>}
         </div>
         <button
           type="submit"
           disabled={registerMutation.isPending}
-          className="mt-2 w-full rounded-xl bg-[#649ef5] py-2 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+          className="mt-2 w-full rounded-xl bg-[#649ef5] py-2 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
         >
           {registerMutation.isPending ? 'Creating Account…' : 'Create Account'}
         </button>
@@ -229,8 +229,8 @@ function ConfigureProvidersStep({
 
   return (
     <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.03)] p-6">
-      <h2 className="mb-1 text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">Configure Exposure Providers</h2>
-      <p className="mb-5 text-[13px] text-[rgba(255,255,255,0.38)]">
+      <h2 className="mb-1 text-lg font-semibold text-[rgba(255,255,255,0.88)]">Configure Exposure Providers</h2>
+      <p className="mb-5 text-sm text-[rgba(255,255,255,0.38)]">
         Optionally configure how your services are exposed to the internet. You can skip this and configure later in Settings.
       </p>
 
@@ -239,10 +239,10 @@ function ConfigureProvidersStep({
         <div className="rounded-xl border border-white/[0.08] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div>
-              <p className="text-[13px] font-medium text-[rgba(255,255,255,0.85)]">Caddy</p>
-              <p className="text-[12px] text-[rgba(255,255,255,0.35)]">Reverse proxy with automatic HTTPS</p>
+              <p className="text-sm font-medium text-[rgba(255,255,255,0.85)]">Caddy</p>
+              <p className="text-xs text-[rgba(255,255,255,0.35)]">Reverse proxy with automatic HTTPS</p>
               {providerConfig.caddy && expandedProvider !== 'caddy' && (
-                <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">
+                <p className="mt-0.5 text-xs text-[rgba(255,255,255,0.38)]">
                   Configured: {providerConfig.caddy.apiUrl}
                 </p>
               )}
@@ -251,7 +251,7 @@ function ConfigureProvidersStep({
               {providerConfig.caddy && (
                 <button
                   onClick={removeCaddy}
-                  className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+                  className="rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
                 >
                   Remove
                 </button>
@@ -260,14 +260,14 @@ function ConfigureProvidersStep({
                 <button
                   onClick={() => runCheckSetup('caddy', { apiUrl: providerConfig.caddy!.apiUrl })}
                   disabled={checkingSetup['caddy']}
-                  className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
+                  className="rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)] disabled:opacity-40"
                 >
                   {checkingSetup['caddy'] ? 'Checking…' : 'Check Setup'}
                 </button>
               )}
               <button
                 onClick={() => setExpandedProvider(expandedProvider === 'caddy' ? null : 'caddy')}
-                className="rounded-lg border border-[rgba(100,158,245,0.4)] px-3 py-1 text-[12px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+                className="rounded-lg border border-[rgba(100,158,245,0.4)] px-3 py-1 text-xs text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
               >
                 {providerConfig.caddy ? 'Edit' : 'Configure'}
               </button>
@@ -281,7 +281,7 @@ function ConfigureProvidersStep({
           {expandedProvider === 'caddy' && (
             <div className="border-t border-white/[0.06] px-4 py-4 space-y-3">
               <div className="space-y-1.5">
-                <label htmlFor="caddy-api-url" className="text-[12px] font-medium text-[rgba(255,255,255,0.6)]">API URL</label>
+                <label htmlFor="caddy-api-url" className="text-xs font-medium text-[rgba(255,255,255,0.6)]">API URL</label>
                 <input
                   id="caddy-api-url"
                   type="text"
@@ -293,7 +293,7 @@ function ConfigureProvidersStep({
               </div>
               <button
                 onClick={saveCaddy}
-                className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+                className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
               >
                 Save
               </button>
@@ -305,10 +305,10 @@ function ConfigureProvidersStep({
         <div className="rounded-xl border border-white/[0.08] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div>
-              <p className="text-[13px] font-medium text-[rgba(255,255,255,0.85)]">Cloudflare</p>
-              <p className="text-[12px] text-[rgba(255,255,255,0.35)]">Tunnel-based exposure via Cloudflare</p>
+              <p className="text-sm font-medium text-[rgba(255,255,255,0.85)]">Cloudflare</p>
+              <p className="text-xs text-[rgba(255,255,255,0.35)]">Tunnel-based exposure via Cloudflare</p>
               {providerConfig.cloudflare && expandedProvider !== 'cloudflare' && (
-                <p className="mt-0.5 text-[12px] text-[rgba(255,255,255,0.38)]">
+                <p className="mt-0.5 text-xs text-[rgba(255,255,255,0.38)]">
                   Account {providerConfig.cloudflare.accountId}
                   {providerConfig.cloudflare.tunnelId !== '__new__'
                     ? ` · Tunnel ${providerConfig.cloudflare.tunnelId}`
@@ -320,14 +320,14 @@ function ConfigureProvidersStep({
               {providerConfig.cloudflare && (
                 <button
                   onClick={removeCloudflare}
-                  className="rounded-lg px-2.5 py-1 text-[12px] text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+                  className="rounded-lg px-2.5 py-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
                 >
                   Remove
                 </button>
               )}
               <button
                 onClick={() => setExpandedProvider(expandedProvider === 'cloudflare' ? null : 'cloudflare')}
-                className="rounded-lg border border-[rgba(100,158,245,0.4)] px-3 py-1 text-[12px] text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+                className="rounded-lg border border-[rgba(100,158,245,0.4)] px-3 py-1 text-xs text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
               >
                 {providerConfig.cloudflare ? 'Edit' : 'Configure'}
               </button>
@@ -338,7 +338,7 @@ function ConfigureProvidersStep({
               <CloudflareProviderForm value={cfFormValue} onChange={setCfFormValue} />
               <button
                 onClick={saveCloudflare}
-                className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+                className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
               >
                 Save
               </button>
@@ -350,13 +350,13 @@ function ConfigureProvidersStep({
       <div className="mt-5 flex items-center justify-between">
         <button
           onClick={onSkip}
-          className="rounded-xl px-4 py-1.5 text-[13px] text-[rgba(255,255,255,0.38)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
+          className="rounded-xl px-4 py-1.5 text-sm text-[rgba(255,255,255,0.38)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.65)]"
         >
           Skip
         </button>
         <button
           onClick={onNext}
-          className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+          className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
         >
           Next
         </button>
@@ -380,11 +380,11 @@ function CompleteStep({
 
   return (
     <div className="rounded-2xl border border-white/[0.10] bg-[rgba(255,255,255,0.03)] p-6">
-      <h2 className="mb-1 text-[15px] font-semibold text-[rgba(255,255,255,0.88)]">Setup Complete</h2>
-      <p className="mb-5 text-[13px] text-[rgba(255,255,255,0.38)]">Your HomelabMan instance is ready to use.</p>
+      <h2 className="mb-1 text-lg font-semibold text-[rgba(255,255,255,0.88)]">Setup Complete</h2>
+      <p className="mb-5 text-sm text-[rgba(255,255,255,0.38)]">Your HomelabMan instance is ready to use.</p>
       <div className="mb-5 rounded-xl border border-white/[0.08] bg-[rgba(255,255,255,0.02)] px-4 py-3">
-        <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Configuration Summary</p>
-        <ul className="space-y-1 text-[13px] text-[rgba(255,255,255,0.55)]">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-[rgba(255,255,255,0.35)]">Configuration Summary</p>
+        <ul className="space-y-1 text-sm text-[rgba(255,255,255,0.55)]">
           <li>Admin account created</li>
           {configuredProviders.length > 0 ? (
             <li>Exposure providers configured: {configuredProviders.join(', ')}</li>
@@ -396,7 +396,7 @@ function CompleteStep({
       <button
         onClick={onFinish}
         disabled={isSubmitting}
-        className="w-full rounded-xl bg-[#649ef5] py-2 text-[13px] font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+        className="w-full rounded-xl bg-[#649ef5] py-2 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
       >
         {isSubmitting ? 'Finishing Setup…' : 'Get Started'}
       </button>
@@ -466,10 +466,10 @@ export function Onboarding() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        <h1 className="mb-1 text-center text-[22px] font-semibold text-[rgba(255,255,255,0.92)]">
+        <h1 className="mb-1 text-center text-2xl font-semibold text-[rgba(255,255,255,0.92)]">
           Welcome to HomelabMan
         </h1>
-        <p className="mb-6 text-center text-[13px] text-[rgba(255,255,255,0.38)]">
+        <p className="mb-6 text-center text-sm text-[rgba(255,255,255,0.38)]">
           Let&apos;s get your instance set up.
         </p>
         <StepIndicator currentStep={step} />
