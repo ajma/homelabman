@@ -21,7 +21,7 @@ test('shows dashboard when authenticated', async ({ page }) => {
   await page.goto('/api/test/session');
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-  await expect(page.getByText('No projects yet. Create your first project to get started.')).toBeVisible();
+  await expect(page.getByText('Nothing deployed yet')).toBeVisible();
 });
 
 test('shows validation messages when login is submitted with empty fields', async ({ page }) => {

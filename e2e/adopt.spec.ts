@@ -51,7 +51,7 @@ test('zero-state dashboard shows adoptable checklist when unmanaged stacks exist
 
   await page.goto('/');
 
-  await expect(page.getByText('myapp')).toBeVisible();
+  await expect(page.getByText('myapp', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /adopt selected/i })).toBeVisible();
 });
 
@@ -106,7 +106,7 @@ test('adopt button on new project page opens dialog', async ({ page }) => {
   await page.getByRole('button', { name: 'Adopt' }).click();
 
   await expect(page.getByRole('heading', { name: 'Adopt stacks' })).toBeVisible();
-  await expect(page.getByText('myapp')).toBeVisible();
+  await expect(page.getByText('myapp', { exact: true })).toBeVisible();
 });
 
 test('adopting from dialog closes it and shows success toast', async ({ page }) => {
@@ -131,7 +131,7 @@ test('orphaned stack (has homelabman label but no matching project) is adoptable
 
   await page.goto('/');
 
-  await expect(page.getByText('myapp')).toBeVisible();
+  await expect(page.getByText('myapp', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /adopt selected/i })).toBeVisible();
 });
 
