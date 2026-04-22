@@ -278,7 +278,7 @@ export async function settingsRoutes(app: FastifyInstance) {
         composeContent: p.composeContent,
         exposureEnabled: p.exposureEnabled,
         exposureProviderName: p.exposureProviderId ? (providerIdToName.get(p.exposureProviderId) ?? null) : null,
-        exposureConfig: typeof p.exposureConfig === 'string' ? JSON.parse(p.exposureConfig ?? '{}') : (p.exposureConfig ?? {}),
+        exposureConfig: p.exposureConfig ? JSON.parse(p.exposureConfig) : {},
         isInfrastructure: p.isInfrastructure,
       })),
     };
