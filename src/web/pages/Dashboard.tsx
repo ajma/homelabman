@@ -111,7 +111,7 @@ export function Dashboard() {
         <h1 className="text-xl font-semibold text-[rgba(255,255,255,0.92)]">Dashboard</h1>
         <button
           onClick={() => navigate('/projects/new')}
-          className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+          className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus className="h-3.5 w-3.5" />
           New Project
@@ -121,14 +121,14 @@ export function Dashboard() {
       {isLoading && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-2xl border border-[rgba(100,158,245,0.08)] bg-[rgba(100,158,245,0.03)]" />
+            <div key={i} className="h-40 animate-pulse rounded-2xl border border-primary/[0.08] bg-primary/[0.03]" />
           ))}
         </div>
       )}
 
       {!isLoading && projects?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(100,158,245,0.18)] bg-[rgba(100,158,245,0.02)] p-16 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(100,158,245,0.10)] text-[#649ef5]">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary/[0.18] bg-primary/[0.02] p-16 text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/[0.10] text-primary">
             <Server className="h-6 w-6" />
           </div>
           <p className="text-md font-medium text-[rgba(255,255,255,0.65)]">Nothing deployed yet</p>
@@ -145,7 +145,7 @@ export function Dashboard() {
           ) : (
             <button
               onClick={() => navigate('/projects/new')}
-              className="mt-5 flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+              className="mt-5 flex items-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Plus className="h-3.5 w-3.5" />
               Create Project

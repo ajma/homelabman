@@ -41,7 +41,7 @@ interface ProviderSetupResult {
 }
 
 const inputCls =
-  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
+  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-primary/[0.5] disabled:cursor-not-allowed disabled:opacity-50';
 
 function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
   return (
@@ -78,9 +78,9 @@ function StepIndicator({ currentStep }: { currentStep: OnboardingStep }) {
           <div
             className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
               step === currentStep
-                ? 'bg-[#649ef5] text-[#101827]'
+                ? 'bg-primary text-primary-foreground'
                 : step < currentStep
-                  ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
+                  ? 'bg-primary/[0.15] text-primary'
                   : 'bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.35)]'
             }`}
           >
@@ -147,7 +147,7 @@ function CreateAccountStep({ onComplete }: { onComplete: () => void }) {
         <button
           type="submit"
           disabled={registerMutation.isPending}
-          className="mt-2 w-full rounded-xl bg-[#649ef5] py-2 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+          className="mt-2 w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
         >
           {registerMutation.isPending ? 'Creating Account…' : 'Create Account'}
         </button>
@@ -280,7 +280,7 @@ function ConfigureProvidersStep({
               )}
               <button
                 onClick={() => setExpandedProvider(expandedProvider === 'caddy' ? null : 'caddy')}
-                className="rounded-lg border border-[rgba(100,158,245,0.4)] px-3 py-1 text-xs text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+                className="rounded-lg border border-primary/[0.4] px-3 py-1 text-xs text-primary transition-colors hover:bg-primary/[0.08]"
               >
                 {providerConfig.caddy ? 'Edit' : 'Configure'}
               </button>
@@ -306,7 +306,7 @@ function ConfigureProvidersStep({
               </div>
               <button
                 onClick={saveCaddy}
-                className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+                className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Save
               </button>
@@ -340,7 +340,7 @@ function ConfigureProvidersStep({
               )}
               <button
                 onClick={() => setExpandedProvider(expandedProvider === 'cloudflare' ? null : 'cloudflare')}
-                className="rounded-lg border border-[rgba(100,158,245,0.4)] px-3 py-1 text-xs text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+                className="rounded-lg border border-primary/[0.4] px-3 py-1 text-xs text-primary transition-colors hover:bg-primary/[0.08]"
               >
                 {providerConfig.cloudflare ? 'Edit' : 'Configure'}
               </button>
@@ -351,7 +351,7 @@ function ConfigureProvidersStep({
               <CloudflareProviderForm value={cfFormValue} onChange={setCfFormValue} detectedStack={detectedStack} />
               <button
                 onClick={saveCloudflare}
-                className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+                className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Save
               </button>
@@ -369,7 +369,7 @@ function ConfigureProvidersStep({
         </button>
         <button
           onClick={onNext}
-          className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+          className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           Next
         </button>
@@ -409,7 +409,7 @@ function CompleteStep({
       <button
         onClick={onFinish}
         disabled={isSubmitting}
-        className="w-full rounded-xl bg-[#649ef5] py-2 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+        className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
       >
         {isSubmitting ? 'Finishing Setup…' : 'Get Started'}
       </button>

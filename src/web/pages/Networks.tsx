@@ -57,11 +57,11 @@ function useDeleteNetwork() {
 const DRIVER_OPTIONS = ['bridge', 'overlay', 'macvlan', 'host', 'none'] as const;
 
 const selectCls =
-  'h-10 w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 pr-9 text-md text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]';
+  'h-10 w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 pr-9 text-md text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-primary/[0.5]';
 
 const driverStyles: Record<string, string> = {
-  bridge: 'bg-[rgba(100,158,245,0.10)] text-[#7db0ff] border-[rgba(100,158,245,0.25)]',
-  overlay: 'bg-[rgba(100,158,245,0.08)] text-[rgba(125,176,255,0.85)] border-[rgba(100,158,245,0.20)]',
+  bridge: 'bg-primary/[0.10] text-primary border-primary/[0.25]',
+  overlay: 'bg-primary/[0.08] text-primary/[0.85] border-primary/[0.20]',
   macvlan: 'bg-[rgba(74,222,128,0.08)] text-[rgba(74,222,128,0.85)] border-[rgba(74,222,128,0.20)]',
   host: 'bg-[rgba(250,204,21,0.08)] text-[#facc15] border-[rgba(250,204,21,0.20)]',
   none: 'bg-[rgba(255,255,255,0.04)] text-[rgba(255,255,255,0.35)] border-[rgba(255,255,255,0.10)]',
@@ -121,7 +121,7 @@ export function Networks() {
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-3 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <Plus className="h-3.5 w-3.5" />
             Create Network
@@ -175,7 +175,7 @@ export function Networks() {
             <button
               onClick={handleCreate}
               disabled={!newName.trim() || createNetwork.isPending}
-              className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+              className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
               {createNetwork.isPending ? 'Creating…' : 'Create'}
             </button>
@@ -187,15 +187,15 @@ export function Networks() {
       {isLoading && (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-[rgba(100,158,245,0.08)] bg-[rgba(100,158,245,0.03)]" />
+            <div key={i} className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]" />
           ))}
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && networks?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(100,158,245,0.15)] bg-[rgba(100,158,245,0.02)] p-12 text-center">
-          <Network className="mb-3 h-8 w-8 text-[#649ef5] opacity-40" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary/[0.15] bg-primary/[0.02] p-12 text-center">
+          <Network className="mb-3 h-8 w-8 text-primary opacity-40" />
           <p className="text-sm text-[rgba(255,255,255,0.35)]">No networks found.</p>
         </div>
       )}

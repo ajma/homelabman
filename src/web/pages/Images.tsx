@@ -173,7 +173,7 @@ export function Images() {
           {!isPulling && (
             <button
               onClick={() => setIsPulling(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-[#649ef5] px-3 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+              className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Download className="h-3.5 w-3.5" />
               Pull Image
@@ -208,7 +208,7 @@ export function Images() {
             <button
               onClick={handlePull}
               disabled={!pullName.trim() || pullImage.isPending}
-              className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+              className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
               {pullImage.isPending ? 'Pulling…' : 'Pull'}
             </button>
@@ -233,15 +233,15 @@ export function Images() {
       {isLoading && (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-[rgba(100,158,245,0.08)] bg-[rgba(100,158,245,0.03)]" />
+            <div key={i} className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]" />
           ))}
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && images?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(100,158,245,0.15)] bg-[rgba(100,158,245,0.02)] p-12 text-center">
-          <HardDrive className="mb-3 h-8 w-8 text-[#649ef5] opacity-40" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary/[0.15] bg-primary/[0.02] p-12 text-center">
+          <HardDrive className="mb-3 h-8 w-8 text-primary opacity-40" />
           <p className="text-sm text-[rgba(255,255,255,0.35)]">No images found.</p>
         </div>
       )}

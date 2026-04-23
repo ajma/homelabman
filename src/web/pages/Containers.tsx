@@ -36,7 +36,7 @@ const stateStyles: Record<string, { bg: string; text: string; border: string; do
   running: { bg: 'bg-[rgba(74,222,128,0.10)]', text: 'text-[#4ade80]', border: 'border-[rgba(74,222,128,0.25)]', dot: 'bg-[#4ade80] shadow-[0_0_6px_rgba(74,222,128,0.5)]' },
   exited: { bg: 'bg-[rgba(248,113,113,0.08)]', text: 'text-[rgba(248,113,113,0.85)]', border: 'border-[rgba(248,113,113,0.20)]', dot: 'bg-[rgba(248,113,113,0.85)]' },
   paused: { bg: 'bg-[rgba(250,204,21,0.08)]', text: 'text-[#facc15]', border: 'border-[rgba(250,204,21,0.20)]', dot: 'bg-[#facc15]' },
-  restarting: { bg: 'bg-[rgba(125,176,255,0.10)]', text: 'text-[#7db0ff]', border: 'border-[rgba(125,176,255,0.25)]', dot: 'bg-[#7db0ff] animate-pulse' },
+  restarting: { bg: 'bg-primary/[0.10]', text: 'text-primary', border: 'border-primary/[0.25]', dot: 'bg-primary animate-pulse' },
 };
 
 function StateBadge({ state }: { state: string }) {
@@ -90,14 +90,14 @@ export function Containers() {
       {isLoading && (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-[rgba(100,158,245,0.08)] bg-[rgba(100,158,245,0.03)]" />
+            <div key={i} className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]" />
           ))}
         </div>
       )}
 
       {!isLoading && containers?.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(100,158,245,0.15)] bg-[rgba(100,158,245,0.02)] p-12 text-center">
-          <Box className="mb-3 h-8 w-8 text-[#649ef5] opacity-40" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary/[0.15] bg-primary/[0.02] p-12 text-center">
+          <Box className="mb-3 h-8 w-8 text-primary opacity-40" />
           <p className="text-sm text-[rgba(255,255,255,0.35)]">No containers running.</p>
         </div>
       )}

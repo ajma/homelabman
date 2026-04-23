@@ -4,44 +4,44 @@
 
 @layer base {
   :root {
-    /* Background: #04070f deep navy-black */
-    --background: 225 57% 4%;
-    --foreground: 220 8% 92%;
+    /* Background: deep warm-black with golden tint */
+    --background: 40 18% 6%;
+    --foreground: 40 5% 92%;
 
     /* Card: slightly elevated dark surface */
-    --card: 218 49% 8%;
-    --card-foreground: 220 8% 92%;
+    --card: 37 16% 10%;
+    --card-foreground: 40 5% 92%;
 
-    /* Popover: #0a111d */
-    --popover: 218 49% 8%;
-    --popover-foreground: 220 8% 92%;
+    /* Popover */
+    --popover: 37 16% 10%;
+    --popover-foreground: 40 5% 92%;
 
-    /* Primary: #649ef5 brand blue */
-    --primary: 216 88% 68%;
-    --primary-foreground: 220 42% 11%;
+    /* Primary: golden labrador */
+    --primary: 37 50% 55%;
+    --primary-foreground: 37 30% 7%;
 
-    /* Secondary: hover surface (≈ rgba(255,255,255,0.06) over bg) */
-    --secondary: 220 22% 10%;
-    --secondary-foreground: 220 6% 60%;
+    /* Secondary: hover surface */
+    --secondary: 37 12% 12%;
+    --secondary-foreground: 37 5% 60%;
 
-    /* Muted: subdued surface + muted text ≈ rgba(255,255,255,0.45) */
-    --muted: 220 20% 11%;
-    --muted-foreground: 220 6% 45%;
+    /* Muted: subdued surface + muted text */
+    --muted: 37 10% 13%;
+    --muted-foreground: 37 5% 45%;
 
     /* Accent: hover surface */
-    --accent: 220 22% 10%;
-    --accent-foreground: 220 6% 60%;
+    --accent: 37 12% 12%;
+    --accent-foreground: 37 5% 60%;
 
     /* Destructive: #f87171 */
     --destructive: 0 72% 71%;
-    --destructive-foreground: 220 8% 92%;
+    --destructive-foreground: 40 5% 92%;
 
-    /* Border: ≈ rgba(255,255,255,0.16) over dark bg — boosted for visibility */
-    --border: 222 20% 16%;
-    --input: 222 20% 16%;
+    /* Border: warm-tinted */
+    --border: 37 10% 18%;
+    --input: 37 10% 18%;
 
     /* Ring: same as primary for focus */
-    --ring: 216 88% 68%;
+    --ring: 37 50% 55%;
 
     /* Border-radius baseline: rounded-xl (12px) */
     --radius: 0.75rem;
@@ -50,7 +50,7 @@
 
 /* Select option dark background */
 select option {
-  background-color: #0d1525;
+  background-color: hsl(var(--popover));
   color: rgba(255, 255, 255, 0.85);
 }
 
@@ -58,7 +58,7 @@ select option {
 [data-sonner-toast][data-type='success'] [data-icon] { color: #4ade80; }
 [data-sonner-toast][data-type='error']   [data-icon] { color: #f87171; }
 [data-sonner-toast][data-type='warning'] [data-icon] { color: #facc15; }
-[data-sonner-toast][data-type='info']    [data-icon] { color: #7db0ff; }
+[data-sonner-toast][data-type='info']    [data-icon] { color: hsl(var(--primary)); }
 
 @layer base {
   * {
@@ -66,11 +66,11 @@ select option {
   }
   html {
     font-size: 16px;
-    background-color: #04070f;
+    background-color: hsl(var(--background));
   }
   body {
-    background: linear-gradient(180deg, rgba(12, 18, 31, 0.98) 0%, rgba(9, 14, 25, 0.98) 100%) fixed;
-    background-color: #04070f;
+    background: linear-gradient(180deg, hsl(var(--background) / 0.98) 0%, hsl(var(--background) / 0.96) 100%) fixed;
+    background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: 'Rubik', sans-serif;
     min-height: 100vh;

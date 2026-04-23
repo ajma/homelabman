@@ -16,7 +16,7 @@ interface ComposeEditorProps {
 
 const yamlHighlight = HighlightStyle.define([
   // YAML keys → soft blue
-  { tag: t.propertyName, color: '#7db0ff' },
+  { tag: t.propertyName, color: 'hsl(var(--primary))' },
   // Strings → muted teal-green
   { tag: t.string, color: '#6ee7b7' },
   // Numbers, booleans, null → amber
@@ -35,14 +35,14 @@ const yamlHighlight = HighlightStyle.define([
 
 const darkTheme = EditorView.theme({
   '&': {
-    background: 'rgba(4, 7, 15, 0.78)',
+    background: 'hsl(var(--background) / 0.78)',
     borderRadius: '16px',
     border: '1px solid rgba(255,255,255,0.10)',
     overflow: 'hidden',
   },
   '&.cm-focused': {
     outline: 'none',
-    border: '1px solid rgba(125,176,255,0.36)',
+    border: '1px solid hsl(var(--primary) / 0.36)',
   },
   '.cm-scroller': { overflow: 'auto' },
   '.cm-content': {
@@ -50,10 +50,10 @@ const darkTheme = EditorView.theme({
     fontSize: '0.8125rem',
     padding: '12px 16px',
     color: 'rgba(255,255,255,0.88)',
-    caretColor: '#649ef5',
+    caretColor: 'hsl(var(--primary))',
   },
   '.cm-gutters': {
-    background: 'rgba(4, 7, 15, 0.6)',
+    background: 'hsl(var(--background) / 0.6)',
     border: 'none',
     borderRight: '1px solid rgba(255,255,255,0.06)',
     color: 'rgba(255,255,255,0.22)',
@@ -61,9 +61,9 @@ const darkTheme = EditorView.theme({
   },
   '.cm-activeLineGutter': { background: 'rgba(255,255,255,0.04)' },
   '.cm-activeLine': { background: 'rgba(255,255,255,0.03)' },
-  '.cm-selectionBackground, ::selection': { background: 'rgba(100,158,245,0.20)' },
-  '.cm-cursor': { borderLeftColor: '#649ef5' },
-  '.cm-matchingBracket': { background: 'rgba(100,158,245,0.15)', outline: 'none' },
+  '.cm-selectionBackground, ::selection': { background: 'hsl(var(--primary) / 0.20)' },
+  '.cm-cursor': { borderLeftColor: 'hsl(var(--primary))' },
+  '.cm-matchingBracket': { background: 'hsl(var(--primary) / 0.15)', outline: 'none' },
   '.cm-line': { padding: '0' },
 }, { dark: true });
 

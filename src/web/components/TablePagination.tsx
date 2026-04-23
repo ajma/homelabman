@@ -20,7 +20,7 @@ export function TablePagination({ page, pageSize, total, onPageChange, onPageSiz
       <div className="flex items-center gap-2 text-xs text-[rgba(255,255,255,0.38)]">
         <span>Rows per page:</span>
         <select
-          className="h-7 rounded-lg border border-white/[0.14] bg-[rgba(4,7,15,0.78)] px-2 text-xs text-[rgba(255,255,255,0.75)] outline-none focus:border-[rgba(100,158,245,0.4)]"
+          className="h-7 rounded-lg border border-white/[0.14] bg-background/[0.78] px-2 text-xs text-[rgba(255,255,255,0.75)] outline-none focus:border-primary/[0.4]"
           value={pageSize}
           onChange={(e) => {
             onPageSizeChange(Number(e.target.value));

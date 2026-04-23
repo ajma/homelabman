@@ -70,7 +70,7 @@ export function Login() {
           <button
             type="submit"
             disabled={login.isPending}
-            className="mt-2 w-full rounded-xl bg-[#649ef5] py-2 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+            className="mt-2 w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
           >
             {login.isPending ? 'Signing in…' : 'Sign In'}
           </button>

@@ -9,20 +9,20 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // Primary: solid blue fill, dark text
-        default: 'bg-[#649ef5] text-[#101827] hover:bg-[#7db0ff]',
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
         // Destructive: dark red glass
         destructive:
           'bg-[rgba(127,29,29,0.20)] text-[rgba(254,202,202,0.92)] border border-[rgba(248,113,113,0.36)] hover:bg-[rgba(127,29,29,0.30)] hover:border-[rgba(248,113,113,0.52)]',
         // Outline: blue border, blue text, subtle hover fill
         outline:
-          'border border-[rgba(100,158,245,0.4)] text-[#7db0ff] hover:bg-[rgba(100,158,245,0.08)]',
+          'border border-primary/[0.4] text-primary hover:bg-primary/[0.08]',
         // Secondary: ghost glass with white border
         secondary:
           'bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.07)] text-[rgba(255,255,255,0.45)] hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.6)] hover:border-[rgba(255,255,255,0.12)]',
         // Ghost: text only, subtle hover
         ghost: 'text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.65)] hover:bg-[rgba(255,255,255,0.04)]',
         // Link: blue text underline
-        link: 'text-[#7db0ff] underline-offset-4 hover:text-[#9cc3ff] hover:underline',
+        link: 'text-primary underline-offset-4 hover:brightness-110 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2',

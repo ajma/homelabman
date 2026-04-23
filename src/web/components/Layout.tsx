@@ -33,7 +33,7 @@ function NavItem({
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-lg px-3 py-[8px] text-sm transition-all ${
           isActive
-            ? 'bg-[rgba(100,158,245,0.12)] text-[#7db0ff] shadow-[inset_2px_0_0_#649ef5]'
+            ? 'bg-primary/[0.12] text-primary shadow-[inset_2px_0_0_hsl(var(--primary))]'
             : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
         }`
       }
@@ -79,7 +79,7 @@ function SidebarContent({
   return (
     <>
       <div className="flex h-14 items-center border-b border-[rgba(255,255,255,0.12)] px-4">
-        <h1 className="text-lg font-semibold text-[#7db0ff]">
+        <h1 className="text-lg font-semibold text-primary">
           Labrador
           <span className="ml-1.5 text-2xs font-normal text-[rgba(255,255,255,0.3)]">v{__APP_VERSION__}</span>
         </h1>
@@ -95,7 +95,7 @@ function SidebarContent({
             onClick={() => setDockerOpen(!dockerOpen)}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-[8px] text-sm transition-all ${
               isDockerRoute
-                ? 'text-[#7db0ff]'
+                ? 'text-primary'
                 : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
             }`}
           >
@@ -171,7 +171,7 @@ function SidebarContent({
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-lg px-3 py-[8px] text-sm transition-all ${
                     isActive
-                      ? 'bg-[rgba(100,158,245,0.12)] text-[#7db0ff] shadow-[inset_2px_0_0_#649ef5]'
+                      ? 'bg-primary/[0.12] text-primary shadow-[inset_2px_0_0_hsl(var(--primary))]'
                       : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.06)]'
                   }`
                 }
@@ -255,7 +255,7 @@ export function Layout() {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="ml-3 text-lg font-semibold text-[#7db0ff]">
+        <h1 className="ml-3 text-lg font-semibold text-primary">
           Labrador
           <span className="ml-1.5 text-2xs font-normal text-[rgba(255,255,255,0.3)]">v{__APP_VERSION__}</span>
         </h1>
@@ -268,7 +268,7 @@ export function Layout() {
             className="absolute inset-0 bg-[rgba(0,0,0,0.55)] transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute left-0 top-0 flex h-full w-64 flex-col border-r border-[rgba(255,255,255,0.12)] bg-[rgba(4,7,15,0.98)] shadow-[4px_0_24px_rgba(0,0,0,0.4)] animate-in slide-in-from-left duration-200">
+          <aside className="absolute left-0 top-0 flex h-full w-64 flex-col border-r border-[rgba(255,255,255,0.12)] bg-background/[0.98] shadow-[4px_0_24px_rgba(0,0,0,0.4)] animate-in slide-in-from-left duration-200">
             <div className="absolute right-2 top-3">
               <button
                 onClick={() => setMobileOpen(false)}

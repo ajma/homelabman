@@ -29,7 +29,7 @@ interface Props {
 }
 
 const selectCls =
-  'w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(4,7,15,0.78)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] pr-9';
+  'w-full appearance-none rounded-[14px] border border-white/[0.20] bg-background/[0.78] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-primary/[0.5] pr-9';
 
 export function CloudflareProviderForm({ value, onChange, detectedStack }: Props) {
   const [accounts, setAccounts] = useState<CfAccount[]>([]);
@@ -113,7 +113,7 @@ export function CloudflareProviderForm({ value, onChange, detectedStack }: Props
             type="button"
             onClick={handleConnect}
             disabled={!value.apiToken || isConnecting}
-            className="shrink-0 rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-sm text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)] disabled:opacity-40"
+            className="shrink-0 rounded-xl border border-primary/[0.4] px-3 py-1.5 text-sm text-primary transition-colors hover:bg-primary/[0.08] disabled:opacity-40"
           >
             {isConnecting ? 'Connecting…' : 'Connect'}
           </button>
@@ -133,7 +133,7 @@ export function CloudflareProviderForm({ value, onChange, detectedStack }: Props
               href="https://dash.cloudflare.com/profile/api-tokens"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#7db0ff] hover:underline"
+              className="text-primary hover:underline"
             >
               Open Cloudflare dashboard
             </a>
@@ -267,7 +267,7 @@ export function CloudflareProviderForm({ value, onChange, detectedStack }: Props
                   <input
                     type="radio"
                     name="cf-container-setup"
-                    className="mt-0.5 h-4 w-4 cursor-pointer accent-[#649ef5]"
+                    className="mt-0.5 h-4 w-4 cursor-pointer accent-primary"
                     checked={opt.checked}
                     onChange={opt.onSelect}
                   />
@@ -283,7 +283,7 @@ export function CloudflareProviderForm({ value, onChange, detectedStack }: Props
               <input
                 id="cf-deploy-container"
                 type="checkbox"
-                className="mt-0.5 h-4 w-4 cursor-pointer accent-[#649ef5]"
+                className="mt-0.5 h-4 w-4 cursor-pointer accent-primary"
                 checked={value.deployContainer}
                 onChange={(e) => onChange({ ...value, deployContainer: e.target.checked })}
               />

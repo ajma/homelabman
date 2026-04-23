@@ -46,7 +46,7 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
             </div>
             <div className="h-1.5 w-full rounded-full bg-[rgba(255,255,255,0.06)]">
               <div
-                className="h-1.5 rounded-full bg-[#649ef5] transition-all"
+                className="h-1.5 rounded-full bg-primary transition-all"
                 style={{ width: `${Math.min(s.cpuUsage, 100)}%` }}
               />
             </div>
@@ -60,7 +60,7 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
             </div>
             <div className="h-1.5 w-full rounded-full bg-[rgba(255,255,255,0.06)]">
               <div
-                className="h-1.5 rounded-full bg-[rgba(100,158,245,0.55)] transition-all"
+                className="h-1.5 rounded-full bg-primary/[0.55] transition-all"
                 style={{
                   width: `${s.memoryLimit > 0 ? Math.min((s.memoryUsage / s.memoryLimit) * 100, 100) : 0}%`,
                 }}

@@ -96,7 +96,7 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
                   href={`https://${project.domainName}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="truncate hover:text-[#7db0ff] transition-colors"
+                  className="truncate hover:text-primary transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {project.domainName}

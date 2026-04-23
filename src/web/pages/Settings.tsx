@@ -20,7 +20,7 @@ import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../com
 // ─── shared input class ──────────────────────────────────────────────────────
 
 const inputCls =
-  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
+  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-primary/[0.5] disabled:cursor-not-allowed disabled:opacity-50';
 
 // ─── anchor sections ─────────────────────────────────────────────────────────
 
@@ -40,7 +40,7 @@ function AnchorNav({ active }: { active: SectionId }) {
   };
 
   return (
-    <nav className="flex items-stretch gap-6 px-6 mb-8 border-b border-white/[0.10] sticky top-0 bg-[#04070f] z-10">
+    <nav className="flex items-stretch gap-6 px-6 mb-8 border-b border-white/[0.10] sticky top-0 bg-background z-10">
       {SECTIONS.map((s) => (
         <button
           key={s.id}
@@ -53,7 +53,7 @@ function AnchorNav({ active }: { active: SectionId }) {
         >
           {s.label}
           <span
-            className={`absolute bottom-0 left-0 right-0 h-0.5 bg-[#649ef5] transition-opacity duration-200 ${
+            className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-opacity duration-200 ${
               active === s.id ? 'opacity-100' : 'opacity-0'
             }`}
           />
@@ -150,7 +150,7 @@ function ProviderTypeToggle({
           onClick={() => !disabled && onChange(type)}
           className={`rounded-[10px] px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
             value === type
-              ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
+              ? 'bg-primary/[0.15] text-primary'
               : 'text-[rgba(255,255,255,0.38)] hover:text-[rgba(255,255,255,0.65)]'
           }`}
         >
@@ -317,7 +317,7 @@ function ProviderModal({
         e.preventDefault();
         handleCancel();
       }}
-      className="m-auto w-full max-w-lg rounded-2xl border border-white/[0.10] bg-[#0a1020] p-0 shadow-2xl backdrop:bg-black/60"
+      className="m-auto w-full max-w-lg rounded-2xl border border-white/[0.10] bg-popover p-0 shadow-2xl backdrop:bg-black/60"
     >
       <div className="flex flex-col" style={{ maxHeight: '90vh' }}>
         {/* Header */}
@@ -357,7 +357,7 @@ function ProviderModal({
             type="button"
             disabled={isPending}
             onClick={() => formRef.current?.requestSubmit()}
-            className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+            className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
           >
             {isPending ? 'Saving…' : 'Save'}
           </button>
@@ -458,7 +458,7 @@ function ProvidersSection() {
       <div className="flex items-center justify-end gap-4 mb-4">
         <button
           onClick={() => setModalState({ mode: 'add' })}
-          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-sm text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-primary/[0.4] px-3 py-1.5 text-sm text-primary transition-colors hover:bg-primary/[0.08]"
         >
           <Plus className="h-3.5 w-3.5" />
           Add Provider
@@ -471,7 +471,7 @@ function ProvidersSection() {
         <div className="rounded-2xl border border-dashed border-white/[0.10] px-6 py-10 text-center">
           <p className="text-sm text-[rgba(255,255,255,0.35)]">
             No providers yet.{' '}
-            <button onClick={() => setModalState({ mode: 'add' })} className="text-[#7db0ff] hover:underline">
+            <button onClick={() => setModalState({ mode: 'add' })} className="text-primary hover:underline">
               Add one
             </button>{' '}
             to expose your services.
@@ -486,7 +486,7 @@ function ProvidersSection() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-md font-medium text-[rgba(255,255,255,0.85)]">{provider.name}</span>
                     {settings?.defaultExposureProviderId === provider.id && (
-                      <span className="rounded-full bg-[rgba(100,158,245,0.12)] px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-[#7db0ff]">Default</span>
+                      <span className="rounded-full bg-primary/[0.12] px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-primary">Default</span>
                     )}
                     {!provider.enabled && (
                       <span className="rounded-full bg-[rgba(255,255,255,0.05)] px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-[rgba(255,255,255,0.35)]">Disabled</span>
@@ -664,7 +664,7 @@ function GroupsSection() {
         <button
           onClick={handleNewGroup}
           disabled={createGroup.isPending}
-          className="flex items-center gap-1.5 rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-sm text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)] disabled:opacity-40"
+          className="flex items-center gap-1.5 rounded-xl border border-primary/[0.4] px-3 py-1.5 text-sm text-primary transition-colors hover:bg-primary/[0.08] disabled:opacity-40"
         >
           <Plus className="h-3.5 w-3.5" />
           New Group
@@ -712,7 +712,7 @@ function GroupsSection() {
                       onChange={(e) => setEditingName(e.target.value)}
                       onBlur={() => commitEdit(group)}
                       onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(group); if (e.key === 'Escape') setEditingGroupId(null); }}
-                      className="flex-1 rounded-lg border border-[rgba(100,158,245,0.4)] bg-[rgba(100,158,245,0.06)] px-2 py-0.5 text-sm text-[rgba(255,255,255,0.85)] outline-none"
+                      className="flex-1 rounded-lg border border-primary/[0.4] bg-primary/[0.06] px-2 py-0.5 text-sm text-[rgba(255,255,255,0.85)] outline-none"
                     />
                   ) : (
                     <div className="flex flex-1 items-center gap-2 min-w-0">
@@ -1050,7 +1050,7 @@ function AccountSection() {
         <button
           type="submit"
           disabled={isSubmitting || changePassword.isPending}
-          className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+          className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
         >
           {isSubmitting || changePassword.isPending ? 'Saving…' : 'Update password'}
         </button>

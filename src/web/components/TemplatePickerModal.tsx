@@ -47,7 +47,7 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="relative flex h-[80vh] w-full max-w-5xl flex-col rounded-2xl border border-white/[0.12] bg-[rgba(9,14,25,0.97)] shadow-xl">
+      <div className="relative flex h-[80vh] w-full max-w-5xl flex-col rounded-2xl border border-white/[0.12] bg-background/[0.97] shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-4">
           <h2 className="text-lg font-semibold text-[rgba(255,255,255,0.88)]">Choose a Template</h2>
@@ -69,7 +69,7 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
               placeholder="Search templates…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] pl-10 pr-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]"
+              className="flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] pl-10 pr-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-primary/[0.5]"
             />
           </div>
           {categories.length > 0 && (
@@ -78,7 +78,7 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
                 onClick={() => setActiveCategory(null)}
                 className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                   activeCategory === null
-                    ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
+                    ? 'bg-primary/[0.15] text-primary'
                     : 'border border-white/[0.14] text-[rgba(255,255,255,0.45)] hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.7)]'
                 }`}
               >
@@ -90,7 +90,7 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
                   onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
                   className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                     activeCategory === cat
-                      ? 'bg-[rgba(100,158,245,0.15)] text-[#7db0ff]'
+                      ? 'bg-primary/[0.15] text-primary'
                       : 'border border-white/[0.14] text-[rgba(255,255,255,0.45)] hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.7)]'
                   }`}
                 >

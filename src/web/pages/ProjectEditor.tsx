@@ -185,7 +185,7 @@ function GroupCombobox({
           onFocus={() => { setOpen(true); setQuery(''); }}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]"
+          className="flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-primary/[0.5]"
         />
         {value && (
           <button
@@ -199,7 +199,7 @@ function GroupCombobox({
       </div>
 
       {open && (
-        <div className="absolute z-20 mt-1 w-full rounded-xl border border-white/[0.12] bg-[#0a1020] shadow-xl overflow-hidden">
+        <div className="absolute z-20 mt-1 w-full rounded-xl border border-white/[0.12] bg-popover shadow-xl overflow-hidden">
           {filtered.length === 0 && !showCreate && (
             <p className="px-4 py-3 text-sm text-[rgba(255,255,255,0.35)]">No groups yet</p>
           )}
@@ -218,7 +218,7 @@ function GroupCombobox({
               type="button"
               onMouseDown={handleCreate}
               disabled={createGroup.isPending}
-              className="flex w-full items-center gap-2 border-t border-white/[0.06] px-4 py-2.5 text-sm text-[#7db0ff] hover:bg-[rgba(100,158,245,0.06)] transition-colors disabled:opacity-40"
+              className="flex w-full items-center gap-2 border-t border-white/[0.06] px-4 py-2.5 text-sm text-primary hover:bg-primary/[0.06] transition-colors disabled:opacity-40"
             >
               <Plus className="h-3.5 w-3.5" />
               {createGroup.isPending ? 'Creating…' : `Create "${query.trim()}"`}
@@ -243,10 +243,10 @@ const emptyProjectFormValues: CreateProjectInput = {
 };
 
 const inputCls =
-  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)] disabled:cursor-not-allowed disabled:opacity-50';
+  'flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-primary/[0.5] disabled:cursor-not-allowed disabled:opacity-50';
 
 const selectCls =
-  'h-10 w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 pr-9 text-md text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]';
+  'h-10 w-full appearance-none rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 pr-9 text-md text-[rgba(255,255,255,0.85)] outline-none transition-colors focus:border-primary/[0.5]';
 
 const statusStyles: Record<string, string> = {
   running: 'bg-[rgba(74,222,128,0.12)] text-[#4ade80] border-[rgba(74,222,128,0.25)]',
@@ -263,7 +263,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ${
-        checked ? 'bg-[#649ef5]' : 'bg-[rgba(255,255,255,0.14)]'
+        checked ? 'bg-primary' : 'bg-[rgba(255,255,255,0.14)]'
       }`}
     >
       <span
@@ -301,7 +301,7 @@ function LogsModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative flex h-[94vh] w-full max-w-6xl flex-col rounded-2xl border border-white/[0.12] bg-[rgba(9,14,25,0.97)] shadow-2xl">
+      <div className="relative flex h-[94vh] w-full max-w-6xl flex-col rounded-2xl border border-white/[0.12] bg-background/[0.97] shadow-2xl">
 
         {/* Modal header */}
         <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-6 py-4">
@@ -365,7 +365,7 @@ function LogsModal({
                   <p className="mb-2 shrink-0 font-rubik text-2xs font-semibold uppercase tracking-[0.12em] text-[rgba(255,255,255,0.28)]">
                     {entry.container}
                   </p>
-                  <pre className="min-h-0 flex-1 overflow-auto rounded-xl bg-[rgba(4,7,15,0.78)] p-4 font-mono text-xs leading-relaxed text-[rgba(255,255,255,0.70)]">
+                  <pre className="min-h-0 flex-1 overflow-auto rounded-xl bg-background/[0.78] p-4 font-mono text-xs leading-relaxed text-[rgba(255,255,255,0.70)]">
                     {entry.output || '(no output)'}
                   </pre>
                 </div>
@@ -689,7 +689,7 @@ export function ProjectEditor() {
         <p className="text-[rgba(255,255,255,0.6)]">Project not found.</p>
         <button
           onClick={() => navigate('/')}
-          className="mt-4 text-sm text-[#7db0ff] transition-colors hover:text-[#9cc3ff]"
+          className="mt-4 text-sm text-primary transition-colors hover:brightness-110"
         >
           ← Back to Dashboard
         </button>
@@ -703,14 +703,14 @@ export function ProjectEditor() {
     <div className="flex min-h-full flex-col">
 
       {isCreate && adoptable && adoptable.length > 0 && (
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-[rgba(100,158,245,0.18)] bg-[rgba(100,158,245,0.04)] px-4 py-3">
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-primary/[0.18] bg-primary/[0.04] px-4 py-3">
           <p className="text-sm text-[rgba(255,255,255,0.65)]">
             {adoptable.length} existing stack{adoptable.length > 1 ? 's' : ''} can be adopted
           </p>
           <button
             type="button"
             onClick={() => setAdoptDialogOpen(true)}
-            className="rounded-xl bg-[#649ef5] px-3 py-1 text-xs font-medium text-[#101827] transition-colors hover:bg-[#7db0ff]"
+            className="rounded-xl bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Adopt
           </button>
@@ -719,7 +719,7 @@ export function ProjectEditor() {
       <AdoptStacksDialog open={adoptDialogOpen} onClose={() => setAdoptDialogOpen(false)} />
 
       {/* ── Sticky header ── */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/[0.08] bg-[rgba(9,14,25,0.92)] px-6 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/[0.08] bg-background/[0.92] px-6 py-3 backdrop-blur-md">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           {watch('logoUrl') && (
             <img
@@ -748,7 +748,7 @@ export function ProjectEditor() {
               href={`https://${project.domainName}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:text-[#7db0ff]"
+              className="flex items-center gap-1 text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:text-primary"
             >
               <Globe className="h-3 w-3" />
               {project.domainName}
@@ -762,7 +762,7 @@ export function ProjectEditor() {
             <button
               type="button"
               onClick={() => setShowTemplatePicker(true)}
-              className="rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-sm text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)]"
+              className="rounded-xl border border-primary/[0.4] px-3 py-1.5 text-sm text-primary transition-colors hover:bg-primary/[0.08]"
             >
               Use Template
             </button>
@@ -772,7 +772,7 @@ export function ProjectEditor() {
             type="submit"
             form="project-form"
             disabled={isSubmitting}
-            className="rounded-xl bg-[#649ef5] px-4 py-1.5 text-sm font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+            className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
           >
             {isSubmitting ? 'Saving…' : isEditing ? 'Save' : 'Create'}
           </button>
@@ -897,7 +897,7 @@ export function ProjectEditor() {
                         <button
                           type="button"
                           onClick={() => navigate('/settings')}
-                          className="text-[#7db0ff] hover:underline"
+                          className="text-primary hover:underline"
                         >
                           Add one in Settings.
                         </button>
@@ -1057,7 +1057,7 @@ export function ProjectEditor() {
                           type="button"
                           onClick={handleSaveAndDeploy}
                           disabled={isDeploying || updateMutation.isPending}
-                          className="rounded-lg bg-[#649ef5] px-3 py-1 text-xs font-medium text-[#101827] transition-colors hover:bg-[#7db0ff] disabled:opacity-40"
+                          className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
                         >
                           {updateMutation.isPending || isDeploying ? 'Redeploying…' : 'Save & Redeploy'}
                         </button>
@@ -1066,7 +1066,7 @@ export function ProjectEditor() {
                         type="button"
                         onClick={() => restartMutation.mutate()}
                         disabled={restartMutation.isPending}
-                        className="rounded-lg border border-[rgba(100,158,245,0.3)] px-3 py-1 text-xs text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)] disabled:opacity-40"
+                        className="rounded-lg border border-primary/[0.3] px-3 py-1 text-xs text-primary transition-colors hover:bg-primary/[0.08] disabled:opacity-40"
                       >
                         {restartMutation.isPending ? 'Restarting…' : 'Restart'}
                       </button>
@@ -1141,7 +1141,7 @@ export function ProjectEditor() {
                 style={{ gridTemplateRows: deployProgress.length > 0 ? '1fr' : '0fr' }}
               >
                 <div className="overflow-hidden">
-                  <div className="max-h-28 overflow-y-auto rounded-xl bg-[rgba(4,7,15,0.6)] px-4 py-3">
+                  <div className="max-h-28 overflow-y-auto rounded-xl bg-background/[0.6] px-4 py-3">
                     {deployProgress.map((p, i) => (
                       <div key={i} className="flex gap-2 font-mono text-xs leading-relaxed">
                         <span className="shrink-0 text-[rgba(255,255,255,0.22)]">[{p.stage}]</span>
