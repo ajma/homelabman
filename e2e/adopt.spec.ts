@@ -76,52 +76,6 @@ test('adopting from dashboard zero-state creates a project', async ({ page }) =>
   await expect(page.getByText('Nothing deployed yet')).not.toBeVisible();
 });
 
-// --- New project page banner ---
-
-test('new project page shows banner when adoptable stacks exist', async ({ page }) => {
-  await page.request.post('/api/test/mock/docker', {
-    data: { containers: [unmanaged('myapp')] },
-  });
-
-  await page.goto('/projects/new');
-
-  await expect(page.getByText(/1 existing stack can be adopted/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Adopt' })).toBeVisible();
-});
-
-test('new project page hides banner when no adoptable stacks', async ({ page }) => {
-  await page.request.post('/api/test/mock/docker', { data: { containers: [] } });
-
-  await page.goto('/projects/new');
-
-  await expect(page.getByText(/existing stack/i)).not.toBeVisible();
-});
-
-test('adopt button on new project page opens dialog', async ({ page }) => {
-  await page.request.post('/api/test/mock/docker', {
-    data: { containers: [unmanaged('myapp')] },
-  });
-
-  await page.goto('/projects/new');
-  await page.getByRole('button', { name: 'Adopt' }).click();
-
-  await expect(page.getByRole('heading', { name: 'Adopt stacks' })).toBeVisible();
-  await expect(page.getByText('myapp', { exact: true })).toBeVisible();
-});
-
-test('adopting from dialog closes it and shows success toast', async ({ page }) => {
-  await page.request.post('/api/test/mock/docker', {
-    data: { containers: [unmanaged('myapp')] },
-  });
-
-  await page.goto('/projects/new');
-  await page.getByRole('button', { name: 'Adopt' }).click();
-  await page.getByRole('button', { name: /adopt selected/i }).click();
-
-  await expect(page.getByText('Adopted 1 stack')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Adopt stacks' })).not.toBeVisible();
-});
-
 // --- Adopt variations ---
 
 test('orphaned stack (has labrador label but no matching project) is adoptable', async ({ page }) => {

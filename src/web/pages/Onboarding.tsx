@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { registerSchema, type ExposureProviderInput } from '@shared/schemas';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRegister, useAuthStatus } from '../hooks/useAuth';
+import { AdoptableStacksList } from '../components/AdoptableStacksList';
+import type { AdoptableStack } from '@shared/types';
 import { api } from '../lib/api';
 import { inputCls } from '../lib/styles';
 import { Input } from '../components/ui/input';
 import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../components/CloudflareProviderForm';
 import { resolveCloudflareBeforeSave, deployCloudflaredProject } from '../lib/cloudflare';
 
-type OnboardingStep = 1 | 2 | 3;
+type OnboardingStep = 1 | 2 | 3 | 4;
 
 const createAccountSchema = registerSchema.extend({
   confirmPassword: z.string().min(8).max(128),
@@ -63,12 +65,14 @@ function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
   );
 }
 
-function StepIndicator({ currentStep }: { currentStep: OnboardingStep }) {
-  const steps = [
-    { step: 1, label: 'Account' },
-    { step: 2, label: 'Providers' },
-    { step: 3, label: 'Complete' },
-  ] as const;
+function StepIndicator({ currentStep, showAdopt }: { currentStep: OnboardingStep; showAdopt: boolean }) {
+  const allSteps = [
+    { step: 1 as const, label: 'Account' },
+    { step: 2 as const, label: 'Providers' },
+    { step: 3 as const, label: 'Adopt' },
+    { step: 4 as const, label: 'Complete' },
+  ];
+  const steps = showAdopt ? allSteps : allSteps.filter((s) => s.step !== 3);
 
   return (
     <div className="mb-6 flex items-center justify-center gap-2">
@@ -94,7 +98,7 @@ function StepIndicator({ currentStep }: { currentStep: OnboardingStep }) {
           >
             {label}
           </span>
-          {step < 3 && <div className="mx-2 h-px w-8 bg-muted" />}
+          {step < steps[steps.length - 1].step && <div className="mx-2 h-px w-8 bg-muted" />}
         </div>
       ))}
     </div>
@@ -377,6 +381,28 @@ function ConfigureProvidersStep({
   );
 }
 
+function AdoptStep({ stacks, onNext, onSkip }: { stacks: AdoptableStack[]; onNext: () => void; onSkip: () => void }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.22] bg-accent/80 p-6">
+      <h2 className="mb-1 text-lg font-semibold text-foreground">Adopt Existing Stacks</h2>
+      <p className="mb-5 text-sm text-muted-foreground">
+        We found Docker Compose stacks already running on this host. Select which ones to bring under Labrador management.
+      </p>
+
+      <AdoptableStacksList stacks={stacks} onAdopted={onNext} />
+
+      <div className="mt-5">
+        <button
+          onClick={onSkip}
+          className="rounded-xl px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
+        >
+          Skip
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CompleteStep({
   providerConfig,
   onFinish,
@@ -423,6 +449,13 @@ export function Onboarding() {
   const [step, setStep] = useState<OnboardingStep>(1);
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: adoptableStacks } = useQuery<AdoptableStack[]>({
+    queryKey: ['projects', 'adoptable'],
+    queryFn: () => api.get('/projects/adoptable'),
+    enabled: step >= 2,
+  });
+  const hasAdoptable = adoptableStacks && adoptableStacks.length > 0;
+  const nextAfterProviders: OnboardingStep = hasAdoptable ? 3 : 4;
 
   useEffect(() => {
     if (authStatus?.authenticated) setStep((s) => s === 1 ? 2 : s);
@@ -498,17 +531,20 @@ export function Onboarding() {
         <p className="mb-6 text-center text-sm text-muted-foreground">
           Let&apos;s get your instance set up.
         </p>
-        <StepIndicator currentStep={step} />
+        <StepIndicator currentStep={step} showAdopt={!!hasAdoptable} />
         {step === 1 && <CreateAccountStep onComplete={() => setStep(2)} />}
         {step === 2 && (
           <ConfigureProvidersStep
             providerConfig={providerConfig}
             onConfigChange={setProviderConfig}
-            onNext={() => setStep(3)}
-            onSkip={() => setStep(3)}
+            onNext={() => setStep(nextAfterProviders)}
+            onSkip={() => setStep(nextAfterProviders)}
           />
         )}
-        {step === 3 && (
+        {step === 3 && hasAdoptable && (
+          <AdoptStep stacks={adoptableStacks!} onNext={() => setStep(4)} onSkip={() => setStep(4)} />
+        )}
+        {step === 4 && (
           <CompleteStep
             providerConfig={providerConfig}
             onFinish={handleFinish}

@@ -12,11 +12,9 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { load } from 'js-yaml';
 import { ComposeEditor } from '../components/ComposeEditor';
 import { TemplatePickerModal } from '../components/TemplatePickerModal';
-import { AdoptStacksDialog } from '../components/AdoptStacksDialog';
 import { inputCls, selectCls } from '../lib/styles';
 import { api } from '../lib/api';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { useAdoptable } from '../hooks/useAdoptable';
 import type { ProjectTemplate } from '@shared/types';
 
 interface ExposureProviderOption {
@@ -379,10 +377,6 @@ export function ProjectEditor() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEditing = !!id;
-  const isCreate = !id;
-
-  const { data: adoptable } = useAdoptable();
-  const [adoptDialogOpen, setAdoptDialogOpen] = useState(false);
 
   const { data: project, isLoading } = useProject(id ?? '');
   const createMutation = useCreateProject();
@@ -697,22 +691,6 @@ export function ProjectEditor() {
 
   return (
     <div className="flex min-h-full flex-col">
-
-      {isCreate && adoptable && adoptable.length > 0 && (
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-primary/[0.18] bg-primary/[0.04] px-4 py-3">
-          <p className="text-sm text-muted-foreground">
-            {adoptable.length} existing stack{adoptable.length > 1 ? 's' : ''} can be adopted
-          </p>
-          <button
-            type="button"
-            onClick={() => setAdoptDialogOpen(true)}
-            className="rounded-xl bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Adopt
-          </button>
-        </div>
-      )}
-      <AdoptStacksDialog open={adoptDialogOpen} onClose={() => setAdoptDialogOpen(false)} />
 
       {/* ── Sticky header ── */}
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/[0.20] bg-background/[0.92] px-6 py-3 backdrop-blur-md">

@@ -37,6 +37,7 @@ export class MockDockerService {
   async startContainer(_id: string) {}
   async stopContainer(_id: string) {}
   async restartContainer(_id: string) {}
+  async removeContainer(_id: string, _force = false) {}
   async getContainerLogs(_id: string) { return ''; }
   async getContainerStats(_id: string) { return {} as Dockerode.ContainerStats; }
   async composeUp(_file: string, _name: string) { return { exitCode: 0 } as any; }
