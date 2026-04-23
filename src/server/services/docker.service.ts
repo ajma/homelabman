@@ -70,6 +70,12 @@ export class DockerService {
     await container.restart();
   }
 
+  /** Remove a container (must be stopped first unless force=true) */
+  async removeContainer(containerId: string, force = false): Promise<void> {
+    const container = this.docker.getContainer(containerId);
+    await container.remove({ force });
+  }
+
   /** Get container logs (last N lines) */
   async getContainerLogs(containerId: string, tail = 100): Promise<string> {
     const container = this.docker.getContainer(containerId);

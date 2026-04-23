@@ -17,6 +17,46 @@ export async function dockerRoutes(app: FastifyInstance) {
     return containers;
   });
 
+  // POST /containers/:id/start
+  app.post<{ Params: { id: string } }>('/containers/:id/start', async (request, reply) => {
+    if (!dockerService) {
+      return reply.code(503).send({ error: 'Docker is not available' });
+    }
+    await dockerService.startContainer(request.params.id);
+    return { success: true };
+  });
+
+  // POST /containers/:id/stop
+  app.post<{ Params: { id: string } }>('/containers/:id/stop', async (request, reply) => {
+    if (!dockerService) {
+      return reply.code(503).send({ error: 'Docker is not available' });
+    }
+    await dockerService.stopContainer(request.params.id);
+    return { success: true };
+  });
+
+  // POST /containers/:id/restart
+  app.post<{ Params: { id: string } }>('/containers/:id/restart', async (request, reply) => {
+    if (!dockerService) {
+      return reply.code(503).send({ error: 'Docker is not available' });
+    }
+    await dockerService.restartContainer(request.params.id);
+    return { success: true };
+  });
+
+  // DELETE /containers/:id
+  app.delete<{ Params: { id: string }; Querystring: { force?: string } }>(
+    '/containers/:id',
+    async (request, reply) => {
+      if (!dockerService) {
+        return reply.code(503).send({ error: 'Docker is not available' });
+      }
+      const force = request.query.force === 'true';
+      await dockerService.removeContainer(request.params.id, force);
+      return { success: true };
+    },
+  );
+
   // GET /networks - List Docker networks for a page, with Containers populated only for that page
   app.get<{ Querystring: { page?: string; pageSize?: string } }>('/networks', async (request, reply) => {
     if (!dockerService) {

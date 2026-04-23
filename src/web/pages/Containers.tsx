@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { Box, Search } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Box, Search, Play, Square, RotateCw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { Input } from '../components/ui/input';
 import { TablePagination } from '../components/TablePagination';
@@ -49,10 +50,34 @@ function StateBadge({ state }: { state: string }) {
   );
 }
 
+function useContainerAction(action: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => {
+      if (action === 'remove') return api.delete(`/docker/containers/${id}?force=true`);
+      return api.post(`/docker/containers/${id}/${action}`, {});
+    },
+    onSuccess: (_data, { name }) => {
+      queryClient.invalidateQueries({ queryKey: ['containers'] });
+      const labels: Record<string, string> = { start: 'started', stop: 'stopped', restart: 'restarted', remove: 'removed' };
+      toast.success(`${name} ${labels[action]}`);
+    },
+    onError: (error: Error, { name }) => {
+      toast.error(`Failed to ${action} ${name}: ${error.message}`);
+    },
+  });
+}
+
 export function Containers() {
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const startAction = useContainerAction('start');
+  const stopAction = useContainerAction('stop');
+  const restartAction = useContainerAction('restart');
+  const removeAction = useContainerAction('remove');
 
   const { data: containers, isLoading } = useQuery<DockerContainer[]>({
     queryKey: ['containers'],
@@ -119,6 +144,7 @@ export function Containers() {
                 <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">State</th>
                 <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Status</th>
                 <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Ports</th>
+                <th className="px-4 py-3 text-right text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -135,6 +161,62 @@ export function Containers() {
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">{container.Status}</td>
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatPorts(container.Ports)}</td>
+                  <td className="px-4 py-3 text-right">
+                    {removingId === container.Id ? (
+                      <div className="inline-flex items-center gap-2">
+                        <button
+                          onClick={() => setRemovingId(null)}
+                          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => { removeAction.mutate({ id: container.Id, name: containerName(container.Names) }); setRemovingId(null); }}
+                          disabled={removeAction.isPending}
+                          className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-1">
+                        {container.State === 'running' ? (
+                          <button
+                            onClick={() => stopAction.mutate({ id: container.Id, name: containerName(container.Names) })}
+                            disabled={stopAction.isPending}
+                            className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-[#facc15] disabled:opacity-40"
+                            title="Stop"
+                          >
+                            <Square className="h-3.5 w-3.5" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => startAction.mutate({ id: container.Id, name: containerName(container.Names) })}
+                            disabled={startAction.isPending}
+                            className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-[#4ade80] disabled:opacity-40"
+                            title="Start"
+                          >
+                            <Play className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => restartAction.mutate({ id: container.Id, name: containerName(container.Names) })}
+                          disabled={restartAction.isPending}
+                          className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-primary disabled:opacity-40"
+                          title="Restart"
+                        >
+                          <RotateCw className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setRemovingId(container.Id)}
+                          className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-[rgba(248,113,113,0.75)]"
+                          title="Remove"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
