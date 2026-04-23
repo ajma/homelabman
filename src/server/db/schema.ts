@@ -9,6 +9,15 @@ export const users = sqliteTable('users', {
   updatedAt: integer('updated_at', { mode: 'number' }).notNull().$defaultFn(() => Date.now()),
 });
 
+export const projectGroups = sqliteTable('project_groups', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').notNull().references(() => users.id),
+  name: text('name').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: integer('created_at', { mode: 'number' }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull().$defaultFn(() => Date.now()),
+});
+
 export const settings = sqliteTable('settings', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text('user_id').notNull().references(() => users.id),
@@ -45,6 +54,8 @@ export const projects = sqliteTable('projects', {
   createdAt: integer('created_at', { mode: 'number' }).notNull().$defaultFn(() => Date.now()),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull().$defaultFn(() => Date.now()),
   deployedAt: integer('deployed_at', { mode: 'number' }),
+  groupId: text('group_id').references(() => projectGroups.id, { onDelete: 'set null' }),
+  sortOrder: integer('sort_order').notNull().default(0),
 });
 
 export const containerStats = sqliteTable('container_stats', {

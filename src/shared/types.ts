@@ -10,6 +10,15 @@ export interface AuthStatus {
   authenticated: boolean;
 }
 
+export interface ProjectGroup {
+  id: string;
+  userId: string;
+  name: string;
+  sortOrder: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Project {
   id: string;
   userId: string;
@@ -26,6 +35,8 @@ export interface Project {
   createdAt: number;
   updatedAt: number;
   deployedAt: number | null;
+  groupId: string | null;
+  sortOrder: number;
 }
 
 export interface ExposureProviderConfig {

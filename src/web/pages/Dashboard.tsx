@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Server } from 'lucide-react';
+import { Plus, Server, ChevronRight, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProjects } from '../hooks/useProjects';
+import { useGroups } from '../hooks/useGroups';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAdoptable } from '../hooks/useAdoptable';
 import type { ContainerStats } from '../hooks/useStats';
@@ -15,7 +16,32 @@ export function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: projects, isLoading } = useProjects();
+  const { data: groups = [] } = useGroups();
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const ws = useWebSocket();
+
+  const allCollapsed = groups.length > 0 && collapsedGroups.size === groups.length;
+
+  const toggleGroup = (id: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allCollapsed) setCollapsedGroups(new Set());
+    else setCollapsedGroups(new Set(groups.map((g) => g.id)));
+  };
+
+  const sortedProjects = [...(projects ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+  const ungrouped = sortedProjects.filter((p) => p.groupId === null);
+  const groupedSections = groups.map((g) => ({
+    group: g,
+    projects: sortedProjects.filter((p) => p.groupId === g.id),
+  }));
   const { data: adoptable } = useAdoptable();
   const [projectStats, setProjectStats] = useState<Map<string, ContainerStats[]>>(new Map());
 
@@ -129,17 +155,69 @@ export function Dashboard() {
       )}
 
       {!isLoading && projects && projects.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              stats={projectStats.get(project.id)}
-              onDeploy={(id) => deployMutation.mutate(id)}
-              onStop={(id) => stopMutation.mutate(id)}
-              onRestart={(id) => restartMutation.mutate(id)}
-            />
-          ))}
+        <div className="space-y-8">
+          {groups.length > 0 && (
+            <div className="flex justify-end">
+              <button
+                onClick={toggleAll}
+                className="text-xs text-[rgba(255,255,255,0.35)] transition-colors hover:text-[rgba(255,255,255,0.6)]"
+              >
+                {allCollapsed ? 'Expand all' : 'Collapse all'}
+              </button>
+            </div>
+          )}
+
+          {ungrouped.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {ungrouped.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  stats={projectStats.get(project.id)}
+                  onDeploy={(id) => deployMutation.mutate(id)}
+                  onStop={(id) => stopMutation.mutate(id)}
+                  onRestart={(id) => restartMutation.mutate(id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {groupedSections.map(({ group, projects: gProjects }) => {
+            if (gProjects.length === 0) return null;
+            const collapsed = collapsedGroups.has(group.id);
+            return (
+              <div key={group.id}>
+                <button
+                  onClick={() => toggleGroup(group.id)}
+                  className="flex w-full items-center gap-2 mb-4"
+                >
+                  {collapsed ? (
+                    <ChevronRight className="h-3.5 w-3.5 text-[rgba(255,255,255,0.35)]" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5 text-[rgba(255,255,255,0.35)]" />
+                  )}
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgba(255,255,255,0.45)]">
+                    {group.name}
+                  </span>
+                  <div className="flex-1 h-px bg-white/[0.06]" />
+                </button>
+                {!collapsed && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {gProjects.map((project) => (
+                      <ProjectCard
+                        key={project.id}
+                        project={project}
+                        stats={projectStats.get(project.id)}
+                        onDeploy={(id) => deployMutation.mutate(id)}
+                        onStop={(id) => stopMutation.mutate(id)}
+                        onRestart={(id) => restartMutation.mutate(id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

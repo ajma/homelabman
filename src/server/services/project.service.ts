@@ -51,6 +51,8 @@ export class ProjectService {
         exposureProviderId: data.exposureProviderId ?? null,
         exposureConfig: data.exposureConfig ? JSON.stringify(data.exposureConfig) : '{}',
         isInfrastructure: data.isInfrastructure ?? false,
+        groupId: data.groupId ?? null,
+        sortOrder: data.sortOrder ?? 0,
       })
       .returning();
 
@@ -76,6 +78,8 @@ export class ProjectService {
     if (data.exposureProviderId !== undefined) updateData.exposureProviderId = data.exposureProviderId ?? null;
     if (data.exposureConfig !== undefined) updateData.exposureConfig = JSON.stringify(data.exposureConfig);
     if (data.isInfrastructure !== undefined) updateData.isInfrastructure = data.isInfrastructure;
+    if (data.groupId !== undefined) updateData.groupId = data.groupId ?? null;
+    if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
 
     const [row] = await db
       .update(projects)
@@ -101,6 +105,21 @@ export class ProjectService {
 
     // Now delete the project
     await db.delete(projects).where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
+  }
+
+  async reorderProjects(
+    userId: string,
+    updates: { id: string; groupId: string | null; sortOrder: number }[],
+  ): Promise<void> {
+    const db = getDatabase();
+    await db.transaction(async (tx) => {
+      for (const u of updates) {
+        await tx
+          .update(projects)
+          .set({ groupId: u.groupId, sortOrder: u.sortOrder, updatedAt: Date.now() })
+          .where(and(eq(projects.id, u.id), eq(projects.userId, userId)));
+      }
+    });
   }
 
   async updateProjectStatus(projectId: string, status: string): Promise<void> {

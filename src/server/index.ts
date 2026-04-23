@@ -14,6 +14,7 @@ import { projectRoutes } from './routes/projects.routes.js';
 import { dockerRoutes } from './routes/docker.routes.js';
 import { settingsRoutes } from './routes/settings.routes.js';
 import { cloudflareRoutes } from './routes/cloudflare.routes.js';
+import { groupRoutes } from './routes/groups.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { DockerService } from './services/docker.service.js';
 import { UpdateCheckerService } from './services/update-checker.service.js';
@@ -138,6 +139,7 @@ async function main() {
   await app.register(dockerRoutes, { prefix: '/api/docker' });
   await app.register(settingsRoutes, { prefix: '/api/settings' });
   await app.register(cloudflareRoutes, { prefix: '/api/cloudflare' });
+  await app.register(groupRoutes, { prefix: '/api/groups' });
 
   // Error handler
   app.setErrorHandler(errorHandler);

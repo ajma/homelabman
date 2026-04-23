@@ -1,13 +1,14 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Globe, ChevronDown, ExternalLink, X, RefreshCw, ScrollText } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { Globe, ChevronDown, ExternalLink, X, RefreshCw, ScrollText, Plus } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProject, useCreateProject, useUpdateProject, useDeleteProject, useProjectUpdates, useCheckUpdates } from '../hooks/useProjects';
+import { useGroups, useCreateGroup } from '../hooks/useGroups';
 import { createProjectSchema, updateProjectSchema } from '@shared/schemas';
 import type { CreateProjectInput } from '@shared/schemas';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { load } from 'js-yaml';
 import { ComposeEditor } from '../components/ComposeEditor';
 import { TemplatePickerModal } from '../components/TemplatePickerModal';
@@ -128,6 +129,107 @@ export function extractFirstComposeTargetPort(composeContent: string): number | 
   }
 }
 
+function GroupCombobox({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (groupId: string | null) => void;
+}) {
+  const { data: groups = [] } = useGroups();
+  const createGroup = useCreateGroup();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const selected = groups.find((g) => g.id === value) ?? null;
+
+  const filtered = groups.filter((g) =>
+    g.name.toLowerCase().includes(query.toLowerCase()),
+  );
+  const exactMatch = groups.find(
+    (g) => g.name.toLowerCase() === query.toLowerCase(),
+  );
+  const showCreate = query.trim().length > 0 && !exactMatch;
+
+  const select = (group: { id: string; name: string }) => {
+    onChange(group.id);
+    setQuery('');
+    setOpen(false);
+  };
+
+  const clear = () => {
+    onChange(null);
+    setQuery('');
+    setOpen(false);
+  };
+
+  const handleCreate = async () => {
+    if (exactMatch) {
+      select(exactMatch);
+      return;
+    }
+    const group = await createGroup.mutateAsync(query.trim());
+    select(group);
+  };
+
+  return (
+    <div className="relative">
+      <div className="flex items-center gap-1">
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="No group"
+          autoComplete="off"
+          value={open ? query : (selected?.name ?? '')}
+          onFocus={() => { setOpen(true); setQuery(''); }}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onChange={(e) => setQuery(e.target.value)}
+          className="flex h-10 w-full rounded-[14px] border border-white/[0.20] bg-[rgba(255,255,255,0.06)] px-4 py-2 text-md text-[rgba(255,255,255,0.85)] placeholder:text-[rgba(255,255,255,0.28)] outline-none transition-colors focus:border-[rgba(100,158,245,0.5)]"
+        />
+        {value && (
+          <button
+            type="button"
+            onClick={clear}
+            className="shrink-0 text-[rgba(255,255,255,0.25)] transition-colors hover:text-[rgba(255,255,255,0.65)]"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div className="absolute z-20 mt-1 w-full rounded-xl border border-white/[0.12] bg-[#0a1020] shadow-xl overflow-hidden">
+          {filtered.length === 0 && !showCreate && (
+            <p className="px-4 py-3 text-sm text-[rgba(255,255,255,0.35)]">No groups yet</p>
+          )}
+          {filtered.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              onMouseDown={() => select(g)}
+              className="flex w-full items-center px-4 py-2.5 text-sm text-[rgba(255,255,255,0.75)] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
+            >
+              {g.name}
+            </button>
+          ))}
+          {showCreate && (
+            <button
+              type="button"
+              onMouseDown={handleCreate}
+              disabled={createGroup.isPending}
+              className="flex w-full items-center gap-2 border-t border-white/[0.06] px-4 py-2.5 text-sm text-[#7db0ff] hover:bg-[rgba(100,158,245,0.06)] transition-colors disabled:opacity-40"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {createGroup.isPending ? 'Creating…' : `Create "${query.trim()}"`}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const emptyProjectFormValues: CreateProjectInput = {
   name: '',
   composeContent: '',
@@ -137,6 +239,7 @@ const emptyProjectFormValues: CreateProjectInput = {
   exposureProviderId: null,
   exposureConfig: {},
   isInfrastructure: false,
+  groupId: null,
 };
 
 const inputCls =
@@ -408,6 +511,7 @@ export function ProjectEditor() {
     reset,
     setValue,
     watch,
+    control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<CreateProjectInput>({
     resolver: zodResolver(isEditing ? updateProjectSchema : createProjectSchema),
@@ -444,6 +548,7 @@ export function ProjectEditor() {
         exposureEnabled: project.exposureEnabled ?? false,
         exposureProviderId: project.exposureProviderId || null,
         exposureConfig: expConfig,
+        groupId: project.groupId ?? null,
       });
     }
   }, [isEditing, project, reset]);
@@ -726,6 +831,21 @@ export function ProjectEditor() {
             {errors.logoUrl && (
               <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.logoUrl.message}</p>
             )}
+          </div>
+
+          {/* Group */}
+          <div className="space-y-1.5">
+            <label className="font-rubik text-xs font-medium text-[rgba(255,255,255,0.6)]">
+              Group{' '}
+              <span className="font-normal text-[rgba(255,255,255,0.28)]">(optional)</span>
+            </label>
+            <Controller
+              name="groupId"
+              control={control}
+              render={({ field }) => (
+                <GroupCombobox value={field.value ?? null} onChange={field.onChange} />
+              )}
+            />
           </div>
 
           {/* Exposure */}

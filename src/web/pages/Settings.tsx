@@ -3,14 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Plus, CheckCircle2, XCircle, FileCheck, X } from 'lucide-react';
+import { Plus, CheckCircle2, XCircle, FileCheck, X, ChevronUp, ChevronDown, Pencil, Layers } from 'lucide-react';
 import {
   exposureProviderSchema,
   changePasswordSchema,
   type ExposureProviderInput,
   type ChangePasswordInput,
 } from '@shared/schemas';
-import type { ExposureProviderConfig, Settings as SettingsType } from '@shared/types';
+import type { ExposureProviderConfig, Settings as SettingsType, ProjectGroup, Project } from '@shared/types';
+import { useGroups, useCreateGroup, useRenameGroup, useDeleteGroup, useReorderGroups, useReorderProjects } from '../hooks/useGroups';
+import { useProjects } from '../hooks/useProjects';
 import { api } from '../lib/api';
 import { resolveCloudflareBeforeSave, deployCloudflaredProject } from '../lib/cloudflare';
 import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../components/CloudflareProviderForm';
@@ -23,6 +25,7 @@ const inputCls =
 // ─── anchor sections ─────────────────────────────────────────────────────────
 
 const SECTIONS = [
+  { id: 'groups', label: 'Project Groups' },
   { id: 'account', label: 'Account' },
   { id: 'providers', label: 'Providers' },
   { id: 'data', label: 'Data' },
@@ -573,6 +576,234 @@ function ProvidersSection() {
   );
 }
 
+// ─── groups section ──────────────────────────────────────────────────────────
+
+function GroupsSection() {
+  const { data: groups = [], isLoading } = useGroups();
+  const { data: projects = [] } = useProjects();
+  const createGroup = useCreateGroup();
+  const renameGroup = useRenameGroup();
+  const deleteGroup = useDeleteGroup();
+  const reorderGroups = useReorderGroups();
+  const reorderProjects = useReorderProjects();
+
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+
+  const getGroupProjects = (groupId: string) =>
+    [...projects]
+      .filter((p) => p.groupId === groupId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const startEdit = (group: ProjectGroup) => {
+    setEditingGroupId(group.id);
+    setEditingName(group.name);
+  };
+
+  const commitEdit = (group: ProjectGroup) => {
+    if (editingName.trim() && editingName.trim() !== group.name) {
+      renameGroup.mutate({ id: group.id, name: editingName.trim() });
+    }
+    setEditingGroupId(null);
+  };
+
+  const handleNewGroup = async () => {
+    const group = await createGroup.mutateAsync('New Group');
+    startEdit(group);
+  };
+
+  const moveGroupUp = (index: number) => {
+    if (index === 0) return;
+    const newOrder = [...groups];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    reorderGroups.mutate(newOrder.map((g) => g.id));
+  };
+
+  const moveGroupDown = (index: number) => {
+    if (index === groups.length - 1) return;
+    const newOrder = [...groups];
+    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    reorderGroups.mutate(newOrder.map((g) => g.id));
+  };
+
+  const moveProjectUp = (groupId: string, projectIndex: number) => {
+    if (projectIndex === 0) return;
+    const gProjects = getGroupProjects(groupId);
+    const newOrder = [...gProjects];
+    [newOrder[projectIndex - 1], newOrder[projectIndex]] = [newOrder[projectIndex], newOrder[projectIndex - 1]];
+    reorderProjects.mutate(newOrder.map((p, i) => ({ id: p.id, groupId, sortOrder: i })));
+  };
+
+  const moveProjectDown = (groupId: string, projectIndex: number) => {
+    const gProjects = getGroupProjects(groupId);
+    if (projectIndex === gProjects.length - 1) return;
+    const newOrder = [...gProjects];
+    [newOrder[projectIndex], newOrder[projectIndex + 1]] = [newOrder[projectIndex + 1], newOrder[projectIndex]];
+    reorderProjects.mutate(newOrder.map((p, i) => ({ id: p.id, groupId, sortOrder: i })));
+  };
+
+  const moveProjectToGroup = (project: Project, targetGroupId: string | null) => {
+    const targetProjects = projects.filter((p) => p.groupId === targetGroupId);
+    reorderProjects.mutate([{ id: project.id, groupId: targetGroupId, sortOrder: targetProjects.length }]);
+  };
+
+  const dotColor: Record<string, string> = {
+    running: '#4ade80',
+    stopped: 'rgba(255,255,255,0.20)',
+    starting: '#facc15',
+    error: '#f87171',
+  };
+
+  if (isLoading) return <p className="text-sm text-[rgba(255,255,255,0.35)]">Loading…</p>;
+
+  return (
+    <div>
+      <div className="flex items-center justify-end mb-4">
+        <button
+          onClick={handleNewGroup}
+          disabled={createGroup.isPending}
+          className="flex items-center gap-1.5 rounded-xl border border-[rgba(100,158,245,0.4)] px-3 py-1.5 text-sm text-[#7db0ff] transition-colors hover:bg-[rgba(100,158,245,0.08)] disabled:opacity-40"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          New Group
+        </button>
+      </div>
+
+      {groups.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-white/[0.10] px-6 py-10 text-center">
+          <div className="mb-3 flex justify-center">
+            <Layers className="h-8 w-8 text-[rgba(255,255,255,0.18)]" />
+          </div>
+          <p className="text-sm text-[rgba(255,255,255,0.35)]">Groups help you organize your projects.</p>
+        </div>
+      ) : (
+        <div className="space-y-0">
+          {groups.map((group, groupIndex) => {
+            const gProjects = getGroupProjects(group.id);
+            const isDeleting = deletingGroupId === group.id;
+            const isEditing = editingGroupId === group.id;
+
+            return (
+              <div key={group.id}>
+                <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 ${groupIndex === 0 ? '' : 'mt-1'} bg-[rgba(255,255,255,0.03)] border border-white/[0.06]`}>
+                  <div className="flex flex-col">
+                    <button
+                      onClick={() => moveGroupUp(groupIndex)}
+                      disabled={groupIndex === 0}
+                      className="text-[rgba(255,255,255,0.25)] hover:text-[rgba(255,255,255,0.6)] disabled:opacity-20 transition-colors leading-none"
+                    >
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => moveGroupDown(groupIndex)}
+                      disabled={groupIndex === groups.length - 1}
+                      className="text-[rgba(255,255,255,0.25)] hover:text-[rgba(255,255,255,0.6)] disabled:opacity-20 transition-colors leading-none"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  {isEditing ? (
+                    <input
+                      autoFocus
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onBlur={() => commitEdit(group)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(group); if (e.key === 'Escape') setEditingGroupId(null); }}
+                      className="flex-1 rounded-lg border border-[rgba(100,158,245,0.4)] bg-[rgba(100,158,245,0.06)] px-2 py-0.5 text-sm text-[rgba(255,255,255,0.85)] outline-none"
+                    />
+                  ) : (
+                    <div className="flex flex-1 items-center gap-2 min-w-0">
+                      <span className="truncate text-sm font-medium text-[rgba(255,255,255,0.85)]">{group.name}</span>
+                      <button onClick={() => startEdit(group)} className="shrink-0 text-[rgba(255,255,255,0.25)] hover:text-[rgba(255,255,255,0.6)] transition-colors">
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  <span className="shrink-0 rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-0.5 text-2xs text-[rgba(255,255,255,0.35)]">
+                    {gProjects.length}
+                  </span>
+
+                  {isDeleting ? (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="text-xs text-[rgba(255,255,255,0.45)]">Projects will become ungrouped.</span>
+                      <button onClick={() => setDeletingGroupId(null)} className="text-xs text-[rgba(255,255,255,0.35)] hover:text-[rgba(255,255,255,0.6)] transition-colors">Cancel</button>
+                      <button
+                        onClick={() => { deleteGroup.mutate(group.id); setDeletingGroupId(null); }}
+                        disabled={deleteGroup.isPending}
+                        className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2.5 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDeletingGroupId(group.id)}
+                      className="shrink-0 text-xs text-[rgba(255,255,255,0.20)] hover:text-[rgba(248,113,113,0.75)] transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+
+                {gProjects.length > 0 && (
+                  <div className="ml-6 border-l border-white/[0.06] pl-3 mt-0.5 space-y-0.5 mb-1">
+                    {gProjects.map((project, projectIndex) => (
+                      <div key={project.id} className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+                        <div className="flex flex-col">
+                          <button
+                            onClick={() => moveProjectUp(group.id, projectIndex)}
+                            disabled={projectIndex === 0}
+                            className="text-[rgba(255,255,255,0.20)] hover:text-[rgba(255,255,255,0.55)] disabled:opacity-20 transition-colors leading-none"
+                          >
+                            <ChevronUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => moveProjectDown(group.id, projectIndex)}
+                            disabled={projectIndex === gProjects.length - 1}
+                            className="text-[rgba(255,255,255,0.20)] hover:text-[rgba(255,255,255,0.55)] disabled:opacity-20 transition-colors leading-none"
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </button>
+                        </div>
+
+                        <span
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: dotColor[project.status] ?? 'rgba(255,255,255,0.20)' }}
+                        />
+                        <span className="flex-1 truncate text-sm text-[rgba(255,255,255,0.65)]">{project.name}</span>
+
+                        <select
+                          value={project.groupId ?? '__ungrouped__'}
+                          onChange={(e) => {
+                            const target = e.target.value === '__ungrouped__' ? null : e.target.value;
+                            moveProjectToGroup(project, target);
+                          }}
+                          className="appearance-none rounded-lg border border-white/[0.10] bg-transparent px-2 py-0.5 text-xs text-[rgba(255,255,255,0.35)] hover:border-white/[0.20] transition-colors cursor-pointer"
+                        >
+                          <option value={group.id}>{group.name}</option>
+                          {groups
+                            .filter((g) => g.id !== group.id)
+                            .map((g) => (
+                              <option key={g.id} value={g.id}>{g.name}</option>
+                            ))}
+                          <option value="__ungrouped__">(ungrouped)</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── data section ────────────────────────────────────────────────────────────
 
 function DataSection() {
@@ -830,7 +1061,7 @@ function AccountSection() {
 // ─── main page ────────────────────────────────────────────────────────────────
 
 export function Settings() {
-  const [activeSection, setActiveSection] = useState<SectionId>('account');
+  const [activeSection, setActiveSection] = useState<SectionId>('groups');
 
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
@@ -855,7 +1086,11 @@ export function Settings() {
       <AnchorNav active={activeSection} />
 
       <div className="px-6 pb-6">
-      <Section id="account" heading="Account" description="Change your login credentials." first>
+      <Section id="groups" heading="Project Groups" description="Organize your projects into named groups." first>
+        <GroupsSection />
+      </Section>
+
+      <Section id="account" heading="Account" description="Change your login credentials.">
         <AccountSection />
       </Section>
 

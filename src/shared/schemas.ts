@@ -19,6 +19,8 @@ export const createProjectSchema = z.object({
   exposureProviderId: z.string().uuid().nullable().optional(),
   exposureConfig: z.record(z.any()).optional().default({}),
   isInfrastructure: z.boolean().optional().default(false),
+  groupId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().min(0).optional().default(0),
 });
 
 export const updateProjectSchema = createProjectSchema.partial();
@@ -47,6 +49,26 @@ export const changePasswordSchema = z.object({
   path: ['confirmPassword'],
 });
 
+export const createGroupSchema = z.object({
+  name: z.string().min(1).max(100),
+});
+
+export const renameGroupSchema = z.object({
+  name: z.string().min(1).max(100),
+});
+
+export const reorderGroupsSchema = z.object({
+  ids: z.array(z.string().uuid()),
+});
+
+export const reorderProjectsSchema = z.object({
+  updates: z.array(z.object({
+    id: z.string().uuid(),
+    groupId: z.string().uuid().nullable(),
+    sortOrder: z.number().int().min(0),
+  })),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
@@ -55,3 +77,7 @@ export type ExposureProviderInput = z.infer<typeof exposureProviderSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type CreateGroupInput = z.infer<typeof createGroupSchema>;
+export type RenameGroupInput = z.infer<typeof renameGroupSchema>;
+export type ReorderGroupsInput = z.infer<typeof reorderGroupsSchema>;
+export type ReorderProjectsInput = z.infer<typeof reorderProjectsSchema>;

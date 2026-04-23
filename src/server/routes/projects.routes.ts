@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { createProjectSchema, updateProjectSchema } from '../../shared/schemas.js';
+import { createProjectSchema, updateProjectSchema, reorderProjectsSchema } from '../../shared/schemas.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { ProjectService } from '../services/project.service.js';
 import { ComposeValidatorService } from '../services/compose-validator.service.js';
@@ -130,6 +130,17 @@ export async function projectRoutes(app: FastifyInstance) {
     const userId = (request.user as any).id;
     const project = await projectService.createProject(userId, parsed.data);
     return reply.code(201).send(project);
+  });
+
+  // PUT /reorder — must be registered BEFORE PUT /:id
+  app.put('/reorder', async (request, reply) => {
+    const parsed = reorderProjectsSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'Invalid input', details: parsed.error.flatten() });
+    }
+    const userId = (request.user as any).id;
+    await projectService.reorderProjects(userId, parsed.data.updates);
+    return reply.code(204).send();
   });
 
   // PUT /:id - Update a project
