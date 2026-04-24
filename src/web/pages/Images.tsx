@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Download, Trash2, HardDrive, Search } from 'lucide-react';
-import { TablePagination } from '../components/TablePagination';
-import { toast } from 'sonner';
-import { api } from '../lib/api';
-import { Input } from '../components/ui/input';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Download, Trash2, HardDrive, Search } from "lucide-react";
+import { TablePagination } from "../components/TablePagination";
+import { toast } from "sonner";
+import { api } from "../lib/api";
+import { Input } from "../components/ui/input";
 
 interface DockerImage {
   Id: string;
@@ -14,11 +14,11 @@ interface DockerImage {
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
 function formatDate(timestamp: number): string {
@@ -26,7 +26,7 @@ function formatDate(timestamp: number): string {
 }
 
 function shortId(id: string): string {
-  return id.replace('sha256:', '').slice(0, 12);
+  return id.replace("sha256:", "").slice(0, 12);
 }
 
 function ContainerCountBadge({ count }: { count: number }) {
@@ -39,27 +39,28 @@ function ContainerCountBadge({ count }: { count: number }) {
 }
 
 function getRepoTag(image: DockerImage): string {
-  if (!image.RepoTags || image.RepoTags.length === 0) return '<none>';
+  if (!image.RepoTags || image.RepoTags.length === 0) return "<none>";
   return image.RepoTags[0];
 }
 
 function useImages() {
   return useQuery<DockerImage[]>({
-    queryKey: ['images'],
-    queryFn: () => api.get('/docker/images'),
+    queryKey: ["images"],
+    queryFn: () => api.get("/docker/images"),
   });
 }
 
 function usePullImage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) => api.post(`/docker/images/${encodeURIComponent(name)}/pull`),
+    mutationFn: (name: string) =>
+      api.post(`/docker/images/${encodeURIComponent(name)}/pull`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['images'] });
-      toast.success('Image pulled');
+      queryClient.invalidateQueries({ queryKey: ["images"] });
+      toast.success("Image pulled");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to pull image');
+      toast.error(error.message || "Failed to pull image");
     },
   });
 }
@@ -69,11 +70,11 @@ function useDeleteImage() {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/docker/images/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['images'] });
-      toast.success('Image removed');
+      queryClient.invalidateQueries({ queryKey: ["images"] });
+      toast.success("Image removed");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to remove image');
+      toast.error(error.message || "Failed to remove image");
     },
   });
 }
@@ -81,21 +82,22 @@ function useDeleteImage() {
 function usePruneImages() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post<{ ImagesDeleted?: unknown[] }>('/docker/images/prune'),
+    mutationFn: () =>
+      api.post<{ ImagesDeleted?: unknown[] }>("/docker/images/prune"),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['images'] });
+      queryClient.invalidateQueries({ queryKey: ["images"] });
       toast.success(`Pruned ${data?.ImagesDeleted?.length || 0} images`);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to prune images');
+      toast.error(error.message || "Failed to prune images");
     },
   });
 }
 
 function useContainers() {
   return useQuery<{ Id: string; Image: string; ImageID: string }[]>({
-    queryKey: ['containers'],
-    queryFn: () => api.get('/docker/containers'),
+    queryKey: ["containers"],
+    queryFn: () => api.get("/docker/containers"),
   });
 }
 
@@ -106,15 +108,20 @@ export function Images() {
   const deleteImage = useDeleteImage();
   const pruneImages = usePruneImages();
 
-  const usedImageIds = new Set(containers?.flatMap((c) => [c.ImageID, c.Image]) ?? []);
+  const usedImageIds = new Set(
+    containers?.flatMap((c) => [c.ImageID, c.Image]) ?? [],
+  );
   const containerCountByImage = new Map<string, number>();
   containers?.forEach((c) => {
-    containerCountByImage.set(c.ImageID, (containerCountByImage.get(c.ImageID) || 0) + 1);
+    containerCountByImage.set(
+      c.ImageID,
+      (containerCountByImage.get(c.ImageID) || 0) + 1,
+    );
   });
 
   const [isPulling, setIsPulling] = useState(false);
-  const [pullName, setPullName] = useState('');
-  const [filter, setFilter] = useState('');
+  const [pullName, setPullName] = useState("");
+  const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -124,7 +131,7 @@ export function Images() {
     if (!pullName.trim()) return;
     pullImage.mutate(pullName.trim(), {
       onSuccess: () => {
-        setPullName('');
+        setPullName("");
         setIsPulling(false);
       },
     });
@@ -138,7 +145,10 @@ export function Images() {
     return tag.includes(query) || id.includes(query);
   });
 
-  const paginatedImages = filteredImages?.slice((page - 1) * pageSize, page * pageSize);
+  const paginatedImages = filteredImages?.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
 
   return (
     <div className="p-6 space-y-6">
@@ -147,7 +157,9 @@ export function Images() {
         <div className="flex items-center gap-2">
           {showPruneConfirm ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Prune unused images?</span>
+              <span className="text-xs text-muted-foreground">
+                Prune unused images?
+              </span>
               <button
                 onClick={() => setShowPruneConfirm(false)}
                 className="text-xs text-muted-foreground transition-colors hover:text-muted-foreground"
@@ -155,11 +167,14 @@ export function Images() {
                 Cancel
               </button>
               <button
-                onClick={() => { pruneImages.mutate(); setShowPruneConfirm(false); }}
+                onClick={() => {
+                  pruneImages.mutate();
+                  setShowPruneConfirm(false);
+                }}
                 disabled={pruneImages.isPending}
                 className="rounded-xl border border-[rgba(248,113,113,0.36)] px-3 py-1.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
               >
-                {pruneImages.isPending ? 'Pruning…' : 'Confirm'}
+                {pruneImages.isPending ? "Pruning…" : "Confirm"}
               </button>
             </div>
           ) : (
@@ -185,9 +200,14 @@ export function Images() {
       {/* Pull Image Form */}
       {isPulling && (
         <div className="rounded-2xl border border-white/[0.22] bg-accent/50 p-5">
-          <h3 className="mb-4 text-md font-medium text-foreground">Pull Image</h3>
+          <h3 className="mb-4 text-md font-medium text-foreground">
+            Pull Image
+          </h3>
           <div className="space-y-1.5">
-            <label htmlFor="image-name" className="text-xs font-medium text-muted-foreground">
+            <label
+              htmlFor="image-name"
+              className="text-xs font-medium text-muted-foreground"
+            >
               Image Name
             </label>
             <Input
@@ -195,12 +215,15 @@ export function Images() {
               placeholder="e.g. nginx:latest"
               value={pullName}
               onChange={(e) => setPullName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handlePull()}
+              onKeyDown={(e) => e.key === "Enter" && handlePull()}
             />
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button
-              onClick={() => { setIsPulling(false); setPullName(''); }}
+              onClick={() => {
+                setIsPulling(false);
+                setPullName("");
+              }}
               className="rounded-xl px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
             >
               Cancel
@@ -210,7 +233,7 @@ export function Images() {
               disabled={!pullName.trim() || pullImage.isPending}
               className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
-              {pullImage.isPending ? 'Pulling…' : 'Pull'}
+              {pullImage.isPending ? "Pulling…" : "Pull"}
             </button>
           </div>
         </div>
@@ -223,7 +246,10 @@ export function Images() {
           <Input
             placeholder="Filter by name or ID…"
             value={filter}
-            onChange={(e) => { setFilter(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setFilter(e.target.value);
+              setPage(1);
+            }}
             className="pl-10"
           />
         </div>
@@ -233,7 +259,10 @@ export function Images() {
       {isLoading && (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]" />
+            <div
+              key={i}
+              className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]"
+            />
           ))}
         </div>
       )}
@@ -247,11 +276,16 @@ export function Images() {
       )}
 
       {/* No filter results */}
-      {!isLoading && images && images.length > 0 && filteredImages?.length === 0 && (
-        <div className="flex items-center justify-center rounded-2xl border border-dashed border-white/[0.22] p-8">
-          <p className="text-sm text-muted-foreground">No images match your filter.</p>
-        </div>
-      )}
+      {!isLoading &&
+        images &&
+        images.length > 0 &&
+        filteredImages?.length === 0 && (
+          <div className="flex items-center justify-center rounded-2xl border border-dashed border-white/[0.22] p-8">
+            <p className="text-sm text-muted-foreground">
+              No images match your filter.
+            </p>
+          </div>
+        )}
 
       {/* Table */}
       {!isLoading && filteredImages && filteredImages.length > 0 && (
@@ -259,58 +293,85 @@ export function Images() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.20] bg-accent/50">
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Repository / Tag</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Image ID</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Size</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Created</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Containers</th>
-                <th className="px-4 py-3 text-right text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Repository / Tag
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Image ID
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Size
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Created
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Containers
+                </th>
+                <th className="px-4 py-3 text-right text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {paginatedImages!.map((image) => {
                 const tag = getRepoTag(image);
-                const isNone = tag === '<none>';
+                const isNone = tag === "<none>";
                 const containerCount = containerCountByImage.get(image.Id) || 0;
                 return (
-                <tr key={image.Id} className="border-b border-white/[0.24] last:border-0">
-                  <td className={`px-4 py-3 text-sm font-medium ${isNone ? 'text-muted-foreground italic' : 'text-foreground'}`}>
-                    {tag}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{shortId(image.Id)}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{formatBytes(image.Size)}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(image.Created)}</td>
-                  <td className="px-4 py-3"><ContainerCountBadge count={containerCount} /></td>
-                  <td className="px-4 py-3 text-right">
-                    {!usedImageIds.has(image.Id) && (
-                      deletingId === image.Id ? (
-                        <div className="inline-flex items-center gap-2">
+                  <tr
+                    key={image.Id}
+                    className="border-b border-white/[0.24] last:border-0"
+                  >
+                    <td
+                      className={`px-4 py-3 text-sm font-medium ${isNone ? "text-muted-foreground italic" : "text-foreground"}`}
+                    >
+                      {tag}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                      {shortId(image.Id)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {formatBytes(image.Size)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {formatDate(image.Created)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <ContainerCountBadge count={containerCount} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {!usedImageIds.has(image.Id) &&
+                        (deletingId === image.Id ? (
+                          <div className="inline-flex items-center gap-2">
+                            <button
+                              onClick={() => setDeletingId(null)}
+                              className="text-xs text-muted-foreground transition-colors hover:text-muted-foreground"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => {
+                                deleteImage.mutate(image.Id);
+                                setDeletingId(null);
+                              }}
+                              disabled={deleteImage.isPending}
+                              className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ) : (
                           <button
-                            onClick={() => setDeletingId(null)}
-                            className="text-xs text-muted-foreground transition-colors hover:text-muted-foreground"
+                            onClick={() => setDeletingId(image.Id)}
+                            className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-[rgba(248,113,113,0.75)]"
+                            title="Delete image"
                           >
-                            Cancel
+                            <Trash2 className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={() => { deleteImage.mutate(image.Id); setDeletingId(null); }}
-                            disabled={deleteImage.isPending}
-                            className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setDeletingId(image.Id)}
-                          className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-[rgba(248,113,113,0.75)]"
-                          title="Delete image"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )
-                    )}
-                  </td>
-                </tr>
+                        ))}
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>

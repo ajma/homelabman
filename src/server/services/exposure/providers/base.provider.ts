@@ -4,7 +4,7 @@ import type {
   ValidationResult,
   ProviderHealth,
   RouteStatus,
-} from '@shared/exposure/provider.interface.js';
+} from "@shared/exposure/provider.interface.js";
 
 export abstract class BaseProvider implements ExposureProvider {
   abstract readonly type: string;
@@ -16,7 +16,9 @@ export abstract class BaseProvider implements ExposureProvider {
     this.config = config;
   }
 
-  abstract validateConfig(config: Record<string, any>): Promise<ValidationResult>;
+  abstract validateConfig(
+    config: Record<string, any>,
+  ): Promise<ValidationResult>;
   abstract testConnection(): Promise<boolean>;
   abstract addRoute(route: ExposureRoute): Promise<void>;
   abstract updateRoute(route: ExposureRoute): Promise<void>;

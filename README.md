@@ -14,6 +14,7 @@
 ## Quick Start
 
 **Run with Docker:**
+
 ```bash
 docker run -d \
   --name labrador \
@@ -25,6 +26,7 @@ docker run -d \
 ```
 
 **Or with Docker Compose:**
+
 ```yaml
 services:
   labrador:
@@ -47,12 +49,12 @@ Then open http://localhost:3000 in your browser.
 
 ## Environment Variables
 
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `DATABASE_PATH` | Path to SQLite database file | No | `/data/labrador.db` |
-| `JWT_SECRET` | Secret for JWT token signing | Yes | — |
-| `PORT` | Application port | No | `3000` |
-| `LOG_LEVEL` | Logging level (`debug`, `info`, `warn`, `error`) | No | `info` |
+| Variable        | Description                                      | Required | Default             |
+| --------------- | ------------------------------------------------ | -------- | ------------------- |
+| `DATABASE_PATH` | Path to SQLite database file                     | No       | `/data/labrador.db` |
+| `JWT_SECRET`    | Secret for JWT token signing                     | Yes      | —                   |
+| `PORT`          | Application port                                 | No       | `3000`              |
+| `LOG_LEVEL`     | Logging level (`debug`, `info`, `warn`, `error`) | No       | `info`              |
 
 ## Requirements
 

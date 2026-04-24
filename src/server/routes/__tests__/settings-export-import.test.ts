@@ -1,37 +1,62 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import Fastify from 'fastify';
-import fastifyJwt from '@fastify/jwt';
-import { settingsRoutes } from '../settings.routes.js';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import Fastify from "fastify";
+import fastifyJwt from "@fastify/jwt";
+import { settingsRoutes } from "../settings.routes.js";
 
-vi.mock('../../db/index.js', () => ({ getDatabase: vi.fn() }));
-vi.mock('../../middleware/auth.middleware.js', () => ({
+vi.mock("../../db/index.js", () => ({ getDatabase: vi.fn() }));
+vi.mock("../../middleware/auth.middleware.js", () => ({
   authenticate: vi.fn(async (request: any) => {
-    request.user = { id: 'user-123', username: 'testuser' };
+    request.user = { id: "user-123", username: "testuser" };
   }),
 }));
 
-const USER_ID = 'user-123';
+const USER_ID = "user-123";
 
 const MOCK_SETTINGS = {
-  id: 'settings-1', userId: USER_ID, onboardingCompleted: true,
-  defaultExposureProviderId: 'provider-1', createdAt: 1000, updatedAt: 1000,
+  id: "settings-1",
+  userId: USER_ID,
+  onboardingCompleted: true,
+  defaultExposureProviderId: "provider-1",
+  createdAt: 1000,
+  updatedAt: 1000,
 };
 
-const MOCK_PROVIDERS = [{
-  id: 'provider-1', userId: USER_ID, providerType: 'caddy', name: 'My Caddy',
-  enabled: true, configuration: JSON.stringify({ apiUrl: 'http://localhost:2019' }),
-}];
+const MOCK_PROVIDERS = [
+  {
+    id: "provider-1",
+    userId: USER_ID,
+    providerType: "caddy",
+    name: "My Caddy",
+    enabled: true,
+    configuration: JSON.stringify({ apiUrl: "http://localhost:2019" }),
+  },
+];
 
-const MOCK_PROJECTS = [{
-  id: 'project-1', userId: USER_ID, name: 'Nextcloud', slug: 'nextcloud',
-  logoUrl: null, domainName: null,
-  composeContent: 'services:\n  nextcloud:\n    image: nextcloud\n',
-  exposureEnabled: false, exposureProviderId: 'provider-1',
-  exposureConfig: '{}', isInfrastructure: false, status: 'stopped',
-  createdAt: 1000, updatedAt: 1000, deployedAt: null,
-}];
+const MOCK_PROJECTS = [
+  {
+    id: "project-1",
+    userId: USER_ID,
+    name: "Nextcloud",
+    slug: "nextcloud",
+    logoUrl: null,
+    domainName: null,
+    composeContent: "services:\n  nextcloud:\n    image: nextcloud\n",
+    exposureEnabled: false,
+    exposureProviderId: "provider-1",
+    exposureConfig: "{}",
+    isInfrastructure: false,
+    status: "stopped",
+    createdAt: 1000,
+    updatedAt: 1000,
+    deployedAt: null,
+  },
+];
 
-function makeSelectChain(settingsRow: any, providers: any[], projectList: any[]) {
+function makeSelectChain(
+  settingsRow: any,
+  providers: any[],
+  projectList: any[],
+) {
   // This mock uses call counting to return different data per sequential select() call
   let callCount = 0;
   return {
@@ -52,112 +77,128 @@ function makeSelectChain(settingsRow: any, providers: any[], projectList: any[])
 }
 
 async function buildApp(db: any) {
-  const { getDatabase } = await import('../../db/index.js');
+  const { getDatabase } = await import("../../db/index.js");
   vi.mocked(getDatabase).mockReturnValue(db);
   const app = Fastify({ logger: false });
-  await app.register(fastifyJwt, { secret: 'test-secret' });
-  app.decorate('providerRegistry', { get: vi.fn().mockReturnValue({ checkSetup: undefined }) });
+  await app.register(fastifyJwt, { secret: "test-secret" });
+  app.decorate("providerRegistry", {
+    get: vi.fn().mockReturnValue({ checkSetup: undefined }),
+  });
   await app.register(settingsRoutes);
   await app.ready();
   return app;
 }
 
-describe('GET /export', () => {
+describe("GET /export", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('returns a JSON backup with version, settings, providers, projects', async () => {
+  it("returns a JSON backup with version, settings, providers, projects", async () => {
     const db = makeSelectChain(MOCK_SETTINGS, MOCK_PROVIDERS, MOCK_PROJECTS);
     const app = await buildApp(db);
-    const res = await app.inject({ method: 'GET', url: '/export' });
+    const res = await app.inject({ method: "GET", url: "/export" });
 
     expect(res.statusCode).toBe(200);
-    expect(res.headers['content-disposition']).toContain('attachment');
+    expect(res.headers["content-disposition"]).toContain("attachment");
 
     const body = res.json();
     expect(body.version).toBe(1);
     expect(body.exportedAt).toBeTruthy();
-    expect(body.settings.defaultExposureProviderName).toBe('My Caddy');
+    expect(body.settings.defaultExposureProviderName).toBe("My Caddy");
     expect(body.providers).toHaveLength(1);
-    expect(body.providers[0]).toMatchObject({ providerType: 'caddy', name: 'My Caddy', enabled: true });
+    expect(body.providers[0]).toMatchObject({
+      providerType: "caddy",
+      name: "My Caddy",
+      enabled: true,
+    });
     expect(body.providers[0].id).toBeUndefined();
     expect(body.projects).toHaveLength(1);
-    expect(body.projects[0]).toMatchObject({ name: 'Nextcloud', exposureProviderName: 'My Caddy' });
+    expect(body.projects[0]).toMatchObject({
+      name: "Nextcloud",
+      exposureProviderName: "My Caddy",
+    });
     expect(body.projects[0].id).toBeUndefined();
   });
 
-  it('sets defaultExposureProviderName to null when no default is set', async () => {
+  it("sets defaultExposureProviderName to null when no default is set", async () => {
     const db = makeSelectChain(
       { ...MOCK_SETTINGS, defaultExposureProviderId: null },
       MOCK_PROVIDERS,
       MOCK_PROJECTS,
     );
     const app = await buildApp(db);
-    const res = await app.inject({ method: 'GET', url: '/export' });
+    const res = await app.inject({ method: "GET", url: "/export" });
     expect(res.json().settings.defaultExposureProviderName).toBeNull();
   });
 });
 
 const VALID_BACKUP = {
   version: 1 as const,
-  exportedAt: '2026-04-21T12:00:00.000Z',
-  settings: { defaultExposureProviderName: 'My Caddy' },
+  exportedAt: "2026-04-21T12:00:00.000Z",
+  settings: { defaultExposureProviderName: "My Caddy" },
   providers: [
-    { providerType: 'caddy', name: 'My Caddy', enabled: true, configuration: { apiUrl: 'http://localhost:2019' } },
+    {
+      providerType: "caddy",
+      name: "My Caddy",
+      enabled: true,
+      configuration: { apiUrl: "http://localhost:2019" },
+    },
   ],
   projects: [
     {
-      name: 'Nextcloud',
+      name: "Nextcloud",
       logoUrl: null,
       domainName: null,
-      composeContent: 'services:\n  nextcloud:\n    image: nextcloud\n',
+      composeContent: "services:\n  nextcloud:\n    image: nextcloud\n",
       exposureEnabled: true,
-      exposureProviderName: 'My Caddy',
+      exposureProviderName: "My Caddy",
       exposureConfig: {},
       isInfrastructure: false,
     },
   ],
 };
 
-describe('POST /import', () => {
+describe("POST /import", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('returns 400 when body is missing version', async () => {
+  it("returns 400 when body is missing version", async () => {
     const db = makeSelectChain(MOCK_SETTINGS, MOCK_PROVIDERS, MOCK_PROJECTS);
     const app = await buildApp(db);
     const res = await app.inject({
-      method: 'POST',
-      url: '/import',
+      method: "POST",
+      url: "/import",
       payload: { notABackup: true },
     });
     expect(res.statusCode).toBe(400);
-    expect(res.json().error).toContain('Invalid backup');
+    expect(res.json().error).toContain("Invalid backup");
   });
 
-  it('returns 400 when version is not 1', async () => {
+  it("returns 400 when version is not 1", async () => {
     const db = makeSelectChain(MOCK_SETTINGS, MOCK_PROVIDERS, MOCK_PROJECTS);
     const app = await buildApp(db);
     const res = await app.inject({
-      method: 'POST',
-      url: '/import',
+      method: "POST",
+      url: "/import",
       payload: { ...VALID_BACKUP, version: 99 },
     });
     expect(res.statusCode).toBe(400);
   });
 
-  it('returns 200 and deletes+inserts data on valid backup', async () => {
+  it("returns 200 and deletes+inserts data on valid backup", async () => {
     const deletedCalls: string[] = [];
     const insertedCalls: string[] = [];
 
     const db = {
       delete: vi.fn().mockImplementation(() => {
-        deletedCalls.push('delete');
+        deletedCalls.push("delete");
         return { where: vi.fn().mockResolvedValue([]) };
       }),
       insert: vi.fn().mockImplementation(() => {
-        insertedCalls.push('insert');
+        insertedCalls.push("insert");
         return {
           values: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([{ id: 'new-provider-1', name: 'My Caddy' }]),
+            returning: vi
+              .fn()
+              .mockResolvedValue([{ id: "new-provider-1", name: "My Caddy" }]),
           }),
         };
       }),
@@ -165,14 +206,16 @@ describe('POST /import', () => {
         set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
       }),
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([MOCK_SETTINGS]) }),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([MOCK_SETTINGS]),
+        }),
       }),
     };
 
     const app = await buildApp(db as any);
     const res = await app.inject({
-      method: 'POST',
-      url: '/import',
+      method: "POST",
+      url: "/import",
       payload: VALID_BACKUP,
     });
 

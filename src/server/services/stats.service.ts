@@ -1,7 +1,7 @@
-import { DockerService } from './docker.service.js';
-import { getDatabase } from '../db/index.js';
-import { containerStats } from '../db/schema.js';
-import { eq, and, lt, sql } from 'drizzle-orm';
+import { DockerService } from "./docker.service.js";
+import { getDatabase } from "../db/index.js";
+import { containerStats } from "../db/schema.js";
+import { eq, and, lt, sql } from "drizzle-orm";
 
 export class StatsService {
   private collectInterval: NodeJS.Timeout | null = null;
@@ -30,9 +30,10 @@ export class StatsService {
       // Group containers by project
       const projectContainers = new Map<string, typeof containers>();
       for (const container of containers) {
-        const projectId = container.Labels['labrador.project_id'];
+        const projectId = container.Labels["labrador.project_id"];
         if (!projectId) continue;
-        if (!projectContainers.has(projectId)) projectContainers.set(projectId, []);
+        if (!projectContainers.has(projectId))
+          projectContainers.set(projectId, []);
         projectContainers.get(projectId)!.push(container);
       }
 
@@ -40,7 +41,9 @@ export class StatsService {
         const containerStatsList = [];
         for (const container of projContainers) {
           try {
-            const stats = await this.dockerService.getContainerStats(container.Id);
+            const stats = await this.dockerService.getContainerStats(
+              container.Id,
+            );
             const cpuUsage = this.calculateCpuPercent(stats);
             const memoryUsage = stats.memory_stats?.usage || 0;
             const networkRx = Object.values(stats.networks || {}).reduce(
@@ -54,7 +57,9 @@ export class StatsService {
 
             containerStatsList.push({
               containerId: container.Id,
-              name: container.Names[0]?.replace(/^\//, '') || container.Id.slice(0, 12),
+              name:
+                container.Names[0]?.replace(/^\//, "") ||
+                container.Id.slice(0, 12),
               cpuUsage,
               memoryUsage,
               memoryLimit: stats.memory_stats?.limit || 0,
@@ -68,12 +73,13 @@ export class StatsService {
             await db.insert(containerStats).values({
               projectId,
               containerName:
-                container.Names[0]?.replace(/^\//, '') || container.Id.slice(0, 12),
+                container.Names[0]?.replace(/^\//, "") ||
+                container.Id.slice(0, 12),
               cpuUsage,
               memoryUsage,
               networkRx,
               networkTx,
-              uptimeStatus: container.State === 'running' ? 'up' : 'down',
+              uptimeStatus: container.State === "running" ? "up" : "down",
             });
           } catch {
             // Container may have stopped between list and stats call
@@ -82,7 +88,7 @@ export class StatsService {
 
         if (containerStatsList.length > 0) {
           this.broadcast(projectId, {
-            type: 'stats:update',
+            type: "stats:update",
             projectId,
             containers: containerStatsList,
           });
@@ -122,7 +128,9 @@ export class StatsService {
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
     // Delete very old data (> 30 days)
-    await db.delete(containerStats).where(lt(containerStats.recordedAt, thirtyDaysAgo));
+    await db
+      .delete(containerStats)
+      .where(lt(containerStats.recordedAt, thirtyDaysAgo));
 
     // Delete raw data older than 24 hours (simplified - full aggregation would be more complex)
     await db
@@ -150,7 +158,7 @@ export class StatsService {
   async getProjectUptime(projectId: string, rangeMs: number): Promise<number> {
     const stats = await this.getProjectStats(projectId, rangeMs);
     if (stats.length === 0) return 0;
-    const upCount = stats.filter((s) => s.uptimeStatus === 'up').length;
+    const upCount = stats.filter((s) => s.uptimeStatus === "up").length;
     return (upCount / stats.length) * 100;
   }
 }

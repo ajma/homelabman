@@ -1,4 +1,4 @@
-import yaml from 'js-yaml';
+import yaml from "js-yaml";
 
 interface ValidationError {
   line?: number;
@@ -31,20 +31,20 @@ export class ComposeValidatorService {
     }
 
     // 2. Check it's an object
-    if (!parsed || typeof parsed !== 'object') {
-      errors.push({ message: 'Compose file must be a YAML mapping' });
+    if (!parsed || typeof parsed !== "object") {
+      errors.push({ message: "Compose file must be a YAML mapping" });
       return { valid: false, errors, warnings };
     }
 
     // 3. Check for 'services' key (required)
-    if (!parsed.services || typeof parsed.services !== 'object') {
+    if (!parsed.services || typeof parsed.services !== "object") {
       errors.push({ message: "Missing required 'services' key" });
       return { valid: false, errors, warnings };
     }
 
     // 4. Validate each service
     for (const [name, service] of Object.entries(parsed.services)) {
-      if (!service || typeof service !== 'object') {
+      if (!service || typeof service !== "object") {
         errors.push({ message: `Service '${name}' must be a mapping` });
         continue;
       }
@@ -52,7 +52,9 @@ export class ComposeValidatorService {
 
       // Must have image or build
       if (!svc.image && !svc.build) {
-        errors.push({ message: `Service '${name}': must specify 'image' or 'build'` });
+        errors.push({
+          message: `Service '${name}': must specify 'image' or 'build'`,
+        });
       }
 
       // Validate ports if present
@@ -61,9 +63,15 @@ export class ComposeValidatorService {
           errors.push({ message: `Service '${name}': 'ports' must be a list` });
         } else {
           for (const port of svc.ports) {
-            if (typeof port === 'string' && !/^\d+([:-]\d+)?(\/\w+)?$/.test(port) && !/^\d+\.\d+\.\d+\.\d+:\d+:\d+/.test(port)) {
+            if (
+              typeof port === "string" &&
+              !/^\d+([:-]\d+)?(\/\w+)?$/.test(port) &&
+              !/^\d+\.\d+\.\d+\.\d+:\d+:\d+/.test(port)
+            ) {
               // Allow common port formats, warn on unusual ones
-              warnings.push({ message: `Service '${name}': unusual port format '${port}'` });
+              warnings.push({
+                message: `Service '${name}': unusual port format '${port}'`,
+              });
             }
           }
         }
@@ -75,26 +83,43 @@ export class ComposeValidatorService {
       }
 
       // Validate environment if present
-      if (svc.environment && typeof svc.environment !== 'object' && !Array.isArray(svc.environment)) {
-        errors.push({ message: `Service '${name}': 'environment' must be a mapping or list` });
+      if (
+        svc.environment &&
+        typeof svc.environment !== "object" &&
+        !Array.isArray(svc.environment)
+      ) {
+        errors.push({
+          message: `Service '${name}': 'environment' must be a mapping or list`,
+        });
       }
 
       // Warn about privileged mode
       if (svc.privileged === true) {
-        warnings.push({ message: `Service '${name}': 'privileged' mode is enabled` });
+        warnings.push({
+          message: `Service '${name}': 'privileged' mode is enabled`,
+        });
       }
 
       // Validate restart policy
-      if (svc.restart && !['no', 'always', 'on-failure', 'unless-stopped'].includes(svc.restart)) {
-        warnings.push({ message: `Service '${name}': unusual restart policy '${svc.restart}'` });
+      if (
+        svc.restart &&
+        !["no", "always", "on-failure", "unless-stopped"].includes(svc.restart)
+      ) {
+        warnings.push({
+          message: `Service '${name}': unusual restart policy '${svc.restart}'`,
+        });
       }
 
       // Validate depends_on
       if (svc.depends_on) {
-        const deps = Array.isArray(svc.depends_on) ? svc.depends_on : Object.keys(svc.depends_on);
+        const deps = Array.isArray(svc.depends_on)
+          ? svc.depends_on
+          : Object.keys(svc.depends_on);
         for (const dep of deps) {
           if (!parsed.services[dep]) {
-            errors.push({ message: `Service '${name}': depends_on '${dep}' not found in services` });
+            errors.push({
+              message: `Service '${name}': depends_on '${dep}' not found in services`,
+            });
           }
         }
       }
@@ -105,10 +130,14 @@ export class ComposeValidatorService {
       for (const [name, service] of Object.entries(parsed.services)) {
         const svc = service as Record<string, any>;
         if (svc.networks) {
-          const nets = Array.isArray(svc.networks) ? svc.networks : Object.keys(svc.networks);
+          const nets = Array.isArray(svc.networks)
+            ? svc.networks
+            : Object.keys(svc.networks);
           for (const net of nets) {
-            if (!(net in parsed.networks) && net !== 'default') {
-              errors.push({ message: `Service '${name}': network '${net}' not defined in networks section` });
+            if (!(net in parsed.networks) && net !== "default") {
+              errors.push({
+                message: `Service '${name}': network '${net}' not defined in networks section`,
+              });
             }
           }
         }

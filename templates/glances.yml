@@ -18,10 +18,10 @@ services:
     privileged: false
     # Uncomment next line for SATA or NVME smartctl monitoring
     # cap_add:
-      # Uncomment next line for SATA smartctl monitoring
-      # - SYS_RAWIO
-      # Uncomment next line for NVME smartctl monitoring
-      # - SYS_ADMIN
+    # Uncomment next line for SATA smartctl monitoring
+    # - SYS_RAWIO
+    # Uncomment next line for NVME smartctl monitoring
+    # - SYS_ADMIN
     # devices:
     #   - "/dev/nvme0"
 
@@ -35,8 +35,8 @@ services:
       - "/run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro"
       - "./glances.conf:/glances/conf/glances.conf"
       # Uncomment for proper distro information in upper panel.
-#     # Works only for distros that do have this file (most of distros do).
-#      - "/etc/os-release:/etc/os-release:ro"
+    #     # Works only for distros that do have this file (most of distros do).
+    #      - "/etc/os-release:/etc/os-release:ro"
 
     tmpfs:
       - /tmp
@@ -56,10 +56,10 @@ services:
 #               count: 1
 #               capabilities: [gpu]
 
-    # Uncomment to protect Glances WebUI by a login/password (add --password to GLANCES_OPT)
-    # secrets:
-    #   - source: glances_password
-    #     target: /root/.config/glances/<login>.pwd
+# Uncomment to protect Glances WebUI by a login/password (add --password to GLANCES_OPT)
+# secrets:
+#   - source: glances_password
+#     target: /root/.config/glances/<login>.pwd
 
 # secrets:
 #   glances_password:

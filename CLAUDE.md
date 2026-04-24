@@ -79,15 +79,15 @@ To add a new provider: implement `ExposureProvider` extending `BaseProvider`, re
 
 Use the 7-step semantic scale defined in `tailwind.config.ts`. Never write `text-[Xpx]` arbitrary Tailwind classes.
 
-| Class | Size | Typical use |
-|-------|------|-------------|
+| Class      | Size | Typical use                  |
+| ---------- | ---- | ---------------------------- |
 | `text-2xs` | 12px | Labels, chips, table headers |
-| `text-xs` | 13px | Muted/secondary text |
-| `text-sm` | 14px | Primary body text |
-| `text-md` | 15px | Slightly larger body |
-| `text-lg` | 18px | Section headings |
-| `text-xl` | 22px | Larger headings |
-| `text-2xl` | 27px | Page-level headings |
+| `text-xs`  | 13px | Muted/secondary text         |
+| `text-sm`  | 14px | Primary body text            |
+| `text-md`  | 15px | Slightly larger body         |
+| `text-lg`  | 18px | Section headings             |
+| `text-xl`  | 22px | Larger headings              |
+| `text-2xl` | 27px | Page-level headings          |
 
 To scale all text globally, adjust the rem values in `tailwind.config.ts` — not individual files.
 

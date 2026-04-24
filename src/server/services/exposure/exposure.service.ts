@@ -1,8 +1,11 @@
-import { ExposureProviderRegistry } from './provider-registry.js';
-import { getDatabase } from '../../db/index.js';
-import { projects, exposureProviders } from '../../db/schema.js';
-import { eq } from 'drizzle-orm';
-import type { ExposureRoute, RouteStatus } from '@shared/exposure/provider.interface.js';
+import { ExposureProviderRegistry } from "./provider-registry.js";
+import { getDatabase } from "../../db/index.js";
+import { projects, exposureProviders } from "../../db/schema.js";
+import { eq } from "drizzle-orm";
+import type {
+  ExposureRoute,
+  RouteStatus,
+} from "@shared/exposure/provider.interface.js";
 
 export class ExposureService {
   constructor(private registry: ExposureProviderRegistry) {}
@@ -10,7 +13,10 @@ export class ExposureService {
   async addProjectExposure(projectId: string): Promise<void> {
     const db = getDatabase();
 
-    const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
     if (!project) return;
 
     if (!project.exposureEnabled || !project.exposureProviderId) return;
@@ -26,14 +32,14 @@ export class ExposureService {
     if (!provider) return;
 
     const config =
-      typeof providerConfig.configuration === 'string'
+      typeof providerConfig.configuration === "string"
         ? JSON.parse(providerConfig.configuration)
         : providerConfig.configuration;
 
     await provider.initialize(config);
 
     const exposureConfig =
-      typeof project.exposureConfig === 'string'
+      typeof project.exposureConfig === "string"
         ? JSON.parse(project.exposureConfig)
         : project.exposureConfig || {};
 
@@ -55,7 +61,10 @@ export class ExposureService {
   async removeProjectExposure(projectId: string): Promise<void> {
     const db = getDatabase();
 
-    const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
     if (!project) return;
 
     if (!project.exposureProviderId) return;
@@ -71,7 +80,7 @@ export class ExposureService {
     if (!provider) return;
 
     const config =
-      typeof providerConfig.configuration === 'string'
+      typeof providerConfig.configuration === "string"
         ? JSON.parse(providerConfig.configuration)
         : providerConfig.configuration;
 
@@ -79,17 +88,22 @@ export class ExposureService {
 
     // For Caddy, routeId is the projectId. For Cloudflare, it's the domain.
     const routeId =
-      providerConfig.providerType === 'cloudflare'
+      providerConfig.providerType === "cloudflare"
         ? project.domainName || projectId
         : projectId;
 
     await provider.removeRoute(routeId);
   }
 
-  async getProjectExposureStatus(projectId: string): Promise<RouteStatus | null> {
+  async getProjectExposureStatus(
+    projectId: string,
+  ): Promise<RouteStatus | null> {
     const db = getDatabase();
 
-    const [project] = await db.select().from(projects).where(eq(projects.id, projectId));
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
     if (!project) return null;
 
     if (!project.exposureEnabled || !project.exposureProviderId) {
@@ -107,7 +121,7 @@ export class ExposureService {
     if (!provider) return null;
 
     const config =
-      typeof providerConfig.configuration === 'string'
+      typeof providerConfig.configuration === "string"
         ? JSON.parse(providerConfig.configuration)
         : providerConfig.configuration;
 
@@ -115,7 +129,7 @@ export class ExposureService {
 
     // For Caddy we look up by projectId, for Cloudflare by domain
     const routeId =
-      providerConfig.providerType === 'cloudflare'
+      providerConfig.providerType === "cloudflare"
         ? project.domainName || projectId
         : projectId;
 

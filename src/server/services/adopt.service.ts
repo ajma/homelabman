@@ -1,15 +1,15 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { eq } from 'drizzle-orm';
-import { getDatabase } from '../db/index.js';
-import { projects } from '../db/schema.js';
-import type { DockerService } from './docker.service.js';
-import type Dockerode from 'dockerode';
-import type { ExposureProvider } from '@shared/exposure/provider.interface.js';
+import fs from "fs/promises";
+import path from "path";
+import { eq } from "drizzle-orm";
+import { getDatabase } from "../db/index.js";
+import { projects } from "../db/schema.js";
+import type { DockerService } from "./docker.service.js";
+import type Dockerode from "dockerode";
+import type { ExposureProvider } from "@shared/exposure/provider.interface.js";
 
-const COMPOSE_LABEL = 'com.docker.compose.project';
-const COMPOSE_WORKDIR_LABEL = 'com.docker.compose.project.working_dir';
-const LABEL_LOGO = 'labrador.logo_url';
+const COMPOSE_LABEL = "com.docker.compose.project";
+const COMPOSE_WORKDIR_LABEL = "com.docker.compose.project.working_dir";
+const LABEL_LOGO = "labrador.logo_url";
 
 export interface AdoptableStack {
   stackName: string;
@@ -34,7 +34,7 @@ export class AdoptService {
       if (!stackName) continue;
       if (!stackMap.has(stackName)) {
         stackMap.set(stackName, {
-          workingDir: container.Labels?.[COMPOSE_WORKDIR_LABEL] ?? '',
+          workingDir: container.Labels?.[COMPOSE_WORKDIR_LABEL] ?? "",
           count: 0,
         });
       }
@@ -51,7 +51,11 @@ export class AdoptService {
     const result: AdoptableStack[] = [];
     for (const [stackName, info] of stackMap) {
       if (!slugSet.has(stackName)) {
-        result.push({ stackName, workingDir: info.workingDir, containerCount: info.count });
+        result.push({
+          stackName,
+          workingDir: info.workingDir,
+          containerCount: info.count,
+        });
       }
     }
     return result;
@@ -73,9 +77,12 @@ export class AdoptService {
       for (const container of containers) {
         const stackName = container.Labels?.[COMPOSE_LABEL];
         if (!stackName || slugSet.has(stackName)) continue;
-        const image = container.Image ?? '';
+        const image = container.Image ?? "";
         for (const provider of providers) {
-          if (provider.containerImage && image.includes(provider.containerImage)) {
+          if (
+            provider.containerImage &&
+            image.includes(provider.containerImage)
+          ) {
             return { detected: true, stackName, providerType: provider.type };
           }
         }
@@ -102,7 +109,7 @@ export class AdoptService {
       if (!stackName || !stackNames.includes(stackName)) continue;
       if (!stackMap.has(stackName)) {
         stackMap.set(stackName, {
-          workingDir: container.Labels?.[COMPOSE_WORKDIR_LABEL] ?? '',
+          workingDir: container.Labels?.[COMPOSE_WORKDIR_LABEL] ?? "",
           containerIds: [],
           logoUrl: container.Labels?.[LABEL_LOGO] ?? null,
         });
@@ -122,13 +129,13 @@ export class AdoptService {
 
     for (const stackName of stackNames) {
       if (slugSet.has(stackName)) {
-        failed.push({ stackName, reason: 'slug already exists' });
+        failed.push({ stackName, reason: "slug already exists" });
         continue;
       }
 
       const info = stackMap.get(stackName);
       if (!info) {
-        failed.push({ stackName, reason: 'stack not found in Docker' });
+        failed.push({ stackName, reason: "stack not found in Docker" });
         continue;
       }
 
@@ -139,7 +146,11 @@ export class AdoptService {
         const inspected = await Promise.all(
           info.containerIds.map((id) => this.dockerService.getContainer(id)),
         );
-        composeContent = this.generateComposeFallback(stackName, info.workingDir, inspected);
+        composeContent = this.generateComposeFallback(
+          stackName,
+          info.workingDir,
+          inspected,
+        );
       }
 
       try {
@@ -149,7 +160,7 @@ export class AdoptService {
           slug: stackName,
           logoUrl: info.logoUrl,
           composeContent,
-          status: 'running',
+          status: "running",
           isInfrastructure: options?.isInfrastructure ?? false,
           deployedAt: Date.now(),
         });
@@ -164,18 +175,18 @@ export class AdoptService {
 
   private async readComposeFile(workingDir: string): Promise<string> {
     for (const name of [
-      'docker-compose.yml',
-      'docker-compose.yaml',
-      'compose.yml',
-      'compose.yaml',
+      "docker-compose.yml",
+      "docker-compose.yaml",
+      "compose.yml",
+      "compose.yaml",
     ]) {
       try {
-        return await fs.readFile(path.join(workingDir, name), 'utf-8');
+        return await fs.readFile(path.join(workingDir, name), "utf-8");
       } catch {
         // try next filename
       }
     }
-    throw new Error('Compose file not found');
+    throw new Error("Compose file not found");
   }
 
   private generateComposeFallback(
@@ -184,28 +195,33 @@ export class AdoptService {
     containers: Dockerode.ContainerInspectInfo[],
   ): string {
     const lines: string[] = [
-      `# ⚠️ Original compose file not found at ${workingDir || '(unknown)'}`,
+      `# ⚠️ Original compose file not found at ${workingDir || "(unknown)"}`,
       `# Generated from running containers — review and uncomment before deploying.`,
       `#`,
       `# services:`,
     ];
 
     for (const container of containers) {
-      const rawName = container.Name?.replace(/^\//, '') ?? '';
+      const rawName = container.Name?.replace(/^\//, "") ?? "";
       const serviceName = extractServiceName(rawName, stackName);
       lines.push(`#   ${serviceName}:`);
-      lines.push(`#     image: ${container.Config?.Image ?? 'unknown'}`);
+      lines.push(`#     image: ${container.Config?.Image ?? "unknown"}`);
 
       const portBindings = container.HostConfig?.PortBindings ?? {};
-      const ports = Object.entries(portBindings).flatMap(([containerPort, hostBindings]) =>
-        (hostBindings ?? []).map((hb) => `${hb.HostPort}:${containerPort.split('/')[0]}`),
+      const ports = Object.entries(portBindings).flatMap(
+        ([containerPort, hostBindings]) =>
+          (hostBindings ?? []).map(
+            (hb) => `${hb.HostPort}:${containerPort.split("/")[0]}`,
+          ),
       );
       if (ports.length > 0) {
         lines.push(`#     ports:`);
         for (const p of ports) lines.push(`#       - "${p}"`);
       }
 
-      const env = (container.Config?.Env ?? []).filter((e) => !e.startsWith('PATH='));
+      const env = (container.Config?.Env ?? []).filter(
+        (e) => !e.startsWith("PATH="),
+      );
       if (env.length > 0) {
         lines.push(`#     environment:`);
         for (const e of env) lines.push(`#       - ${e}`);
@@ -218,20 +234,22 @@ export class AdoptService {
       }
 
       const restart = container.HostConfig?.RestartPolicy?.Name;
-      if (restart && restart !== 'no') {
+      if (restart && restart !== "no") {
         lines.push(`#     restart: ${restart}`);
       }
     }
 
-    return lines.join('\n') + '\n';
+    return lines.join("\n") + "\n";
   }
 }
 
 function extractServiceName(containerName: string, stackName: string): string {
-  for (const sep of ['-', '_']) {
+  for (const sep of ["-", "_"]) {
     const prefix = `${stackName}${sep}`;
     if (containerName.startsWith(prefix)) {
-      return containerName.slice(prefix.length).replace(new RegExp(`${sep}\\d+$`), '');
+      return containerName
+        .slice(prefix.length)
+        .replace(new RegExp(`${sep}\\d+$`), "");
     }
   }
   return containerName;

@@ -1,11 +1,11 @@
-import { FastifyInstance } from 'fastify';
-import bcrypt from 'bcrypt';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
-import { registerSchema, loginSchema } from '../../shared/schemas.js';
-import { getDatabase } from '../db/index.js';
-import { users, settings } from '../db/schema.js';
-import { authenticate } from '../middleware/auth.middleware.js';
+import { FastifyInstance } from "fastify";
+import bcrypt from "bcrypt";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { registerSchema, loginSchema } from "../../shared/schemas.js";
+import { getDatabase } from "../db/index.js";
+import { users, settings } from "../db/schema.js";
+import { authenticate } from "../middleware/auth.middleware.js";
 
 const BCRYPT_COST = 12;
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
@@ -13,28 +13,30 @@ const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 function cookieOptions() {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-    path: '/',
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
     maxAge: COOKIE_MAX_AGE,
   };
 }
 
 export async function authRoutes(app: FastifyInstance) {
   // Apply rate limiting to auth routes (skipped in test mode to avoid 429s)
-  if (process.env.NODE_ENV !== 'test') {
-    await app.register(import('@fastify/rate-limit'), {
+  if (process.env.NODE_ENV !== "test") {
+    await app.register(import("@fastify/rate-limit"), {
       max: 10,
-      timeWindow: '1 minute',
+      timeWindow: "1 minute",
       keyGenerator: (request) => request.ip,
     });
   }
 
   // POST /register - Create first admin user
-  app.post('/register', async (request, reply) => {
+  app.post("/register", async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.code(400).send({ error: 'Invalid input', details: parsed.error.flatten() });
+      return reply
+        .code(400)
+        .send({ error: "Invalid input", details: parsed.error.flatten() });
     }
 
     const db = getDatabase();
@@ -43,17 +45,22 @@ export async function authRoutes(app: FastifyInstance) {
     // Check if any user already exists
     const existingUsers = await db.select().from(users);
     if (existingUsers.length > 0) {
-      return reply.code(403).send({ error: 'Registration is disabled. A user already exists.' });
+      return reply
+        .code(403)
+        .send({ error: "Registration is disabled. A user already exists." });
     }
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
 
     // Insert user
-    const [user] = await db.insert(users).values({
-      username,
-      passwordHash,
-    }).returning();
+    const [user] = await db
+      .insert(users)
+      .values({
+        username,
+        passwordHash,
+      })
+      .returning();
 
     // Create settings row for user
     await db.insert(settings).values({
@@ -62,7 +69,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     // Generate JWT and set cookie
     const token = app.jwt.sign({ id: user.id, username: user.username });
-    reply.setCookie('token', token, cookieOptions());
+    reply.setCookie("token", token, cookieOptions());
 
     return reply.code(201).send({
       id: user.id,
@@ -73,30 +80,35 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // POST /login - Authenticate
-  app.post('/login', async (request, reply) => {
+  app.post("/login", async (request, reply) => {
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.code(400).send({ error: 'Invalid input', details: parsed.error.flatten() });
+      return reply
+        .code(400)
+        .send({ error: "Invalid input", details: parsed.error.flatten() });
     }
 
     const db = getDatabase();
     const { username, password } = parsed.data;
 
     // Find user by username
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
     if (!user) {
-      return reply.code(401).send({ error: 'Invalid username or password' });
+      return reply.code(401).send({ error: "Invalid username or password" });
     }
 
     // Compare password
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
-      return reply.code(401).send({ error: 'Invalid username or password' });
+      return reply.code(401).send({ error: "Invalid username or password" });
     }
 
     // Generate JWT and set cookie
     const token = app.jwt.sign({ id: user.id, username: user.username });
-    reply.setCookie('token', token, cookieOptions());
+    reply.setCookie("token", token, cookieOptions());
 
     return {
       id: user.id,
@@ -107,13 +119,13 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // POST /logout - Clear auth cookie
-  app.post('/logout', async (_request, reply) => {
-    reply.clearCookie('token', { path: '/' });
+  app.post("/logout", async (_request, reply) => {
+    reply.clearCookie("token", { path: "/" });
     return { success: true };
   });
 
   // GET /me - Get current user (protected)
-  app.get('/me', { preHandler: [authenticate] }, async (request) => {
+  app.get("/me", { preHandler: [authenticate] }, async (request) => {
     return request.user;
   });
 
@@ -124,37 +136,43 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // PUT /password - Change password (protected)
-  app.put('/password', { preHandler: [authenticate] }, async (request, reply) => {
-    const parsed = changePasswordServerSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.code(400).send({ error: 'Invalid input', details: parsed.error.flatten() });
-    }
+  app.put(
+    "/password",
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      const parsed = changePasswordServerSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply
+          .code(400)
+          .send({ error: "Invalid input", details: parsed.error.flatten() });
+      }
 
-    const db = getDatabase();
-    const { id: userId } = request.user as { id: string; username: string };
-    const { currentPassword, newPassword } = parsed.data;
+      const db = getDatabase();
+      const { id: userId } = request.user as { id: string; username: string };
+      const { currentPassword, newPassword } = parsed.data;
 
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
-    if (!user) {
-      return reply.code(404).send({ error: 'User not found' });
-    }
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user) {
+        return reply.code(404).send({ error: "User not found" });
+      }
 
-    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!valid) {
-      return reply.code(401).send({ error: 'Current password is incorrect' });
-    }
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) {
+        return reply.code(401).send({ error: "Current password is incorrect" });
+      }
 
-    const newHash = await bcrypt.hash(newPassword, BCRYPT_COST);
-    await db
-      .update(users)
-      .set({ passwordHash: newHash, updatedAt: Date.now() })
-      .where(eq(users.id, userId));
+      const newHash = await bcrypt.hash(newPassword, BCRYPT_COST);
+      await db
+        .update(users)
+        .set({ passwordHash: newHash, updatedAt: Date.now() })
+        .where(eq(users.id, userId));
 
-    return { success: true };
-  });
+      return { success: true };
+    },
+  );
 
   // GET /status - Auth status check (unauthenticated)
-  app.get('/status', async (request) => {
+  app.get("/status", async (request) => {
     const db = getDatabase();
 
     // Check if any user exists and has completed onboarding
@@ -162,7 +180,10 @@ export async function authRoutes(app: FastifyInstance) {
     if (existingUsers.length === 0) {
       return { needsOnboarding: true, authenticated: false };
     }
-    const [userSettings] = await db.select().from(settings).where(eq(settings.userId, existingUsers[0].id));
+    const [userSettings] = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userId, existingUsers[0].id));
     const needsOnboarding = !userSettings?.onboardingCompleted;
 
     // Try to verify JWT from cookie (don't fail if invalid)

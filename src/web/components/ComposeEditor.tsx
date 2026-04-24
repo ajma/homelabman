@@ -1,10 +1,10 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { EditorView, basicSetup } from 'codemirror';
-import { EditorState } from '@codemirror/state';
-import { yaml } from '@codemirror/lang-yaml';
-import { ViewUpdate } from '@codemirror/view';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { tags as t } from '@lezer/highlight';
+import { useEffect, useRef, useCallback } from "react";
+import { EditorView, basicSetup } from "codemirror";
+import { EditorState } from "@codemirror/state";
+import { yaml } from "@codemirror/lang-yaml";
+import { ViewUpdate } from "@codemirror/view";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags as t } from "@lezer/highlight";
 
 interface ComposeEditorProps {
   value: string;
@@ -16,58 +16,76 @@ interface ComposeEditorProps {
 
 const yamlHighlight = HighlightStyle.define([
   // YAML keys → soft blue
-  { tag: t.propertyName, color: 'hsl(var(--primary))' },
+  { tag: t.propertyName, color: "hsl(var(--primary))" },
   // Strings → muted teal-green
-  { tag: t.string, color: '#6ee7b7' },
+  { tag: t.string, color: "#6ee7b7" },
   // Numbers, booleans, null → amber
-  { tag: [t.number, t.bool, t.null], color: '#fbbf24' },
+  { tag: [t.number, t.bool, t.null], color: "#fbbf24" },
   // Comments → dim
-  { tag: t.comment, color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' },
+  {
+    tag: t.comment,
+    color: "hsl(var(--muted-foreground))",
+    fontStyle: "italic",
+  },
   // Punctuation (colons, dashes) → mid-muted
-  { tag: t.punctuation, color: 'hsl(var(--muted-foreground))' },
+  { tag: t.punctuation, color: "hsl(var(--muted-foreground))" },
   // Anchors & aliases → lavender
-  { tag: t.labelName, color: '#c084fc' },
+  { tag: t.labelName, color: "#c084fc" },
   // Tags (!!str etc) → same lavender
-  { tag: t.typeName, color: '#c084fc' },
+  { tag: t.typeName, color: "#c084fc" },
   // Operators → same as punctuation
-  { tag: t.operator, color: 'hsl(var(--muted-foreground))' },
+  { tag: t.operator, color: "hsl(var(--muted-foreground))" },
 ]);
 
-const darkTheme = EditorView.theme({
-  '&': {
-    background: 'hsl(var(--background) / 0.78)',
-    borderRadius: '16px',
-    border: '1px solid hsl(var(--border))',
-    overflow: 'hidden',
+const darkTheme = EditorView.theme(
+  {
+    "&": {
+      background: "hsl(var(--background) / 0.78)",
+      borderRadius: "16px",
+      border: "1px solid hsl(var(--border))",
+      overflow: "hidden",
+    },
+    "&.cm-focused": {
+      outline: "none",
+      border: "1px solid hsl(var(--primary) / 0.36)",
+    },
+    ".cm-scroller": { overflow: "auto" },
+    ".cm-content": {
+      fontFamily: "monospace",
+      fontSize: "0.8125rem",
+      padding: "12px 16px",
+      color: "hsl(var(--foreground))",
+      caretColor: "hsl(var(--primary))",
+    },
+    ".cm-gutters": {
+      background: "hsl(var(--background) / 0.6)",
+      border: "none",
+      borderRight: "1px solid hsl(var(--border))",
+      color: "hsl(var(--muted-foreground))",
+      padding: "0 8px",
+    },
+    ".cm-activeLineGutter": { background: "hsl(var(--accent))" },
+    ".cm-activeLine": { background: "hsl(var(--accent) / 0.7)" },
+    ".cm-selectionBackground, ::selection": {
+      background: "hsl(var(--primary) / 0.20)",
+    },
+    ".cm-cursor": { borderLeftColor: "hsl(var(--primary))" },
+    ".cm-matchingBracket": {
+      background: "hsl(var(--primary) / 0.15)",
+      outline: "none",
+    },
+    ".cm-line": { padding: "0" },
   },
-  '&.cm-focused': {
-    outline: 'none',
-    border: '1px solid hsl(var(--primary) / 0.36)',
-  },
-  '.cm-scroller': { overflow: 'auto' },
-  '.cm-content': {
-    fontFamily: 'monospace',
-    fontSize: '0.8125rem',
-    padding: '12px 16px',
-    color: 'hsl(var(--foreground))',
-    caretColor: 'hsl(var(--primary))',
-  },
-  '.cm-gutters': {
-    background: 'hsl(var(--background) / 0.6)',
-    border: 'none',
-    borderRight: '1px solid hsl(var(--border))',
-    color: 'hsl(var(--muted-foreground))',
-    padding: '0 8px',
-  },
-  '.cm-activeLineGutter': { background: 'hsl(var(--accent))' },
-  '.cm-activeLine': { background: 'hsl(var(--accent) / 0.7)' },
-  '.cm-selectionBackground, ::selection': { background: 'hsl(var(--primary) / 0.20)' },
-  '.cm-cursor': { borderLeftColor: 'hsl(var(--primary))' },
-  '.cm-matchingBracket': { background: 'hsl(var(--primary) / 0.15)', outline: 'none' },
-  '.cm-line': { padding: '0' },
-}, { dark: true });
+  { dark: true },
+);
 
-export function ComposeEditor({ value, onChange, errors = [], warnings = [], minHeight = '460px' }: ComposeEditorProps) {
+export function ComposeEditor({
+  value,
+  onChange,
+  errors = [],
+  warnings = [],
+  minHeight = "460px",
+}: ComposeEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 
@@ -120,7 +138,8 @@ export function ComposeEditor({ value, onChange, errors = [], warnings = [], min
         <div className="space-y-1">
           {errors.map((err, i) => (
             <p key={i} className="text-xs text-[rgba(254,202,202,0.85)]">
-              {err.line ? `Line ${err.line}: ` : ''}{err.message}
+              {err.line ? `Line ${err.line}: ` : ""}
+              {err.message}
             </p>
           ))}
         </div>
@@ -129,7 +148,8 @@ export function ComposeEditor({ value, onChange, errors = [], warnings = [], min
         <div className="space-y-1">
           {warnings.map((warn, i) => (
             <p key={i} className="text-xs text-[#fcd34d]">
-              {warn.line ? `Line ${warn.line}: ` : ''}{warn.message}
+              {warn.line ? `Line ${warn.line}: ` : ""}
+              {warn.message}
             </p>
           ))}
         </div>

@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
-import { useAdoptable } from '../hooks/useAdoptable';
-import { AdoptableStacksList } from './AdoptableStacksList';
+import { useEffect, useRef } from "react";
+import { X } from "lucide-react";
+import { useAdoptable } from "../hooks/useAdoptable";
+import { AdoptableStacksList } from "./AdoptableStacksList";
 
 interface Props {
   open: boolean;
@@ -22,8 +22,8 @@ export function AdoptStacksDialog({ open, onClose }: Props) {
   useEffect(() => {
     const el = dialogRef.current;
     const handle = () => onClose();
-    el?.addEventListener('close', handle);
-    return () => el?.removeEventListener('close', handle);
+    el?.addEventListener("close", handle);
+    return () => el?.removeEventListener("close", handle);
   }, [onClose]);
 
   return (
@@ -43,14 +43,14 @@ export function AdoptStacksDialog({ open, onClose }: Props) {
           <X className="h-4 w-4" />
         </button>
       </div>
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      )}
+      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {stacks && stacks.length > 0 && (
         <AdoptableStacksList stacks={stacks} onAdopted={onClose} />
       )}
       {stacks && stacks.length === 0 && (
-        <p className="text-sm text-muted-foreground">No adoptable stacks found.</p>
+        <p className="text-sm text-muted-foreground">
+          No adoptable stacks found.
+        </p>
       )}
     </dialog>
   );

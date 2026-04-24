@@ -25,11 +25,11 @@ Playwright runner
 
 ### What is mocked
 
-| Dependency | Mock |
-|------------|------|
-| Docker daemon | `MockDockerService` — in-memory state, no socket |
-| Cloudflare API | `MockCloudflareProvider` — configurable responses |
-| Caddy Admin API | `MockCaddyProvider` — no-op, always succeeds |
+| Dependency      | Mock                                              |
+| --------------- | ------------------------------------------------- |
+| Docker daemon   | `MockDockerService` — in-memory state, no socket  |
+| Cloudflare API  | `MockCloudflareProvider` — configurable responses |
+| Caddy Admin API | `MockCaddyProvider` — no-op, always succeeds      |
 
 Everything else runs for real: Fastify routing, JWT auth, Drizzle/SQLite, exposure service, WebSocket.
 
@@ -45,11 +45,11 @@ Everything else runs for real: Fastify routing, JWT auth, Drizzle/SQLite, exposu
 
 Registered only when `NODE_ENV=test`. Tests call these via `request` (Playwright's `APIRequestContext`) to set up state before navigating.
 
-| Method | Path | Body | Effect |
-|--------|------|------|--------|
-| POST | `/test/reset` | `{ seed?: boolean }` | Truncate all tables, reset mock state. `seed` defaults to `true`; pass `false` for a fresh empty DB (needed by onboarding tests). |
-| POST | `/test/mock/docker` | `{ containers, images, networks }` | Replace mock Docker state |
-| POST | `/test/mock/cloudflare` | `{ accounts, tunnels }` | Replace mock Cloudflare state |
+| Method | Path                    | Body                               | Effect                                                                                                                            |
+| ------ | ----------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/test/reset`           | `{ seed?: boolean }`               | Truncate all tables, reset mock state. `seed` defaults to `true`; pass `false` for a fresh empty DB (needed by onboarding tests). |
+| POST   | `/test/mock/docker`     | `{ containers, images, networks }` | Replace mock Docker state                                                                                                         |
+| POST   | `/test/mock/cloudflare` | `{ accounts, tunnels }`            | Replace mock Cloudflare state                                                                                                     |
 
 ### Vite proxy
 
@@ -63,39 +63,48 @@ Module-level singleton (`setServer` / `getServer`) shared between `global-setup.
 
 ```ts
 test.beforeEach(async ({ request }) => {
-  await request.post('/test/reset');
+  await request.post("/test/reset");
 });
 
-test('containers page renders rows', async ({ page, request }) => {
-  await request.post('/test/mock/docker', {
-    data: { containers: [{ Id: 'abc123', Names: ['/nginx'], Image: 'nginx:latest', State: 'running' }] },
+test("containers page renders rows", async ({ page, request }) => {
+  await request.post("/test/mock/docker", {
+    data: {
+      containers: [
+        {
+          Id: "abc123",
+          Names: ["/nginx"],
+          Image: "nginx:latest",
+          State: "running",
+        },
+      ],
+    },
   });
-  await page.goto('/containers');
-  await expect(page.getByText('nginx')).toBeVisible();
+  await page.goto("/containers");
+  await expect(page.getByText("nginx")).toBeVisible();
 });
 ```
 
 For onboarding tests, pass `{ seed: false }` to reset so the DB starts empty (`needsOnboarding: true`):
 
 ```ts
-await request.post('/test/reset', { data: { seed: false } });
+await request.post("/test/reset", { data: { seed: false } });
 ```
 
 ## Coverage
 
 ### Auth routing
 
-| Test | What it verifies |
-|------|-----------------|
-| Unauthenticated redirect | `GET /` redirects to `/login` |
-| Onboarding redirect | `GET /` redirects to `/onboarding` when DB has no user |
-| Authenticated dashboard | `GET /` stays at `/` and renders Dashboard |
+| Test                     | What it verifies                                       |
+| ------------------------ | ------------------------------------------------------ |
+| Unauthenticated redirect | `GET /` redirects to `/login`                          |
+| Onboarding redirect      | `GET /` redirects to `/onboarding` when DB has no user |
+| Authenticated dashboard  | `GET /` stays at `/` and renders Dashboard             |
 
 ### Login form
 
-| Test | What it verifies |
-|------|-----------------|
-| Empty-field validation | Submitting with no input shows Zod validation messages |
+| Test                      | What it verifies                                             |
+| ------------------------- | ------------------------------------------------------------ |
+| Empty-field validation    | Submitting with no input shows Zod validation messages       |
 | Invalid credentials toast | A 401 from the real auth route surfaces the error in a toast |
 
 ### Onboarding happy path
@@ -110,8 +119,8 @@ Stateful multi-step test that:
 
 ### Docker resources
 
-| Test | What it verifies |
-|------|-----------------|
+| Test            | What it verifies                    |
+| --------------- | ----------------------------------- |
 | Containers page | Renders rows from mock Docker state |
-| Images page | Renders rows with formatted size |
-| Networks page | Renders rows with driver and scope |
+| Images page     | Renders rows with formatted size    |
+| Networks page   | Renders rows with driver and scope  |

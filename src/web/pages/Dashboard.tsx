@@ -1,26 +1,29 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Server, ChevronRight, ChevronDown } from 'lucide-react';
-import { toast } from 'sonner';
-import { useProjects } from '../hooks/useProjects';
-import { useGroups } from '../hooks/useGroups';
-import { useWebSocket } from '../hooks/useWebSocket';
-import { useAdoptable } from '../hooks/useAdoptable';
-import type { ContainerStats } from '../hooks/useStats';
-import { ProjectCard } from '../components/ProjectCard';
-import { AdoptableStacksList } from '../components/AdoptableStacksList';
-import { api } from '../lib/api';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Server, ChevronRight, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
+import { useProjects } from "../hooks/useProjects";
+import { useGroups } from "../hooks/useGroups";
+import { useWebSocket } from "../hooks/useWebSocket";
+import { useAdoptable } from "../hooks/useAdoptable";
+import type { ContainerStats } from "../hooks/useStats";
+import { ProjectCard } from "../components/ProjectCard";
+import { AdoptableStacksList } from "../components/AdoptableStacksList";
+import { api } from "../lib/api";
 
 export function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: projects, isLoading } = useProjects();
   const { data: groups = [] } = useGroups();
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
   const ws = useWebSocket();
 
-  const allCollapsed = groups.length > 0 && collapsedGroups.size === groups.length;
+  const allCollapsed =
+    groups.length > 0 && collapsedGroups.size === groups.length;
 
   const toggleGroup = (id: string) => {
     setCollapsedGroups((prev) => {
@@ -36,24 +39,28 @@ export function Dashboard() {
     else setCollapsedGroups(new Set(groups.map((g) => g.id)));
   };
 
-  const sortedProjects = [...(projects ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+  const sortedProjects = [...(projects ?? [])].sort(
+    (a, b) => a.sortOrder - b.sortOrder,
+  );
   const ungrouped = sortedProjects.filter((p) => p.groupId === null);
   const groupedSections = groups.map((g) => ({
     group: g,
     projects: sortedProjects.filter((p) => p.groupId === g.id),
   }));
   const { data: adoptable } = useAdoptable();
-  const [projectStats, setProjectStats] = useState<Map<string, ContainerStats[]>>(new Map());
+  const [projectStats, setProjectStats] = useState<
+    Map<string, ContainerStats[]>
+  >(new Map());
 
   useEffect(() => {
     if (!ws.connected || !projects) return;
 
-    const runningProjects = projects.filter((p) => p.status === 'running');
+    const runningProjects = projects.filter((p) => p.status === "running");
     for (const project of runningProjects) {
       ws.subscribe(project.id);
     }
 
-    const cleanup = ws.on('stats:update', (msg) => {
+    const cleanup = ws.on("stats:update", (msg) => {
       const pid = msg.projectId;
       if (pid && msg.containers) {
         setProjectStats((prev) => {
@@ -75,33 +82,33 @@ export function Dashboard() {
   const deployMutation = useMutation({
     mutationFn: (id: string) => api.post(`/projects/${id}/deploy`),
     onSuccess: () => {
-      toast.success('Deployment started');
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success("Deployment started");
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Deploy failed');
+      toast.error(error.message || "Deploy failed");
     },
   });
 
   const stopMutation = useMutation({
     mutationFn: (id: string) => api.post(`/projects/${id}/stop`),
     onSuccess: () => {
-      toast.success('Project stopped');
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success("Project stopped");
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Stop failed');
+      toast.error(error.message || "Stop failed");
     },
   });
 
   const restartMutation = useMutation({
     mutationFn: (id: string) => api.post(`/projects/${id}/restart`),
     onSuccess: () => {
-      toast.success('Project restarted');
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success("Project restarted");
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Restart failed');
+      toast.error(error.message || "Restart failed");
     },
   });
 
@@ -110,7 +117,7 @@ export function Dashboard() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
         <button
-          onClick={() => navigate('/projects/new')}
+          onClick={() => navigate("/projects/new")}
           className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus className="h-3.5 w-3.5" />
@@ -121,7 +128,10 @@ export function Dashboard() {
       {isLoading && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-2xl border border-primary/[0.08] bg-primary/[0.03]" />
+            <div
+              key={i}
+              className="h-40 animate-pulse rounded-2xl border border-primary/[0.08] bg-primary/[0.03]"
+            />
           ))}
         </div>
       )}
@@ -131,7 +141,9 @@ export function Dashboard() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/[0.10] text-primary">
             <Server className="h-6 w-6" />
           </div>
-          <p className="text-md font-medium text-muted-foreground">Nothing deployed yet</p>
+          <p className="text-md font-medium text-muted-foreground">
+            Nothing deployed yet
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Create a project to start self-hosting.
           </p>
@@ -144,7 +156,7 @@ export function Dashboard() {
             </div>
           ) : (
             <button
-              onClick={() => navigate('/projects/new')}
+              onClick={() => navigate("/projects/new")}
               className="mt-5 flex items-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -162,7 +174,7 @@ export function Dashboard() {
                 onClick={toggleAll}
                 className="text-xs text-muted-foreground transition-colors hover:text-muted-foreground"
               >
-                {allCollapsed ? 'Expand all' : 'Collapse all'}
+                {allCollapsed ? "Expand all" : "Collapse all"}
               </button>
             </div>
           )}

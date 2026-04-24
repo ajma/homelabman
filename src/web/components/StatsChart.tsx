@@ -1,22 +1,20 @@
-import type { ContainerStats } from '../hooks/useStats';
+import type { ContainerStats } from "../hooks/useStats";
 
 interface StatsDisplayProps {
   stats: ContainerStats[];
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
 export function StatsDisplay({ stats }: StatsDisplayProps) {
   if (stats.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">No stats available.</p>
-    );
+    return <p className="text-sm text-muted-foreground">No stats available.</p>;
   }
 
   return (
@@ -27,11 +25,15 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
           className="rounded-xl border border-white/[0.20] bg-accent/80 p-3"
         >
           <div className="mb-2.5 flex items-center justify-between">
-            <span className="text-sm font-medium text-foreground">{s.name}</span>
+            <span className="text-sm font-medium text-foreground">
+              {s.name}
+            </span>
             <span className="flex items-center gap-1.5">
               <span
                 className={`h-2 w-2 rounded-full ${
-                  s.status === 'running' ? 'bg-[#4ade80]' : 'bg-[rgba(255,255,255,0.25)]'
+                  s.status === "running"
+                    ? "bg-[#4ade80]"
+                    : "bg-[rgba(255,255,255,0.25)]"
                 }`}
               />
               <span className="text-xs text-muted-foreground">{s.status}</span>
@@ -56,7 +58,9 @@ export function StatsDisplay({ stats }: StatsDisplayProps) {
           <div className="mb-1.5">
             <div className="mb-1 flex justify-between text-2xs text-muted-foreground">
               <span>Memory</span>
-              <span>{formatBytes(s.memoryUsage)} / {formatBytes(s.memoryLimit)}</span>
+              <span>
+                {formatBytes(s.memoryUsage)} / {formatBytes(s.memoryLimit)}
+              </span>
             </div>
             <div className="h-1.5 w-full rounded-full bg-muted">
               <div

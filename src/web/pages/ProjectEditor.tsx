@@ -1,21 +1,36 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { Globe, ChevronDown, ExternalLink, X, RefreshCw, ScrollText, Plus } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useProject, useCreateProject, useUpdateProject, useDeleteProject, useProjectUpdates, useCheckUpdates } from '../hooks/useProjects';
-import { useGroups, useCreateGroup } from '../hooks/useGroups';
-import { createProjectSchema, updateProjectSchema } from '@shared/schemas';
-import type { CreateProjectInput } from '@shared/schemas';
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { load } from 'js-yaml';
-import { ComposeEditor } from '../components/ComposeEditor';
-import { TemplatePickerModal } from '../components/TemplatePickerModal';
-import { inputCls, selectCls } from '../lib/styles';
-import { api } from '../lib/api';
-import { useWebSocket } from '../hooks/useWebSocket';
-import type { ProjectTemplate } from '@shared/types';
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Globe,
+  ChevronDown,
+  ExternalLink,
+  X,
+  RefreshCw,
+  ScrollText,
+  Plus,
+} from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useProject,
+  useCreateProject,
+  useUpdateProject,
+  useDeleteProject,
+  useProjectUpdates,
+  useCheckUpdates,
+} from "../hooks/useProjects";
+import { useGroups, useCreateGroup } from "../hooks/useGroups";
+import { createProjectSchema, updateProjectSchema } from "@shared/schemas";
+import type { CreateProjectInput } from "@shared/schemas";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { load } from "js-yaml";
+import { ComposeEditor } from "../components/ComposeEditor";
+import { TemplatePickerModal } from "../components/TemplatePickerModal";
+import { inputCls, selectCls } from "../lib/styles";
+import { api } from "../lib/api";
+import { useWebSocket } from "../hooks/useWebSocket";
+import type { ProjectTemplate } from "@shared/types";
 
 interface ExposureProviderOption {
   id: string;
@@ -53,21 +68,27 @@ interface DeployProgress {
 }
 
 export function parsePort(value: unknown): number | null {
-  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+  const parsed =
+    typeof value === "number" ? value : Number.parseInt(String(value), 10);
   if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) return null;
   return parsed;
 }
 
 export function extractTargetPortFromEntry(entry: unknown): number | null {
-  if (typeof entry === 'string') {
-    const withoutProtocol = entry.split('/')[0]?.trim() ?? '';
+  if (typeof entry === "string") {
+    const withoutProtocol = entry.split("/")[0]?.trim() ?? "";
     if (!withoutProtocol) return null;
-    const parts = withoutProtocol.split(':').map((part) => part.trim()).filter(Boolean);
+    const parts = withoutProtocol
+      .split(":")
+      .map((part) => part.trim())
+      .filter(Boolean);
     const targetPart = parts[parts.length - 1];
     return parsePort(targetPart);
   }
-  if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
-    const candidate = (entry as Record<string, unknown>).target ?? (entry as Record<string, unknown>).port;
+  if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+    const candidate =
+      (entry as Record<string, unknown>).target ??
+      (entry as Record<string, unknown>).port;
     return parsePort(candidate);
   }
   return null;
@@ -77,9 +98,11 @@ export function extractComposeTargetPorts(composeContent: string): number[] {
   if (!composeContent.trim()) return [];
   try {
     const parsed = load(composeContent);
-    if (!parsed || typeof parsed !== 'object') return [];
-    const services = (parsed as { services?: Record<string, { ports?: unknown[] }> }).services;
-    if (!services || typeof services !== 'object') return [];
+    if (!parsed || typeof parsed !== "object") return [];
+    const services = (
+      parsed as { services?: Record<string, { ports?: unknown[] }> }
+    ).services;
+    if (!services || typeof services !== "object") return [];
     const ports = new Set<number>();
     for (const service of Object.values(services)) {
       if (!Array.isArray(service?.ports)) continue;
@@ -94,13 +117,16 @@ export function extractComposeTargetPorts(composeContent: string): number[] {
   }
 }
 
-export function extractComposeProjectName(composeContent: string): string | null {
+export function extractComposeProjectName(
+  composeContent: string,
+): string | null {
   if (!composeContent.trim()) return null;
   try {
     const parsed = load(composeContent);
-    if (!parsed || typeof parsed !== 'object') return null;
-    const services = (parsed as { services?: Record<string, unknown> }).services;
-    if (!services || typeof services !== 'object') return null;
+    if (!parsed || typeof parsed !== "object") return null;
+    const services = (parsed as { services?: Record<string, unknown> })
+      .services;
+    if (!services || typeof services !== "object") return null;
     const firstName = Object.keys(services)[0];
     return firstName ? firstName : null;
   } catch {
@@ -108,13 +134,17 @@ export function extractComposeProjectName(composeContent: string): string | null
   }
 }
 
-export function extractFirstComposeTargetPort(composeContent: string): number | null {
+export function extractFirstComposeTargetPort(
+  composeContent: string,
+): number | null {
   if (!composeContent.trim()) return null;
   try {
     const parsed = load(composeContent);
-    if (!parsed || typeof parsed !== 'object') return null;
-    const services = (parsed as { services?: Record<string, { ports?: unknown[] }> }).services;
-    if (!services || typeof services !== 'object') return null;
+    if (!parsed || typeof parsed !== "object") return null;
+    const services = (
+      parsed as { services?: Record<string, { ports?: unknown[] }> }
+    ).services;
+    if (!services || typeof services !== "object") return null;
     for (const service of Object.values(services)) {
       if (!Array.isArray(service?.ports)) continue;
       for (const entry of service.ports) {
@@ -138,7 +168,7 @@ function GroupCombobox({
   const { data: groups = [] } = useGroups();
   const createGroup = useCreateGroup();
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const selected = groups.find((g) => g.id === value) ?? null;
@@ -153,13 +183,13 @@ function GroupCombobox({
 
   const select = (group: { id: string; name: string }) => {
     onChange(group.id);
-    setQuery('');
+    setQuery("");
     setOpen(false);
   };
 
   const clear = () => {
     onChange(null);
-    setQuery('');
+    setQuery("");
     setOpen(false);
   };
 
@@ -180,8 +210,11 @@ function GroupCombobox({
           type="text"
           placeholder="No group"
           autoComplete="off"
-          value={open ? query : (selected?.name ?? '')}
-          onFocus={() => { setOpen(true); setQuery(''); }}
+          value={open ? query : (selected?.name ?? "")}
+          onFocus={() => {
+            setOpen(true);
+            setQuery("");
+          }}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onChange={(e) => setQuery(e.target.value)}
           className="flex h-10 w-full rounded-[14px] border border-white/[0.26] bg-muted px-4 py-2 text-md text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary/[0.5]"
@@ -200,7 +233,9 @@ function GroupCombobox({
       {open && (
         <div className="absolute z-20 mt-1 w-full rounded-xl border border-white/[0.24] bg-popover shadow-xl overflow-hidden">
           {filtered.length === 0 && !showCreate && (
-            <p className="px-4 py-3 text-sm text-muted-foreground">No groups yet</p>
+            <p className="px-4 py-3 text-sm text-muted-foreground">
+              No groups yet
+            </p>
           )}
           {filtered.map((g) => (
             <button
@@ -220,7 +255,7 @@ function GroupCombobox({
               className="flex w-full items-center gap-2 border-t border-white/[0.24] px-4 py-2.5 text-sm text-primary hover:bg-primary/[0.06] transition-colors disabled:opacity-40"
             >
               <Plus className="h-3.5 w-3.5" />
-              {createGroup.isPending ? 'Creating…' : `Create "${query.trim()}"`}
+              {createGroup.isPending ? "Creating…" : `Create "${query.trim()}"`}
             </button>
           )}
         </div>
@@ -230,8 +265,8 @@ function GroupCombobox({
 }
 
 const emptyProjectFormValues: CreateProjectInput = {
-  name: '',
-  composeContent: '',
+  name: "",
+  composeContent: "",
   logoUrl: null,
   domainName: null,
   exposureEnabled: false,
@@ -241,15 +276,23 @@ const emptyProjectFormValues: CreateProjectInput = {
   groupId: null,
 };
 
-
 const statusStyles: Record<string, string> = {
-  running: 'bg-[rgba(74,222,128,0.12)] text-[#4ade80] border-[rgba(74,222,128,0.25)]',
-  stopped: 'bg-accent text-muted-foreground border-border',
-  starting: 'bg-[rgba(250,204,21,0.10)] text-[#facc15] border-[rgba(250,204,21,0.25)]',
-  error: 'bg-[rgba(127,29,29,0.20)] text-[rgba(254,202,202,0.92)] border-[rgba(248,113,113,0.36)]',
+  running:
+    "bg-[rgba(74,222,128,0.12)] text-[#4ade80] border-[rgba(74,222,128,0.25)]",
+  stopped: "bg-accent text-muted-foreground border-border",
+  starting:
+    "bg-[rgba(250,204,21,0.10)] text-[#facc15] border-[rgba(250,204,21,0.25)]",
+  error:
+    "bg-[rgba(127,29,29,0.20)] text-[rgba(254,202,202,0.92)] border-[rgba(248,113,113,0.36)]",
 };
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <button
       type="button"
@@ -257,12 +300,12 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ${
-        checked ? 'bg-primary' : 'bg-muted'
+        checked ? "bg-primary" : "bg-muted"
       }`}
     >
       <span
         className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${
-          checked ? 'translate-x-[18px]' : 'translate-x-[3px]'
+          checked ? "translate-x-[18px]" : "translate-x-[3px]"
         }`}
       />
     </button>
@@ -285,18 +328,21 @@ function LogsModal({
   projectName: string;
 }) {
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="relative flex h-[94vh] w-full max-w-6xl flex-col rounded-2xl border border-white/[0.24] bg-background/[0.97] shadow-2xl">
-
         {/* Modal header */}
         <div className="flex shrink-0 items-center justify-between border-b border-white/[0.20] px-6 py-4">
           <div className="flex items-center gap-2.5">
@@ -304,7 +350,9 @@ function LogsModal({
             <h2 className="font-rubik text-md font-semibold text-foreground">
               Container Logs
               {projectName && (
-                <span className="ml-2 font-normal text-muted-foreground">— {projectName}</span>
+                <span className="ml-2 font-normal text-muted-foreground">
+                  — {projectName}
+                </span>
               )}
             </h2>
           </div>
@@ -315,8 +363,10 @@ function LogsModal({
               disabled={isFetching}
               className="flex items-center gap-1.5 rounded-lg border border-white/[0.24] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-white/[0.28] hover:text-foreground disabled:opacity-40"
             >
-              <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin' : ''}`} />
-              {isFetching ? 'Refreshing…' : 'Refresh'}
+              <RefreshCw
+                className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`}
+              />
+              {isFetching ? "Refreshing…" : "Refresh"}
             </button>
             <button
               type="button"
@@ -360,7 +410,7 @@ function LogsModal({
                     {entry.container}
                   </p>
                   <pre className="min-h-0 flex-1 overflow-auto rounded-xl bg-background/[0.78] p-4 font-mono text-xs leading-relaxed text-foreground/80">
-                    {entry.output || '(no output)'}
+                    {entry.output || "(no output)"}
                   </pre>
                 </div>
               ))}
@@ -378,46 +428,54 @@ export function ProjectEditor() {
   const queryClient = useQueryClient();
   const isEditing = !!id;
 
-  const { data: project, isLoading } = useProject(id ?? '');
+  const { data: project, isLoading } = useProject(id ?? "");
   const createMutation = useCreateProject();
-  const updateMutation = useUpdateProject(id ?? '');
+  const updateMutation = useUpdateProject(id ?? "");
   const deleteMutation = useDeleteProject();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [deployProgress, setDeployProgress] = useState<DeployProgress[]>([]);
   const [showLogsModal, setShowLogsModal] = useState(false);
-  const [domainErrors, setDomainErrors] = useState<{ subdomain?: string; domain?: string }>({});
+  const [domainErrors, setDomainErrors] = useState<{
+    subdomain?: string;
+    domain?: string;
+  }>({});
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
   function handleTemplateSelect(template: ProjectTemplate) {
-    setValue('name', template.name);
-    setValue('composeContent', template.composeContent);
-    if (template.logoUrl) setValue('logoUrl', template.logoUrl);
+    setValue("name", template.name);
+    setValue("composeContent", template.composeContent);
+    if (template.logoUrl) setValue("logoUrl", template.logoUrl);
     const ports = extractComposeTargetPorts(template.composeContent);
     if (ports.length > 0) {
-      const slug = template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const slug = template.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
       setSubdomainPrefix(slug);
-      setValue('exposureEnabled', true);
-      setValue('exposureConfig', { port: ports[0] });
+      setValue("exposureEnabled", true);
+      setValue("exposureConfig", { port: ports[0] });
     }
     setShowTemplatePicker(false);
   }
 
-  const { data: containerUpdates } = useProjectUpdates(id ?? '');
-  const checkUpdatesMutation = useCheckUpdates(id ?? '');
+  const { data: containerUpdates } = useProjectUpdates(id ?? "");
+  const checkUpdatesMutation = useCheckUpdates(id ?? "");
 
   const { data: settingsData } = useQuery<SettingsResponse>({
-    queryKey: ['settings'],
-    queryFn: () => api.get('/settings'),
+    queryKey: ["settings"],
+    queryFn: () => api.get("/settings"),
   });
 
-  const availableProviders = settingsData?.exposureProviders?.filter((p) => p.enabled) || [];
+  const availableProviders =
+    settingsData?.exposureProviders?.filter((p) => p.enabled) || [];
 
   const { data: exposureStatus } = useQuery<ExposureStatus>({
-    queryKey: ['projects', id, 'exposure-status'],
+    queryKey: ["projects", id, "exposure-status"],
     queryFn: () => api.get(`/projects/${id}/exposure-status`),
-    enabled: !!id && project?.status === 'running' && !!project?.exposureEnabled,
+    enabled:
+      !!id && project?.status === "running" && !!project?.exposureEnabled,
   });
 
   const { subscribe, unsubscribe, on, connected } = useWebSocket();
@@ -426,24 +484,24 @@ export function ProjectEditor() {
     if (!id || !connected) return;
     subscribe(id);
 
-    const offProgress = on('deploy:progress', (msg) => {
+    const offProgress = on("deploy:progress", (msg) => {
       setDeployProgress((prev) => [
         ...prev,
         { stage: msg.stage, message: msg.message, timestamp: Date.now() },
       ]);
     });
 
-    const offComplete = on('deploy:complete', (msg) => {
-      if (msg.status === 'success') {
-        toast.success('Deployment successful');
+    const offComplete = on("deploy:complete", (msg) => {
+      if (msg.status === "success") {
+        toast.success("Deployment successful");
       } else {
-        toast.error('Deployment failed');
+        toast.error("Deployment failed");
       }
-      queryClient.invalidateQueries({ queryKey: ['projects', id] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ["projects", id] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     });
 
-    const offError = on('deploy:error', (msg) => {
+    const offError = on("deploy:error", (msg) => {
       toast.error(`Deploy error: ${msg.error}`);
     });
 
@@ -457,43 +515,51 @@ export function ProjectEditor() {
 
   const deployMutation = useMutation({
     mutationFn: () => api.post(`/projects/${id}/deploy`),
-    onMutate: () => { setDeployProgress([]); },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects', id] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    onMutate: () => {
+      setDeployProgress([]);
     },
-    onError: (error: any) => { toast.error(error.message || 'Deploy failed'); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects", id] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Deploy failed");
+    },
   });
 
   const stopMutation = useMutation({
     mutationFn: () => api.post(`/projects/${id}/stop`),
     onSuccess: () => {
-      toast.success('Project stopped');
-      queryClient.invalidateQueries({ queryKey: ['projects', id] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success("Project stopped");
+      queryClient.invalidateQueries({ queryKey: ["projects", id] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: (error: any) => { toast.error(error.message || 'Stop failed'); },
+    onError: (error: any) => {
+      toast.error(error.message || "Stop failed");
+    },
   });
 
   const restartMutation = useMutation({
     mutationFn: () => api.post(`/projects/${id}/restart`),
     onSuccess: () => {
-      toast.success('Project restarted');
-      queryClient.invalidateQueries({ queryKey: ['projects', id] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success("Project restarted");
+      queryClient.invalidateQueries({ queryKey: ["projects", id] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: (error: any) => { toast.error(error.message || 'Restart failed'); },
+    onError: (error: any) => {
+      toast.error(error.message || "Restart failed");
+    },
   });
 
   const logsQuery = useQuery<{ logs: LogEntry[] }>({
-    queryKey: ['projects', id, 'logs'],
+    queryKey: ["projects", id, "logs"],
     queryFn: () => api.get(`/projects/${id}/logs?tail=100`),
     enabled: showLogsModal && !!id,
     refetchInterval: false,
   });
 
-  const [subdomainPrefix, setSubdomainPrefix] = useState('');
-  const [baseDomain, setBaseDomain] = useState('');
+  const [subdomainPrefix, setSubdomainPrefix] = useState("");
+  const [baseDomain, setBaseDomain] = useState("");
 
   const {
     register,
@@ -504,29 +570,31 @@ export function ProjectEditor() {
     control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<CreateProjectInput>({
-    resolver: zodResolver(isEditing ? updateProjectSchema : createProjectSchema),
+    resolver: zodResolver(
+      isEditing ? updateProjectSchema : createProjectSchema,
+    ),
     defaultValues: emptyProjectFormValues,
   });
 
   useEffect(() => {
     if (!isEditing) {
       reset(emptyProjectFormValues);
-      setSubdomainPrefix('');
-      setBaseDomain('');
+      setSubdomainPrefix("");
+      setBaseDomain("");
       return;
     }
     if (project) {
       const expConfig =
-        typeof project.exposureConfig === 'string'
-          ? JSON.parse(project.exposureConfig || '{}')
+        typeof project.exposureConfig === "string"
+          ? JSON.parse(project.exposureConfig || "{}")
           : project.exposureConfig || {};
       if (project.domainName) {
-        const parts = project.domainName.split('.');
+        const parts = project.domainName.split(".");
         if (parts.length >= 2) {
           setSubdomainPrefix(parts[0]);
-          setBaseDomain(parts.slice(1).join('.'));
+          setBaseDomain(parts.slice(1).join("."));
         } else {
-          setSubdomainPrefix('');
+          setSubdomainPrefix("");
           setBaseDomain(project.domainName);
         }
       }
@@ -546,19 +614,23 @@ export function ProjectEditor() {
   useEffect(() => {
     if (isEditing) return;
     const defaultId = settingsData?.defaultExposureProviderId;
-    if (defaultId) setValue('exposureProviderId', defaultId);
+    if (defaultId) setValue("exposureProviderId", defaultId);
   }, [isEditing, settingsData, setValue]);
 
-  const composeContent = watch('composeContent');
-  const exposureEnabled = watch('exposureEnabled');
-  const selectedProviderId = watch('exposureProviderId');
-  const exposureConfig = watch('exposureConfig') as Record<string, unknown> | undefined;
+  const composeContent = watch("composeContent");
+  const exposureEnabled = watch("exposureEnabled");
+  const selectedProviderId = watch("exposureProviderId");
+  const exposureConfig = watch("exposureConfig") as
+    | Record<string, unknown>
+    | undefined;
 
-  const selectedProvider = availableProviders.find((p) => p.id === selectedProviderId);
-  const isCloudflareProvider = selectedProvider?.providerType === 'cloudflare';
+  const selectedProvider = availableProviders.find(
+    (p) => p.id === selectedProviderId,
+  );
+  const isCloudflareProvider = selectedProvider?.providerType === "cloudflare";
 
   const composeTargetPorts = useMemo(
-    () => extractComposeTargetPorts(composeContent ?? ''),
+    () => extractComposeTargetPorts(composeContent ?? ""),
     [composeContent],
   );
 
@@ -567,22 +639,25 @@ export function ProjectEditor() {
     composeTargetPorts.length > 0 && !composeTargetPorts.includes(targetPort);
 
   const { data: availableDomains = [] } = useQuery<string[]>({
-    queryKey: ['provider-domains', selectedProviderId],
-    queryFn: () => api.get(`/settings/exposure-providers/${selectedProviderId}/domains`),
+    queryKey: ["provider-domains", selectedProviderId],
+    queryFn: () =>
+      api.get(`/settings/exposure-providers/${selectedProviderId}/domains`),
     enabled: !!selectedProviderId && exposureEnabled,
   });
 
   const validateDomain = () => {
     if (!isCloudflareProvider) return true;
     const errs: { subdomain?: string; domain?: string } = {};
-    if (!subdomainPrefix.trim()) errs.subdomain = 'Required for Cloudflare';
-    if (!baseDomain.trim()) errs.domain = 'Required for Cloudflare';
+    if (!subdomainPrefix.trim()) errs.subdomain = "Required for Cloudflare";
+    if (!baseDomain.trim()) errs.domain = "Required for Cloudflare";
     setDomainErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleComposeChange = useCallback(
-    (value: string) => { setValue('composeContent', value, { shouldDirty: true }); },
+    (value: string) => {
+      setValue("composeContent", value, { shouldDirty: true });
+    },
     [setValue],
   );
 
@@ -590,14 +665,18 @@ export function ProjectEditor() {
     if (!composeContent) return;
     const extractedName = extractComposeProjectName(composeContent);
     if (extractedName) {
-      setValue('name', extractedName, { shouldDirty: true });
+      setValue("name", extractedName, { shouldDirty: true });
       setSubdomainPrefix(extractedName);
     }
     const firstPort = extractFirstComposeTargetPort(composeContent);
     if (firstPort !== null) {
       const current = exposureConfig || {};
-      setValue('exposureConfig', { ...current, port: firstPort }, { shouldDirty: true });
-      setValue('exposureEnabled', true, { shouldDirty: true });
+      setValue(
+        "exposureConfig",
+        { ...current, port: firstPort },
+        { shouldDirty: true },
+      );
+      setValue("exposureEnabled", true, { shouldDirty: true });
     }
   }, [composeContent, exposureConfig, setValue]);
 
@@ -608,9 +687,14 @@ export function ProjectEditor() {
     }
     const timer = setTimeout(async () => {
       try {
-        const result = await api.post<ValidationResult>('/projects/compose/validate', { content: composeContent });
+        const result = await api.post<ValidationResult>(
+          "/projects/compose/validate",
+          { content: composeContent },
+        );
         setValidation(result);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }, 500);
     return () => clearTimeout(timer);
   }, [composeContent]);
@@ -618,17 +702,20 @@ export function ProjectEditor() {
   const onSubmit = async (data: CreateProjectInput) => {
     if (!validateDomain()) return;
     try {
-      const fullDomain = subdomainPrefix && baseDomain ? `${subdomainPrefix}.${baseDomain}` : null;
+      const fullDomain =
+        subdomainPrefix && baseDomain
+          ? `${subdomainPrefix}.${baseDomain}`
+          : null;
       const submitData = { ...data, domainName: fullDomain };
       if (isEditing) {
         await updateMutation.mutateAsync(submitData);
-        toast.success('Project updated');
+        toast.success("Project updated");
       } else {
         await createMutation.mutateAsync(submitData);
-        toast.success('Project created');
+        toast.success("Project created");
       }
     } catch (err: any) {
-      toast.error(err.message || 'Something went wrong');
+      toast.error(err.message || "Something went wrong");
     }
   };
 
@@ -636,12 +723,15 @@ export function ProjectEditor() {
     if (!validateDomain()) return;
     const data = watch();
     try {
-      const fullDomain = subdomainPrefix && baseDomain ? `${subdomainPrefix}.${baseDomain}` : null;
+      const fullDomain =
+        subdomainPrefix && baseDomain
+          ? `${subdomainPrefix}.${baseDomain}`
+          : null;
       await updateMutation.mutateAsync({ ...data, domainName: fullDomain });
-      toast.success('Changes saved');
+      toast.success("Changes saved");
       await deployMutation.mutateAsync();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save and deploy');
+      toast.error(err.message || "Failed to save and deploy");
     }
   };
 
@@ -649,20 +739,23 @@ export function ProjectEditor() {
     if (!id) return;
     try {
       await deleteMutation.mutateAsync(id);
-      toast.success('Project deleted');
+      toast.success("Project deleted");
       setShowDeleteConfirm(false);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to delete project');
+      toast.error(err.message || "Failed to delete project");
       setShowDeleteConfirm(false);
     }
   };
 
-  const isDeploying = deployMutation.isPending || project?.status === 'starting';
-  const isRunning = project?.status === 'running';
-  const isStopped = project?.status === 'stopped';
+  const isDeploying =
+    deployMutation.isPending || project?.status === "starting";
+  const isRunning = project?.status === "running";
+  const isStopped = project?.status === "stopped";
 
-  const updatesAvailable = containerUpdates?.some((u) => u.updateAvailable) ?? false;
-  const updatesCount = containerUpdates?.filter((u) => u.updateAvailable).length ?? 0;
+  const updatesAvailable =
+    containerUpdates?.some((u) => u.updateAvailable) ?? false;
+  const updatesCount =
+    containerUpdates?.filter((u) => u.updateAvailable).length ?? 0;
   const hasUpdateData = containerUpdates && containerUpdates.length > 0;
 
   if (isEditing && isLoading) {
@@ -678,7 +771,7 @@ export function ProjectEditor() {
       <div className="p-6">
         <p className="text-muted-foreground">Project not found.</p>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="mt-4 text-sm text-primary transition-colors hover:brightness-110"
         >
           ← Back to Dashboard
@@ -687,20 +780,22 @@ export function ProjectEditor() {
     );
   }
 
-  const projectDisplayName = watch('name') || (isEditing ? 'Edit Project' : 'New Project');
+  const projectDisplayName =
+    watch("name") || (isEditing ? "Edit Project" : "New Project");
 
   return (
     <div className="flex min-h-full flex-col">
-
       {/* ── Sticky header ── */}
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/[0.20] bg-background/[0.92] px-6 py-3 backdrop-blur-md">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          {watch('logoUrl') && (
+          {watch("logoUrl") && (
             <img
-              src={watch('logoUrl') as string}
+              src={watch("logoUrl") as string}
               alt="logo"
               className="h-7 w-7 shrink-0 rounded object-contain"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
             />
           )}
           <h1 className="font-rubik truncate text-lg font-semibold text-foreground">
@@ -711,24 +806,26 @@ export function ProjectEditor() {
             <span
               className={`font-rubik inline-flex items-center rounded-full border px-2.5 py-0.5 text-2xs font-medium uppercase tracking-[0.14em] ${
                 statusStyles[project.status] ?? statusStyles.stopped
-              } ${project.status === 'starting' ? 'animate-pulse' : ''}`}
+              } ${project.status === "starting" ? "animate-pulse" : ""}`}
             >
               {project.status}
             </span>
           )}
 
-          {isEditing && project?.status === 'running' && project?.domainName && (
-            <a
-              href={`https://${project.domainName}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
-            >
-              <Globe className="h-3 w-3" />
-              {project.domainName}
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
+          {isEditing &&
+            project?.status === "running" &&
+            project?.domainName && (
+              <a
+                href={`https://${project.domainName}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
+              >
+                <Globe className="h-3 w-3" />
+                {project.domainName}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -748,12 +845,12 @@ export function ProjectEditor() {
             disabled={isSubmitting}
             className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
           >
-            {isSubmitting ? 'Saving…' : isEditing ? 'Save' : 'Create'}
+            {isSubmitting ? "Saving…" : isEditing ? "Save" : "Create"}
           </button>
 
           <button
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="rounded-xl px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
           >
             Cancel
@@ -769,55 +866,71 @@ export function ProjectEditor() {
       >
         {/* ── LEFT: Config ── */}
         <div className="flex flex-col gap-6 border-b border-white/[0.20] p-6 lg:border-b-0 lg:border-r">
-
           {/* Name */}
           <div className="space-y-1.5">
-            <label htmlFor="name" className="font-rubik text-xs font-medium text-muted-foreground">
+            <label
+              htmlFor="name"
+              className="font-rubik text-xs font-medium text-muted-foreground"
+            >
               Project Name
             </label>
             <input
               id="name"
               type="text"
-              {...register('name')}
+              {...register("name")}
               placeholder="my-awesome-service"
               data-1p-ignore
               autoComplete="off"
               className={inputCls}
             />
             {errors.name && (
-              <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.name.message}</p>
+              <p className="text-xs text-[rgba(254,202,202,0.85)]">
+                {errors.name.message}
+              </p>
             )}
           </div>
 
           {/* Logo URL */}
           <div className="space-y-1.5">
-            <label htmlFor="logoUrl" className="font-rubik text-xs font-medium text-muted-foreground">
-              Logo URL{' '}
-              <span className="font-normal text-muted-foreground">(optional)</span>
+            <label
+              htmlFor="logoUrl"
+              className="font-rubik text-xs font-medium text-muted-foreground"
+            >
+              Logo URL{" "}
+              <span className="font-normal text-muted-foreground">
+                (optional)
+              </span>
             </label>
             <input
               id="logoUrl"
               type="text"
-              {...register('logoUrl')}
+              {...register("logoUrl")}
               placeholder="https://example.com/logo.png"
               className={inputCls}
             />
             {errors.logoUrl && (
-              <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.logoUrl.message}</p>
+              <p className="text-xs text-[rgba(254,202,202,0.85)]">
+                {errors.logoUrl.message}
+              </p>
             )}
           </div>
 
           {/* Group */}
           <div className="space-y-1.5">
             <label className="font-rubik text-xs font-medium text-muted-foreground">
-              Group{' '}
-              <span className="font-normal text-muted-foreground">(optional)</span>
+              Group{" "}
+              <span className="font-normal text-muted-foreground">
+                (optional)
+              </span>
             </label>
             <Controller
               name="groupId"
               control={control}
               render={({ field }) => (
-                <GroupCombobox value={field.value ?? null} onChange={field.onChange} />
+                <GroupCombobox
+                  value={field.value ?? null}
+                  onChange={field.onChange}
+                />
               )}
             />
           </div>
@@ -835,17 +948,18 @@ export function ProjectEditor() {
               </div>
               <Toggle
                 checked={exposureEnabled}
-                onChange={(v) => setValue('exposureEnabled', v, { shouldDirty: true })}
+                onChange={(v) =>
+                  setValue("exposureEnabled", v, { shouldDirty: true })
+                }
               />
             </div>
 
             <div
               className="grid transition-all duration-200"
-              style={{ gridTemplateRows: exposureEnabled ? '1fr' : '0fr' }}
+              style={{ gridTemplateRows: exposureEnabled ? "1fr" : "0fr" }}
             >
               <div className="overflow-hidden">
                 <div className="space-y-4 pt-1">
-
                   {/* Provider select */}
                   <div className="space-y-1.5">
                     <label className="font-rubik text-xs font-medium text-muted-foreground">
@@ -853,7 +967,7 @@ export function ProjectEditor() {
                     </label>
                     <div className="relative">
                       <select
-                        {...register('exposureProviderId')}
+                        {...register("exposureProviderId")}
                         className={selectCls}
                       >
                         <option value="">Select a provider…</option>
@@ -867,10 +981,10 @@ export function ProjectEditor() {
                     </div>
                     {availableProviders.length === 0 && (
                       <p className="text-xs text-muted-foreground">
-                        No providers configured.{' '}
+                        No providers configured.{" "}
                         <button
                           type="button"
-                          onClick={() => navigate('/settings')}
+                          onClick={() => navigate("/settings")}
                           className="text-primary hover:underline"
                         >
                           Add one in Settings.
@@ -882,11 +996,13 @@ export function ProjectEditor() {
                   {/* Domain */}
                   <div className="space-y-1.5">
                     <label className="font-rubik text-xs font-medium text-muted-foreground">
-                      Domain{' '}
+                      Domain{" "}
                       {isCloudflareProvider ? (
                         <span className="text-[rgba(254,202,202,0.85)]">*</span>
                       ) : (
-                        <span className="font-normal text-muted-foreground">(optional)</span>
+                        <span className="font-normal text-muted-foreground">
+                          (optional)
+                        </span>
                       )}
                     </label>
                     <div className="flex items-center gap-1.5">
@@ -895,25 +1011,37 @@ export function ProjectEditor() {
                         value={subdomainPrefix}
                         onChange={(e) => {
                           setSubdomainPrefix(e.target.value);
-                          if (domainErrors.subdomain) setDomainErrors((prev) => ({ ...prev, subdomain: undefined }));
+                          if (domainErrors.subdomain)
+                            setDomainErrors((prev) => ({
+                              ...prev,
+                              subdomain: undefined,
+                            }));
                         }}
                         placeholder="myapp"
-                        className={`${inputCls} flex-1 ${domainErrors.subdomain ? 'border-[rgba(248,113,113,0.5)]' : ''}`}
+                        className={`${inputCls} flex-1 ${domainErrors.subdomain ? "border-[rgba(248,113,113,0.5)]" : ""}`}
                       />
-                      <span className="shrink-0 text-md text-muted-foreground">.</span>
+                      <span className="shrink-0 text-md text-muted-foreground">
+                        .
+                      </span>
                       {availableDomains.length > 0 ? (
                         <div className="relative flex-1">
                           <select
                             value={baseDomain}
                             onChange={(e) => {
                               setBaseDomain(e.target.value);
-                              if (domainErrors.domain) setDomainErrors((prev) => ({ ...prev, domain: undefined }));
+                              if (domainErrors.domain)
+                                setDomainErrors((prev) => ({
+                                  ...prev,
+                                  domain: undefined,
+                                }));
                             }}
-                            className={`${selectCls} ${domainErrors.domain ? 'border-[rgba(248,113,113,0.5)]' : ''}`}
+                            className={`${selectCls} ${domainErrors.domain ? "border-[rgba(248,113,113,0.5)]" : ""}`}
                           >
                             <option value="">Select domain…</option>
                             {availableDomains.map((domain: string) => (
-                              <option key={domain} value={domain}>{domain}</option>
+                              <option key={domain} value={domain}>
+                                {domain}
+                              </option>
                             ))}
                           </select>
                           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -924,32 +1052,41 @@ export function ProjectEditor() {
                           value={baseDomain}
                           onChange={(e) => {
                             setBaseDomain(e.target.value);
-                            if (domainErrors.domain) setDomainErrors((prev) => ({ ...prev, domain: undefined }));
+                            if (domainErrors.domain)
+                              setDomainErrors((prev) => ({
+                                ...prev,
+                                domain: undefined,
+                              }));
                           }}
                           placeholder="example.com"
-                          className={`${inputCls} flex-1 ${domainErrors.domain ? 'border-[rgba(248,113,113,0.5)]' : ''}`}
+                          className={`${inputCls} flex-1 ${domainErrors.domain ? "border-[rgba(248,113,113,0.5)]" : ""}`}
                         />
                       )}
                     </div>
                     {(domainErrors.subdomain || domainErrors.domain) && (
                       <p className="text-xs text-[rgba(254,202,202,0.85)]">
                         {domainErrors.subdomain && domainErrors.domain
-                          ? 'Subdomain and domain are required'
+                          ? "Subdomain and domain are required"
                           : domainErrors.subdomain
-                            ? 'Subdomain is required'
-                            : 'Domain is required'}
+                            ? "Subdomain is required"
+                            : "Domain is required"}
                       </p>
                     )}
-                    {!domainErrors.subdomain && !domainErrors.domain && (subdomainPrefix || baseDomain) && (
-                      <p className="text-xs text-muted-foreground">
-                        → {subdomainPrefix || '…'}.{baseDomain || '…'}
-                      </p>
-                    )}
+                    {!domainErrors.subdomain &&
+                      !domainErrors.domain &&
+                      (subdomainPrefix || baseDomain) && (
+                        <p className="text-xs text-muted-foreground">
+                          → {subdomainPrefix || "…"}.{baseDomain || "…"}
+                        </p>
+                      )}
                   </div>
 
                   {/* Target port */}
                   <div className="space-y-1.5">
-                    <label htmlFor="exposurePort" className="font-rubik text-xs font-medium text-muted-foreground">
+                    <label
+                      htmlFor="exposurePort"
+                      className="font-rubik text-xs font-medium text-muted-foreground"
+                    >
                       Target Port
                     </label>
                     <input
@@ -957,8 +1094,12 @@ export function ProjectEditor() {
                       type="number"
                       value={targetPort}
                       onChange={(e) => {
-                        const current = watch('exposureConfig') || {};
-                        setValue('exposureConfig', { ...current, port: parsePort(e.target.value) ?? 80 }, { shouldDirty: true });
+                        const current = watch("exposureConfig") || {};
+                        setValue(
+                          "exposureConfig",
+                          { ...current, port: parsePort(e.target.value) ?? 80 },
+                          { shouldDirty: true },
+                        );
                       }}
                       placeholder="80"
                       min={1}
@@ -967,7 +1108,7 @@ export function ProjectEditor() {
                     />
                     {composeTargetPorts.length > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        Detected: {composeTargetPorts.join(', ')}
+                        Detected: {composeTargetPorts.join(", ")}
                       </p>
                     )}
                     {targetPortMissingFromCompose && (
@@ -978,25 +1119,33 @@ export function ProjectEditor() {
                   </div>
 
                   {/* Exposure status for running projects */}
-                  {isEditing && project?.status === 'running' && exposureStatus && (
-                    <div
-                      className={`rounded-xl px-3 py-2.5 text-sm ${
-                        exposureStatus.active
-                          ? 'bg-[rgba(74,222,128,0.08)] text-[#76e5a2]'
-                          : 'bg-accent/80 text-muted-foreground'
-                      }`}
-                    >
-                      <span className="font-medium">
-                        {exposureStatus.active ? 'Route active' : 'Route inactive'}
-                      </span>
-                      {exposureStatus.domain && (
-                        <span className="ml-2 opacity-70">({exposureStatus.domain})</span>
-                      )}
-                      {exposureStatus.message && (
-                        <p className="mt-0.5 text-xs opacity-70">{exposureStatus.message}</p>
-                      )}
-                    </div>
-                  )}
+                  {isEditing &&
+                    project?.status === "running" &&
+                    exposureStatus && (
+                      <div
+                        className={`rounded-xl px-3 py-2.5 text-sm ${
+                          exposureStatus.active
+                            ? "bg-[rgba(74,222,128,0.08)] text-[#76e5a2]"
+                            : "bg-accent/80 text-muted-foreground"
+                        }`}
+                      >
+                        <span className="font-medium">
+                          {exposureStatus.active
+                            ? "Route active"
+                            : "Route inactive"}
+                        </span>
+                        {exposureStatus.domain && (
+                          <span className="ml-2 opacity-70">
+                            ({exposureStatus.domain})
+                          </span>
+                        )}
+                        {exposureStatus.message && (
+                          <p className="mt-0.5 text-xs opacity-70">
+                            {exposureStatus.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
@@ -1005,22 +1154,20 @@ export function ProjectEditor() {
 
         {/* ── RIGHT: Ops bar + Editor ── */}
         <div className="flex flex-col gap-4 p-6">
-
           {/* Ops bar — edit mode only */}
           {isEditing && project && (
             <div className="space-y-2">
               <div className="flex items-center gap-3 rounded-xl border border-white/[0.20] bg-accent/50 px-4 py-2.5">
-
                 {/* Left zone: deployment controls */}
                 <div className="flex flex-1 items-center gap-2">
-                  {(isStopped || project.status === 'error') && (
+                  {(isStopped || project.status === "error") && (
                     <button
                       type="button"
                       onClick={() => deployMutation.mutate()}
                       disabled={isDeploying}
                       className="rounded-lg bg-[rgba(74,222,128,0.12)] border border-[rgba(74,222,128,0.25)] px-3 py-1 text-xs font-medium text-[#4ade80] transition-colors hover:bg-[rgba(74,222,128,0.18)] disabled:opacity-40"
                     >
-                      {isDeploying ? 'Deploying…' : 'Deploy'}
+                      {isDeploying ? "Deploying…" : "Deploy"}
                     </button>
                   )}
 
@@ -1033,7 +1180,9 @@ export function ProjectEditor() {
                           disabled={isDeploying || updateMutation.isPending}
                           className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
                         >
-                          {updateMutation.isPending || isDeploying ? 'Redeploying…' : 'Save & Redeploy'}
+                          {updateMutation.isPending || isDeploying
+                            ? "Redeploying…"
+                            : "Save & Redeploy"}
                         </button>
                       )}
                       <button
@@ -1042,7 +1191,7 @@ export function ProjectEditor() {
                         disabled={restartMutation.isPending}
                         className="rounded-lg border border-primary/[0.3] px-3 py-1 text-xs text-primary transition-colors hover:bg-primary/[0.08] disabled:opacity-40"
                       >
-                        {restartMutation.isPending ? 'Restarting…' : 'Restart'}
+                        {restartMutation.isPending ? "Restarting…" : "Restart"}
                       </button>
                       <button
                         type="button"
@@ -1050,33 +1199,39 @@ export function ProjectEditor() {
                         disabled={stopMutation.isPending}
                         className="rounded-lg border border-[rgba(248,113,113,0.28)] px-3 py-1 text-xs text-[rgba(254,202,202,0.75)] transition-colors hover:bg-[rgba(127,29,29,0.15)] disabled:opacity-40"
                       >
-                        {stopMutation.isPending ? 'Stopping…' : 'Stop'}
+                        {stopMutation.isPending ? "Stopping…" : "Stop"}
                       </button>
                     </>
                   )}
 
                   {isDeploying && !isStopped && !isRunning && (
-                    <span className="text-xs text-muted-foreground">Deploying…</span>
+                    <span className="text-xs text-muted-foreground">
+                      Deploying…
+                    </span>
                   )}
                 </div>
 
                 {/* Middle zone: container update status */}
                 <div className="flex shrink-0 items-center gap-2">
                   {checkUpdatesMutation.isPending ? (
-                    <span className="text-xs text-muted-foreground">Checking…</span>
+                    <span className="text-xs text-muted-foreground">
+                      Checking…
+                    </span>
                   ) : hasUpdateData ? (
                     <>
                       {updatesAvailable ? (
                         <div className="flex items-center gap-1.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-[#facc15]" />
                           <span className="text-xs text-[#facc15]">
-                            {updatesCount} update{updatesCount !== 1 ? 's' : ''}
+                            {updatesCount} update{updatesCount !== 1 ? "s" : ""}
                           </span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80]" />
-                          <span className="text-xs text-muted-foreground">Up to date</span>
+                          <span className="text-xs text-muted-foreground">
+                            Up to date
+                          </span>
                         </div>
                       )}
                       <button
@@ -1112,14 +1267,23 @@ export function ProjectEditor() {
               {/* Deploy progress log */}
               <div
                 className="grid transition-all duration-200"
-                style={{ gridTemplateRows: deployProgress.length > 0 ? '1fr' : '0fr' }}
+                style={{
+                  gridTemplateRows: deployProgress.length > 0 ? "1fr" : "0fr",
+                }}
               >
                 <div className="overflow-hidden">
                   <div className="max-h-28 overflow-y-auto rounded-xl bg-background/[0.6] px-4 py-3">
                     {deployProgress.map((p, i) => (
-                      <div key={i} className="flex gap-2 font-mono text-xs leading-relaxed">
-                        <span className="shrink-0 text-muted-foreground">[{p.stage}]</span>
-                        <span className="text-muted-foreground">{p.message}</span>
+                      <div
+                        key={i}
+                        className="flex gap-2 font-mono text-xs leading-relaxed"
+                      >
+                        <span className="shrink-0 text-muted-foreground">
+                          [{p.stage}]
+                        </span>
+                        <span className="text-muted-foreground">
+                          {p.message}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -1136,7 +1300,8 @@ export function ProjectEditor() {
                   docker-compose.yml
                 </label>
                 <p className="text-2xs text-muted-foreground/70">
-                  Pick a template above to get started, or paste your compose file and use Infer Details to automatically fill in settings.
+                  Pick a template above to get started, or paste your compose
+                  file and use Infer Details to automatically fill in settings.
                 </p>
               </div>
               <button
@@ -1149,14 +1314,16 @@ export function ProjectEditor() {
               </button>
             </div>
             <ComposeEditor
-              value={composeContent ?? ''}
+              value={composeContent ?? ""}
               onChange={handleComposeChange}
               errors={validation?.errors}
               warnings={validation?.warnings}
               minHeight="480px"
             />
             {errors.composeContent && (
-              <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.composeContent.message}</p>
+              <p className="text-xs text-[rgba(254,202,202,0.85)]">
+                {errors.composeContent.message}
+              </p>
             )}
           </div>
         </div>
@@ -1169,7 +1336,8 @@ export function ProjectEditor() {
             Delete Project
           </h3>
           <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
-            Removes this project and stops all associated containers. This cannot be undone.
+            Removes this project and stops all associated containers. This
+            cannot be undone.
           </p>
           <div className="mt-4">
             {showDeleteConfirm ? (
@@ -1190,7 +1358,7 @@ export function ProjectEditor() {
                   disabled={deleteMutation.isPending}
                   className="rounded-xl border border-[rgba(248,113,113,0.36)] bg-[rgba(127,29,29,0.20)] px-4 py-1.5 text-sm text-[rgba(254,202,202,0.92)] transition-colors hover:bg-[rgba(127,29,29,0.30)] disabled:opacity-40"
                 >
-                  {deleteMutation.isPending ? 'Deleting…' : 'Confirm Delete'}
+                  {deleteMutation.isPending ? "Deleting…" : "Confirm Delete"}
                 </button>
               </div>
             ) : (
@@ -1214,7 +1382,7 @@ export function ProjectEditor() {
           isFetching={logsQuery.isFetching}
           onRefresh={() => logsQuery.refetch()}
           onClose={() => setShowLogsModal(false)}
-          projectName={watch('name') || project?.name || ''}
+          projectName={watch("name") || project?.name || ""}
         />
       )}
 

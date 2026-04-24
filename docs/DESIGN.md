@@ -1,4 +1,5 @@
 # Labrador - Docker Management Web Application
+
 ## Design Document
 
 ---
@@ -6,6 +7,7 @@
 ## 1. Technology Stack Recommendations
 
 ### Frontend
+
 - **Framework**: React 18+ with TypeScript
 - **Build Tool**: Vite (fast dev experience, optimized builds)
 - **UI Library**: shadcn/ui (built on Radix UI + Tailwind CSS)
@@ -19,6 +21,7 @@
 - **Routing**: React Router v6
 
 ### Backend
+
 - **Runtime**: Node.js 20+ with TypeScript
 - **Framework**: Fastify (faster than Express, built-in TypeScript support)
 - **Static Files**: @fastify/static (serve frontend build from `dist/web/`)
@@ -29,6 +32,7 @@
 - **WebSockets**: @fastify/websocket (real-time container stats, uses native ws library)
 
 ### Database
+
 - **Primary**: SQLite with better-sqlite3 (simple, embedded, zero-config)
 - **ORM**: Drizzle ORM (TypeScript-first, lightweight, excellent DX)
 - **Migrations**: Drizzle Kit
@@ -36,12 +40,14 @@
 - **Why SQLite**: Perfect for single-instance deployments, no separate database server needed, simple backups (just copy the file), excellent performance for this use case, built-in transactions and ACID compliance
 
 ### Infrastructure
+
 - **Container**: Single Docker image with multi-stage build (frontend + backend only)
 - **Reverse Proxy**: Caddy v2 (external, user-managed) - controlled via Caddy Admin API
 - **Cloudflare**: Cloudflare API (remotely managed tunnels)
 - **Deployment**: Single container with volume mounts for Docker socket and data
 
 ### DevOps & Tooling
+
 - **Package Manager**: pnpm (single package, no workspaces)
 - **Docker Compose Validation**: js-yaml + custom schema validation
 - **Server Bundler**: tsup (single-file Node.js bundle for production)
@@ -59,6 +65,7 @@ The project has two separate build targets compiled by different tools:
 tsup is chosen over raw `tsc` because it produces a single bundled output file, handles path alias resolution, and tree-shakes unused code — resulting in a smaller Docker image.
 
 **Scripts** (in `package.json`):
+
 ```json
 {
   "scripts": {
@@ -74,20 +81,22 @@ tsup is chosen over raw `tsc` because it produces a single bundled output file, 
 ```
 
 **tsup config** (`tsup.config.ts`):
+
 ```typescript
-import { defineConfig } from 'tsup';
+import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ['src/server/index.ts'],
-  outDir: 'dist/server',
-  format: ['cjs'],
-  target: 'node24',
+  entry: ["src/server/index.ts"],
+  outDir: "dist/server",
+  format: ["cjs"],
+  target: "node24",
   clean: true,
   noExternal: [/^@?src\/shared/],
 });
 ```
 
 **How it fits together**:
+
 - `pnpm dev` — Vite dev server (port 5173) proxies `/api` and `/ws` to the Fastify backend (port 3000) via `vite.config.ts` `server.proxy`. `tsx watch` provides server hot-reload.
 - `pnpm build` — Vite produces `dist/web/`, tsup produces `dist/server/index.js`. The shared code (`src/shared/`) is inlined into both bundles by their respective bundlers.
 - **Production** — Fastify serves `dist/web/` as static files via `@fastify/static`, so the entire app runs on a single port (3000).
@@ -129,24 +138,31 @@ export default defineConfig({
 ## 3. Key Implementation Phases
 
 ### Phase 1–2: Foundation
+
 - Project setup, CI/CD pipeline, database schema, authentication, onboarding
 
 ### Phase 3–6: Core Docker Workflow
+
 - Docker service wrapper, project CRUD, compose editor & validation, deployment
 
 ### Phase 7: Dashboard
+
 - Card layout, status indicators, project quick actions
 
 ### Phase 8: Exposure
+
 - Provider interface & registry, Caddy + Cloudflare providers, auto-exposure on deploy
 
 ### Phase 9–10: Monitoring
+
 - Real-time stats via WebSocket, uptime tracking, container update detection
 
 ### Phase 11: Network & Image Management
+
 - Network CRUD, image browser, image pull & pruning
 
 ### Phase 12: Polish & Documentation
+
 - Mobile refinement, E2E tests, user/deployment docs
 
 ---
@@ -156,6 +172,7 @@ export default defineConfig({
 ### Database Schema (Drizzle ORM)
 
 **SQLite type conventions used below:**
+
 - `uuid` → stored as `text`, generated with `crypto.randomUUID()` in application code
 - `timestamp` → stored as `integer` (Unix epoch milliseconds), e.g. `Date.now()`. Integer storage is more compact and enables efficient range queries compared to ISO-8601 strings.
 - `enum(...)` → stored as `text`, validated at the application layer via Zod
@@ -165,6 +182,7 @@ export default defineConfig({
 - `decimal` → stored as `real`
 
 #### Users Table
+
 ```typescript
 {
   id: uuid (primary key)
@@ -186,6 +204,7 @@ On every page load, the frontend calls `GET /api/auth/status` (unauthenticated e
 - **User exists, logged in** → returns `{ needsOnboarding: false, authenticated: true }`. Normal app access.
 
 The onboarding wizard (`/onboarding`) walks through:
+
 1. **Create admin account** — username and password (calls `POST /api/auth/register`)
 2. **Configure exposure providers** (optional) — set up Caddy, Cloudflare, or skip
 3. **Finalize** — calls `POST /api/settings/onboarding` to save settings and mark setup complete
@@ -193,6 +212,7 @@ The onboarding wizard (`/onboarding`) walks through:
 `POST /api/auth/register` is disabled once a user exists, preventing additional account creation.
 
 #### Settings Table
+
 ```typescript
 {
   id: uuid (primary key)
@@ -205,6 +225,7 @@ The onboarding wizard (`/onboarding`) walks through:
 ```
 
 #### Exposure Providers Table
+
 ```typescript
 {
   id: uuid (primary key)
@@ -223,6 +244,7 @@ The onboarding wizard (`/onboarding`) walks through:
 ```
 
 #### Projects Table
+
 ```typescript
 {
   id: uuid (primary key)
@@ -232,12 +254,12 @@ The onboarding wizard (`/onboarding`) walks through:
   logo_url: string (nullable, user-provided URL)
   domain_name: string (nullable)
   compose_content: text (YAML content)
-  
+
   // Exposure configuration (per-project, extensible)
   exposure_enabled: boolean
   exposure_provider_id: uuid (nullable, foreign key to exposure_providers)
   exposure_config: text (JSON, provider-specific config, e.g., port mappings, paths)
-  
+
   is_infrastructure: boolean (default: false)
   status: enum('stopped', 'starting', 'running', 'error')
   created_at: timestamp
@@ -250,6 +272,7 @@ The onboarding wizard (`/onboarding`) walks through:
 ```
 
 #### Container Stats Table (Time-Series Data)
+
 ```typescript
 {
   id: uuid (primary key)
@@ -267,6 +290,7 @@ The onboarding wizard (`/onboarding`) walks through:
 **Stats Retention**: A background job runs hourly. Raw data points older than 24 hours are aggregated into hourly averages (stored back into the same table) and the raw rows are deleted. Hourly aggregates older than 30 days are deleted. This keeps the table bounded — roughly 720 hourly rows per container per month.
 
 #### Container Updates Table
+
 ```typescript
 {
   id: uuid (primary key)
@@ -286,11 +310,13 @@ The onboarding wizard (`/onboarding`) walks through:
 ### REST Endpoints
 
 #### Health
+
 ```
 GET    /health                     # Returns 200 OK (used by Docker HEALTHCHECK)
 ```
 
 #### Authentication
+
 ```
 POST   /api/auth/register
 POST   /api/auth/login
@@ -300,6 +326,7 @@ GET    /api/auth/status          # Returns { needsOnboarding: boolean, authentic
 ```
 
 #### Projects
+
 ```
 GET    /api/projects
 GET    /api/projects/:id
@@ -314,6 +341,7 @@ POST   /api/compose/validate
 ```
 
 #### Docker Resources
+
 ```
 GET    /api/docker/networks
 POST   /api/docker/networks
@@ -324,6 +352,7 @@ POST   /api/docker/images/:id/pull
 ```
 
 #### Settings
+
 ```
 GET    /api/settings
 PUT    /api/settings
@@ -331,6 +360,7 @@ POST   /api/settings/onboarding
 ```
 
 #### Stats
+
 ```
 GET    /api/projects/:id/stats?range=24h
 GET    /api/projects/:id/uptime
@@ -342,10 +372,12 @@ GET    /api/projects/:id/updates
 **Endpoint**: `GET /ws` (upgraded to WebSocket)
 
 Messages are JSON with a `type` field. Client sends:
+
 - `{ type: "subscribe", projectId }` — start receiving stats/events for a project
 - `{ type: "unsubscribe", projectId }` — stop receiving
 
 Server sends:
+
 - `{ type: "stats:update", projectId, containers: [...] }`
 - `{ type: "container:status", projectId, containerId, status }`
 - `{ type: "deployment:progress", projectId, stage, message }`
@@ -361,6 +393,7 @@ Server sends:
 **Location**: `src/server/services/docker.service.ts`
 
 **Responsibilities**:
+
 - Connect to Docker socket (`/var/run/docker.sock`)
 - List containers with filters (project labels)
 - Execute docker-compose up/down via spawn
@@ -371,6 +404,7 @@ Server sends:
 - Pull images with progress tracking
 
 **Startup Reconciliation**: On application boot, the Docker service scans for all containers with the `labrador.managed=true` label, groups them by `labrador.project_id`, and reconciles each project's `status` field in the database:
+
 - All containers running → set status to `running`
 - All containers stopped → set status to `stopped`
 - Mixed or missing containers → set status to `error`
@@ -385,6 +419,7 @@ This handles Labrador restarts, host reboots, and containers that were started/s
 **Implements**: `ExposureProvider` interface
 
 **Responsibilities**:
+
 - Connect to external Caddy instance via Admin API (user-provided URL)
 - Generate Caddy JSON config for new routes
 - Add/update routes via Caddy Admin API (POST /config/)
@@ -394,6 +429,7 @@ This handles Labrador restarts, host reboots, and containers that were started/s
 - Verify Caddy connectivity and health
 
 **How it works**:
+
 - Caddy provider is available by default (shown in onboarding)
 - User provides Caddy Admin API URL (e.g., `http://localhost:2019`)
 - Labrador connects to existing Caddy instance
@@ -401,6 +437,7 @@ This handles Labrador restarts, host reboots, and containers that were started/s
 - No Caddy binary included in Labrador container
 
 **Example Caddy Config Generation**:
+
 ```json
 {
   "apps": {
@@ -409,11 +446,13 @@ This handles Labrador restarts, host reboots, and containers that were started/s
         "srv0": {
           "routes": [
             {
-              "match": [{"host": ["myapp.example.com"]}],
-              "handle": [{
-                "handler": "reverse_proxy",
-                "upstreams": [{"dial": "localhost:8080"}]
-              }]
+              "match": [{ "host": ["myapp.example.com"] }],
+              "handle": [
+                {
+                  "handler": "reverse_proxy",
+                  "upstreams": [{ "dial": "localhost:8080" }]
+                }
+              ]
             }
           ]
         }
@@ -432,6 +471,7 @@ This handles Labrador restarts, host reboots, and containers that were started/s
 **Approach**: Uses **remotely managed tunnels** exclusively. The user runs `cloudflared` on their own (as a Docker container, systemd service, etc.) and connects it to a Cloudflare tunnel. Labrador manages the tunnel's public hostnames via the Cloudflare API — it never starts, stops, or touches the `cloudflared` process.
 
 **Responsibilities**:
+
 - Add/update/remove public hostnames on an existing tunnel via Cloudflare API (`PUT /accounts/{account_id}/cfe/tunnel/{tunnel_id}/configurations`)
 - Validate API token permissions and tunnel connectivity
 - Monitor tunnel health via API (`GET /accounts/{account_id}/cfe/tunnel/{tunnel_id}`)
@@ -440,17 +480,20 @@ This handles Labrador restarts, host reboots, and containers that were started/s
 **Note**: DNS records (CNAME to `{tunnel_id}.cfargotunnel.com`) are created and deleted automatically by Cloudflare when public hostnames are added/removed from the tunnel config. No separate DNS API calls needed.
 
 **What Labrador does NOT do**:
+
 - Does not install, start, stop, or manage the `cloudflared` daemon
 - Does not generate local config.yml files
 - Does not store tunnel credentials files
 
 **Example API flow** (adding a route):
+
 1. Fetch current tunnel config: `GET /accounts/{account_id}/cfe/tunnel/{tunnel_id}/configurations`
 2. Append new public hostname entry: `{ "hostname": "myapp.example.com", "service": "http://localhost:8080" }`
 3. Update tunnel config: `PUT /accounts/{account_id}/cfe/tunnel/{tunnel_id}/configurations`
    Cloudflare automatically creates the CNAME DNS record for the hostname.
 
 **Required user configuration** (stored in exposure_providers table):
+
 ```json
 {
   "api_token": "...",
@@ -462,6 +505,7 @@ This handles Labrador restarts, host reboots, and containers that were started/s
 **Optional: Deploy as infrastructure project** (via `ExposureProvider.getComposeTemplate()`):
 
 During setup, if `getComposeTemplate()` returns a compose YAML, the UI offers to deploy the provider's service as a Labrador infrastructure project. This is the same project system used for user projects — it appears on the dashboard, can be stopped/started, and gets the same lifecycle management. For Cloudflare, this:
+
 1. Creates a new tunnel via the Cloudflare API and retrieves its token
 2. Calls `getComposeTemplate()` which returns compose YAML for `cloudflare/cloudflared`
 3. Creates a project with `name: "cloudflared"` and a system flag to mark it as infrastructure
@@ -474,6 +518,7 @@ The user can skip this and point at an existing tunnel instead. The same pattern
 **Location**: `src/server/services/compose-validator.service.ts`
 
 **Responsibilities**:
+
 - Parse YAML with js-yaml
 - Validate against docker-compose schema
 - Check for required fields (services, etc.)
@@ -496,22 +541,22 @@ export interface ExposureProvider {
   // Provider metadata
   readonly type: string; // e.g., 'caddy', 'cloudflare', 'traefik'
   readonly name: string; // Human-readable name
-  
+
   // Lifecycle methods
   initialize(config: Record<string, any>): Promise<void>;
   validateConfig(config: Record<string, any>): Promise<ValidationResult>;
   testConnection(): Promise<boolean>;
-  
+
   // Route management
   addRoute(route: ExposureRoute): Promise<void>;
   updateRoute(route: ExposureRoute): Promise<void>;
   removeRoute(routeId: string): Promise<void>;
   getRouteStatus(routeId: string): Promise<RouteStatus>;
-  
+
   // Health and monitoring
   getHealth(): Promise<ProviderHealth>;
   cleanup(): Promise<void>;
-  
+
   // Optional: generate a compose YAML to deploy this provider's service
   // as a Labrador infrastructure project (e.g., cloudflared, caddy, traefik)
   getComposeTemplate?(config: Record<string, any>): string | null;
@@ -566,19 +611,19 @@ providers/
 
 export class ExposureProviderRegistry {
   private providers: Map<string, ExposureProvider> = new Map();
-  
+
   register(provider: ExposureProvider): void {
     this.providers.set(provider.type, provider);
   }
-  
+
   get(type: string): ExposureProvider | undefined {
     return this.providers.get(type);
   }
-  
+
   getAll(): ExposureProvider[] {
     return Array.from(this.providers.values());
   }
-  
+
   getAvailableTypes(): string[] {
     return Array.from(this.providers.keys());
   }
@@ -606,25 +651,25 @@ Caddy and Cloudflare are registered at startup and available during onboarding. 
 export class ExposureService {
   constructor(
     private registry: ExposureProviderRegistry,
-    private db: Database
+    private db: Database,
   ) {}
-  
+
   async addProjectExposure(projectId: string): Promise<void> {
     const project = await this.db.getProject(projectId);
     if (!project.exposure_enabled || !project.exposure_provider_id) {
       return;
     }
-    
+
     const providerConfig = await this.db.getExposureProvider(
-      project.exposure_provider_id
+      project.exposure_provider_id,
     );
-    
+
     // Get the appropriate provider from registry
     const provider = this.registry.get(providerConfig.provider_type);
     if (!provider) {
       throw new Error(`Unknown provider: ${providerConfig.provider_type}`);
     }
-    
+
     // Initialize and add route
     await provider.initialize(providerConfig.configuration);
     await provider.addRoute({
@@ -633,23 +678,22 @@ export class ExposureService {
       ...project.exposure_config,
     });
   }
-  
+
   async removeProjectExposure(projectId: string): Promise<void> {
     const project = await this.db.getProject(projectId);
     if (!project.exposure_provider_id) return;
-    
+
     const providerConfig = await this.db.getExposureProvider(
-      project.exposure_provider_id
+      project.exposure_provider_id,
     );
     const provider = this.registry.get(providerConfig.provider_type);
     if (!provider) return;
-    
+
     await provider.initialize(providerConfig.configuration);
     await provider.removeRoute(projectId);
   }
 }
 ```
-
 
 ---
 
@@ -658,29 +702,34 @@ export class ExposureService {
 ### Security
 
 #### 1. Authentication & Authorization
+
 - JWT tokens with httpOnly cookies
 - CSRF protection for state-changing operations
 - Rate limiting on auth endpoints
 - Password hashing with bcrypt (cost factor: 12)
 
 #### 2. Docker Socket Security
+
 - Run backend with minimal Docker permissions
 - Label-based isolation (only manage labrador-labeled containers)
 - Validate compose files to prevent privilege escalation
 - Sanitize container names and labels
 
 #### 3. Secrets Management
+
 - Store Cloudflare API tokens encrypted in database
 - Use environment variables for sensitive config
 - Never expose Docker socket directly to frontend
 - Validate and sanitize all YAML input
 
 #### 4. Network Isolation
+
 - Backend API behind reverse proxy
 - Separate Docker networks for managed projects
 - Firewall rules to restrict access to Docker socket
 
 #### 5. Input Validation
+
 - Zod schemas for all API inputs
 - Sanitize domain names and slugs
 - Limit compose file size (e.g., 100KB max)
@@ -692,6 +741,7 @@ export class ExposureService {
 All components packaged in one Docker image for simple deployment:
 
 **Multi-Stage Dockerfile:**
+
 ```dockerfile
 # Stage 1: Build
 FROM node:20-alpine AS builder
@@ -725,6 +775,7 @@ CMD ["node", "dist/server/index.js"]
 ```
 
 **Running the container:**
+
 ```bash
 docker run -d \
   --name labrador \
@@ -737,6 +788,7 @@ docker run -d \
 ```
 
 **Docker Compose:**
+
 ```yaml
 services:
   labrador:
@@ -756,6 +808,7 @@ volumes:
 ```
 
 **How Exposure Works**:
+
 - During onboarding, user configures built-in providers (Caddy and/or Cloudflare) or skips
 - Provider configuration is stored in the `exposure_providers` table and managed via the Settings page
 - Each project selects which provider to use (or none) via a dropdown
@@ -767,6 +820,7 @@ volumes:
 ### Production Considerations
 
 #### 1. Backups
+
 - Automated SQLite backups (simple file copy with WAL mode, or `.backup` command)
 - Use SQLite's backup API or `VACUUM INTO` for consistent backups
 - Schedule regular backups (e.g., daily cron job)
@@ -775,17 +829,20 @@ volumes:
 - Consider using `litestream` for continuous SQLite replication (optional)
 
 #### 2. Monitoring
+
 - Health check endpoints for all services
 - Logging with structured JSON (pino for Node.js)
 - Error tracking (optional: Sentry integration)
 - Metrics collection for container stats
 
 #### 3. Updates & Maintenance
+
 - Database migrations with rollback capability
 - Zero-downtime deployments (blue/green or rolling)
 - Automatic container image updates (watchtower optional)
 
 #### 4. Resource Limits
+
 - Set memory/CPU limits for managed containers
 - Implement project limits (max containers per user)
 - Disk space monitoring for volumes
@@ -803,6 +860,7 @@ volumes:
 ### Phase 1: Project Setup & CI/CD
 
 **Initialize single-package structure**:
+
 ```
 labrador/
 ├── src/
@@ -816,6 +874,7 @@ labrador/
 ```
 
 **Backend initialization**:
+
 - Set up Fastify with TypeScript under `src/server/`
 - Configure Drizzle ORM + SQLite connection (better-sqlite3)
 - Create initial database schema
@@ -823,6 +882,7 @@ labrador/
 - Configure environment variables
 
 **Frontend initialization**:
+
 - Set up Vite + React + TypeScript under `src/web/`
 - Install shadcn/ui and Tailwind CSS
 - Set up React Router
@@ -831,6 +891,7 @@ labrador/
 - Error boundaries and toast notification system
 
 **CI/CD pipeline**:
+
 - GitHub Actions workflow: lint, type-check, and test on every push/PR
 - Docker image build and push on merge to main
 - Dockerfile with multi-stage build (see Section 8)
@@ -839,6 +900,7 @@ labrador/
 ### Phase 2: Authentication & Onboarding
 
 **Backend**:
+
 - Implement user registration/login endpoints
 - JWT token generation and validation with httpOnly cookies
 - `GET /api/auth/status` endpoint for onboarding detection
@@ -846,6 +908,7 @@ labrador/
 - Rate limiting on auth endpoints
 
 **Frontend**:
+
 - Login/register forms
 - Protected routes with auth context
 - Onboarding wizard (create admin account, optionally configure exposure providers)
@@ -854,6 +917,7 @@ labrador/
 ### Phase 3: Docker Service Foundation
 
 **Backend**:
+
 - Initialize dockerode connection
 - Implement Docker service abstraction layer
 - Create docker-compose execution wrapper (via execa)
@@ -865,12 +929,14 @@ labrador/
 ### Phase 4: Project CRUD & Database
 
 **Backend**:
+
 - Project service implementation
 - Project CRUD endpoints
 - Slug generation (URL-safe names)
 - Compose file storage and retrieval
 
 **Frontend**:
+
 - Project list view (basic table/cards)
 - Create project form
 - Edit project form
@@ -879,12 +945,14 @@ labrador/
 ### Phase 5: Docker Compose Editor & Validation
 
 **Backend**:
+
 - Compose validation service (js-yaml + custom schema)
 - YAML parsing and schema validation
 - Error message formatting with line numbers
 - Real-time validation endpoint (debounced)
 
 **Frontend**:
+
 - CodeMirror editor integration with YAML syntax highlighting
 - Real-time validation feedback in editor
 - Auto-save functionality
@@ -892,6 +960,7 @@ labrador/
 ### Phase 6: Project Deployment
 
 **Backend**:
+
 - Deploy endpoint implementation
 - Inject labrador labels into compose YAML
 - Execute docker-compose up with project labels
@@ -899,6 +968,7 @@ labrador/
 - WebSocket deployment progress events
 
 **Frontend**:
+
 - Deploy button with loading states
 - Real-time deployment progress via WebSocket
 - Error handling and display
@@ -907,9 +977,11 @@ labrador/
 ### Phase 7: Dashboard
 
 **Backend**:
+
 - Project summary endpoint (status, container count, basic resource info)
 
 **Frontend**:
+
 - Dashboard card layout (responsive grid)
 - Status indicators (running, stopped, error)
 - Project quick actions (start, stop, restart, open editor)
@@ -918,6 +990,7 @@ labrador/
 ### Phase 8: Exposure Provider System
 
 **Backend**:
+
 - `ExposureProvider` interface and `ExposureProviderRegistry`
 - Abstract base provider class
 - Caddy provider: config generation, route CRUD via Admin API, health checks
@@ -926,6 +999,7 @@ labrador/
 - Detect exposed ports from compose file, generate domain mappings
 
 **Frontend**:
+
 - Per-project exposure config: provider dropdown (None + enabled providers), domain input, port mapping
 - Exposure status indicator on project cards
 - Provider configuration in Settings page (Caddy API URL, Cloudflare credentials)
@@ -933,6 +1007,7 @@ labrador/
 ### Phase 9: Real-Time Stats & Monitoring
 
 **Backend**:
+
 - Container stats collection service (dockerode stats API)
 - WebSocket stats streaming (2s interval)
 - Stats aggregation, storage, and retention (hourly rollup, 30-day max)
@@ -940,6 +1015,7 @@ labrador/
 - Historical stats query endpoint
 
 **Frontend**:
+
 - Dashboard enhancement: real-time CPU/RAM display per project
 - Uptime history visualization
 - WebSocket connection management (subscribe/unsubscribe per project)
@@ -947,6 +1023,7 @@ labrador/
 ### Phase 10: Container Update Detection
 
 **Backend**:
+
 - Image update checking service
 - Docker Hub API integration (with rate-limit awareness)
 - Compare local vs. latest image digests
@@ -954,6 +1031,7 @@ labrador/
 - Update badge data in API responses
 
 **Frontend**:
+
 - Update badge on project cards
 - Update details modal
 - One-click update functionality
@@ -961,6 +1039,7 @@ labrador/
 ### Phase 11: Network & Image Management
 
 **Backend**:
+
 - Network CRUD endpoints (list, create, delete)
 - Network inspection and filtering
 - Image list with size/tags
@@ -968,6 +1047,7 @@ labrador/
 - Image pull with progress tracking
 
 **Frontend**:
+
 - Networks management page with creation form
 - Image browser with search
 - Image deletion confirmation
@@ -976,17 +1056,20 @@ labrador/
 ### Phase 12: Polish, Testing & Documentation
 
 **Polish**:
+
 - Mobile refinement (navigation drawer, touch controls, PWA manifest)
 - Loading skeletons and empty states
 - Keyboard shortcuts
 - Graceful degradation for Docker socket disconnection
 
 **Testing**:
+
 - E2E tests for critical user flows (Playwright)
 - Integration tests for Docker operations
 - Fill any coverage gaps from earlier steps
 
 **Documentation** (see project structure `docs/` tree):
+
 - README.md (project overview, quick start)
 - Getting started guide and installation guide
 - Configuration reference (environment variables, settings)
@@ -1007,17 +1090,17 @@ labrador/
 // Execute with proper error handling and logging
 async deployProject(projectId: string): Promise<void> {
   const project = await this.getProject(projectId);
-  
+
   // Inject labrador labels into compose YAML before writing
   const labeledCompose = injectLabels(project.compose_content, {
     'labrador.project_id': projectId,
     'labrador.managed': 'true',
   });
-  
+
   // Write compose file to temp location
   const composeFile = `/tmp/labrador/${project.slug}/docker-compose.yml`;
   await fs.writeFile(composeFile, labeledCompose);
-  
+
   // Execute docker compose up
   const result = await execa('docker', [
     'compose',
@@ -1025,7 +1108,7 @@ async deployProject(projectId: string): Promise<void> {
     '-p', project.slug,
     'up', '-d',
   ]);
-  
+
   // Update project status
   await this.updateProjectStatus(projectId, 'running');
 }
@@ -1039,19 +1122,19 @@ async streamStats(socket: WebSocket, projectId: string): Promise<void> {
   const containers = await this.docker.listContainers({
     filters: { label: [`labrador.project_id=${projectId}`] }
   });
-  
+
   const interval = setInterval(async () => {
     const stats = await Promise.all(
       containers.map(c => this.docker.getContainer(c.Id).stats({ stream: false }))
     );
-    
+
     socket.send(JSON.stringify({
       type: 'stats:update',
       projectId,
       containers: stats.map(this.formatStats),
     }));
   }, 2000);
-  
+
   socket.on('close', () => clearInterval(interval));
 }
 ```
@@ -1062,16 +1145,16 @@ async streamStats(socket: WebSocket, projectId: string): Promise<void> {
 // Ensure cleanup when deleting projects (works with any provider)
 async deleteProject(projectId: string): Promise<void> {
   const project = await this.getProject(projectId);
-  
+
   // Stop containers first
   await this.dockerService.stopProject(projectId);
-  
+
   // Clean up exposure config using provider registry
   if (project.exposure_enabled && project.exposure_provider_id) {
     const providerConfig = await this.db.getExposureProvider(
       project.exposure_provider_id
     );
-    
+
     // Get provider from registry - works for any provider type
     const provider = this.exposureRegistry.get(providerConfig.provider_type);
     if (provider) {
@@ -1079,7 +1162,7 @@ async deleteProject(projectId: string): Promise<void> {
       await provider.removeRoute(projectId);
     }
   }
-  
+
   // Remove from database
   await this.db.delete(projects).where(eq(projects.id, projectId));
 }
@@ -1092,6 +1175,7 @@ async deleteProject(projectId: string): Promise<void> {
 Based on this design, here are the most critical files for implementing this application:
 
 ### Server Core Services
+
 - `src/server/services/docker.service.ts` - Docker API wrapper
 - `src/server/services/exposure/exposure.service.ts` - Exposure orchestration service
 - `src/server/services/exposure/provider-registry.ts` - Provider registry
@@ -1104,12 +1188,14 @@ Based on this design, here are the most critical files for implementing this app
 - `src/server/db/schema.ts` - Database schema definitions
 
 ### Server Routes
+
 - `src/server/routes/projects.routes.ts` - Project API endpoints
 - `src/server/routes/auth.routes.ts` - Authentication endpoints
 - `src/server/routes/docker.routes.ts` - Docker resources endpoints
 - `src/server/routes/settings.routes.ts` - Settings and onboarding endpoints
 
 ### Web Core Components
+
 - `src/web/pages/Onboarding.tsx` - First-launch setup wizard
 - `src/web/pages/Login.tsx` - Authentication page
 - `src/web/components/ProjectCard.tsx` - Dashboard cards
@@ -1118,10 +1204,12 @@ Based on this design, here are the most critical files for implementing this app
 - `src/web/pages/ProjectEditor.tsx` - Project creation/editing
 
 ### Shared
+
 - `src/shared/schemas.ts` - Zod validation schemas (shared between web/server)
 - `src/shared/exposure/provider.interface.ts` - Exposure provider interface & types
 
 ### Deployment Files
+
 - `Dockerfile` - Multi-stage build combining frontend + backend in single image
 - `docker-compose.yml` - Production deployment configuration
 - `.dockerignore` - Exclude unnecessary files from image

@@ -1,5 +1,5 @@
-import { FastifyInstance } from 'fastify';
-import type { WebSocket as WsWebSocket } from '@fastify/websocket';
+import { FastifyInstance } from "fastify";
+import type { WebSocket as WsWebSocket } from "@fastify/websocket";
 
 interface WsClient {
   socket: WsWebSocket;
@@ -9,16 +9,16 @@ interface WsClient {
 export function setupWebSocket(app: FastifyInstance) {
   const clients = new Set<WsClient>();
 
-  app.get('/ws', { websocket: true }, (socket, _request) => {
+  app.get("/ws", { websocket: true }, (socket, _request) => {
     const client: WsClient = { socket, subscriptions: new Set() };
     clients.add(client);
 
-    socket.on('message', (data: Buffer) => {
+    socket.on("message", (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString());
-        if (message.type === 'subscribe' && message.projectId) {
+        if (message.type === "subscribe" && message.projectId) {
           client.subscriptions.add(message.projectId);
-        } else if (message.type === 'unsubscribe' && message.projectId) {
+        } else if (message.type === "unsubscribe" && message.projectId) {
           client.subscriptions.delete(message.projectId);
         }
       } catch {
@@ -26,7 +26,7 @@ export function setupWebSocket(app: FastifyInstance) {
       }
     });
 
-    socket.on('close', () => {
+    socket.on("close", () => {
       clients.delete(client);
     });
   });
@@ -36,7 +36,10 @@ export function setupWebSocket(app: FastifyInstance) {
     const data = JSON.stringify(message);
     for (const client of clients) {
       // WebSocket.OPEN === 1
-      if (client.subscriptions.has(projectId) && client.socket.readyState === 1) {
+      if (
+        client.subscriptions.has(projectId) &&
+        client.socket.readyState === 1
+      ) {
         client.socket.send(data);
       }
     }

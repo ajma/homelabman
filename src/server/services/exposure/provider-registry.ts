@@ -1,4 +1,4 @@
-import type { ExposureProvider } from '@shared/exposure/provider.interface.js';
+import type { ExposureProvider } from "@shared/exposure/provider.interface.js";
 
 export class ExposureProviderRegistry {
   private providers = new Map<string, ExposureProvider>();

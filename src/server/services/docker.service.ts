@@ -1,14 +1,14 @@
-import Dockerode from 'dockerode';
-import { execa } from 'execa';
+import Dockerode from "dockerode";
+import { execa } from "execa";
 
-const LABEL_MANAGED = 'labrador.managed';
-const LABEL_PROJECT_ID = 'labrador.project_id';
+const LABEL_MANAGED = "labrador.managed";
+const LABEL_PROJECT_ID = "labrador.project_id";
 
 export class DockerService {
   private docker: Dockerode;
 
   constructor() {
-    this.docker = new Dockerode({ socketPath: '/var/run/docker.sock' });
+    this.docker = new Dockerode({ socketPath: "/var/run/docker.sock" });
   }
 
   /** Test Docker connection */
@@ -25,7 +25,7 @@ export class DockerService {
   async listContainers(projectId?: string): Promise<Dockerode.ContainerInfo[]> {
     const filters: Record<string, string[]> = {};
     if (projectId) {
-      filters['label'] = [`${LABEL_PROJECT_ID}=${projectId}`];
+      filters["label"] = [`${LABEL_PROJECT_ID}=${projectId}`];
     }
     return this.docker.listContainers({ all: true, filters });
   }
@@ -42,12 +42,14 @@ export class DockerService {
   async listComposeContainers(): Promise<Dockerode.ContainerInfo[]> {
     return this.docker.listContainers({
       all: true,
-      filters: { label: ['com.docker.compose.project'] },
+      filters: { label: ["com.docker.compose.project"] },
     });
   }
 
   /** Get container by ID */
-  async getContainer(containerId: string): Promise<Dockerode.ContainerInspectInfo> {
+  async getContainer(
+    containerId: string,
+  ): Promise<Dockerode.ContainerInspectInfo> {
     const container = this.docker.getContainer(containerId);
     return container.inspect();
   }
@@ -96,29 +98,62 @@ export class DockerService {
   }
 
   /** Get real-time stats for a container (one-shot, not streaming) */
-  async getContainerStats(containerId: string): Promise<Dockerode.ContainerStats> {
+  async getContainerStats(
+    containerId: string,
+  ): Promise<Dockerode.ContainerStats> {
     const container = this.docker.getContainer(containerId);
-    return container.stats({ stream: false }) as Promise<Dockerode.ContainerStats>;
+    return container.stats({
+      stream: false,
+    }) as Promise<Dockerode.ContainerStats>;
   }
 
   /** Deploy a project using docker compose */
   async composeUp(composeFilePath: string, projectName: string) {
-    return execa('docker', ['compose', '-f', composeFilePath, '-p', projectName, 'up', '-d']);
+    return execa("docker", [
+      "compose",
+      "-f",
+      composeFilePath,
+      "-p",
+      projectName,
+      "up",
+      "-d",
+    ]);
   }
 
   /** Stop a project using docker compose */
   async composeDown(composeFilePath: string, projectName: string) {
-    return execa('docker', ['compose', '-f', composeFilePath, '-p', projectName, 'down']);
+    return execa("docker", [
+      "compose",
+      "-f",
+      composeFilePath,
+      "-p",
+      projectName,
+      "down",
+    ]);
   }
 
   /** Restart project containers */
   async composeRestart(composeFilePath: string, projectName: string) {
-    return execa('docker', ['compose', '-f', composeFilePath, '-p', projectName, 'restart']);
+    return execa("docker", [
+      "compose",
+      "-f",
+      composeFilePath,
+      "-p",
+      projectName,
+      "restart",
+    ]);
   }
 
   /** Pull images for a project */
   async composePull(composeFilePath: string, projectName: string) {
-    return execa('docker', ['compose', '-f', composeFilePath, '-p', projectName, 'pull']);
+    return execa("docker", [
+      "compose",
+      "-f",
+      composeFilePath,
+      "-p",
+      projectName,
+      "pull",
+    ]);
   }
 
   /** List all Docker networks (no Containers field) */
@@ -127,12 +162,17 @@ export class DockerService {
   }
 
   /** Inspect a specific subset of networks to populate the Containers field */
-  async inspectNetworks(ids: string[]): Promise<Dockerode.NetworkInspectInfo[]> {
+  async inspectNetworks(
+    ids: string[],
+  ): Promise<Dockerode.NetworkInspectInfo[]> {
     return Promise.all(ids.map((id) => this.docker.getNetwork(id).inspect()));
   }
 
   /** Create a Docker network */
-  async createNetwork(name: string, driver = 'bridge'): Promise<Dockerode.Network> {
+  async createNetwork(
+    name: string,
+    driver = "bridge",
+  ): Promise<Dockerode.Network> {
     return this.docker.createNetwork({ Name: name, Driver: driver });
   }
 
@@ -168,7 +208,9 @@ export class DockerService {
    * Scans for containers with labrador.managed=true label,
    * groups by labrador.project_id, and returns a map of projectId -> status.
    */
-  async reconcileProjectStatuses(): Promise<Map<string, 'running' | 'stopped' | 'error'>> {
+  async reconcileProjectStatuses(): Promise<
+    Map<string, "running" | "stopped" | "error">
+  > {
     const containers = await this.listManagedContainers();
     const projectMap = new Map<string, Dockerode.ContainerInfo[]>();
 
@@ -180,16 +222,16 @@ export class DockerService {
       }
     }
 
-    const statusMap = new Map<string, 'running' | 'stopped' | 'error'>();
+    const statusMap = new Map<string, "running" | "stopped" | "error">();
     for (const [projectId, projectContainers] of projectMap) {
-      const allRunning = projectContainers.every((c) => c.State === 'running');
+      const allRunning = projectContainers.every((c) => c.State === "running");
       const allStopped = projectContainers.every(
-        (c) => c.State === 'exited' || c.State === 'created',
+        (c) => c.State === "exited" || c.State === "created",
       );
 
-      if (allRunning) statusMap.set(projectId, 'running');
-      else if (allStopped) statusMap.set(projectId, 'stopped');
-      else statusMap.set(projectId, 'error');
+      if (allRunning) statusMap.set(projectId, "running");
+      else if (allStopped) statusMap.set(projectId, "stopped");
+      else statusMap.set(projectId, "error");
     }
 
     return statusMap;
@@ -225,5 +267,5 @@ function stripDockerStreamHeaders(buffer: Buffer): string {
     offset = end;
   }
 
-  return Buffer.concat(lines).toString('utf-8');
+  return Buffer.concat(lines).toString("utf-8");
 }

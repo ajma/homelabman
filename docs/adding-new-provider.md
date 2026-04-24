@@ -7,6 +7,7 @@ This guide walks you through creating a custom exposure provider for Labrador.
 Exposure providers are plugins that handle exposing Docker services to the internet or local network. Labrador uses a standardized interface that makes adding new providers straightforward.
 
 **Examples of providers:**
+
 - Caddy - Reverse proxy with automatic HTTPS
 - Cloudflare Tunnel - Zero-trust tunnel
 - Traefik - Dynamic reverse proxy
@@ -29,40 +30,53 @@ Create a new file in `src/server/services/exposure/providers/`:
 ```typescript
 // src/server/services/exposure/providers/traefik.provider.ts
 
-import { ExposureProvider, ExposureRoute, ValidationResult, ProviderHealth, RouteStatus } from '../../../../shared/exposure/provider.interface';
+import {
+  ExposureProvider,
+  ExposureRoute,
+  ValidationResult,
+  ProviderHealth,
+  RouteStatus,
+} from "../../../../shared/exposure/provider.interface";
 
 export class TraefikProvider implements ExposureProvider {
-  readonly type = 'traefik';
-  readonly name = 'Traefik';
+  readonly type = "traefik";
+  readonly name = "Traefik";
 
-  private apiUrl: string = '';
-  private provider: 'docker' | 'file' = 'docker';
+  private apiUrl: string = "";
+  private provider: "docker" | "file" = "docker";
 
   async initialize(config: Record<string, any>): Promise<void> {
     this.apiUrl = config.api_url;
-    this.provider = config.provider || 'docker';
+    this.provider = config.provider || "docker";
     const healthy = await this.testConnection();
-    if (!healthy) throw new Error('Cannot connect to Traefik API');
+    if (!healthy) throw new Error("Cannot connect to Traefik API");
   }
 
   async validateConfig(config: Record<string, any>): Promise<ValidationResult> {
     const errors: string[] = [];
-    if (!config.api_url) errors.push('API URL is required');
-    if (config.api_url && !config.api_url.startsWith('http')) {
-      errors.push('API URL must start with http:// or https://');
+    if (!config.api_url) errors.push("API URL is required");
+    if (config.api_url && !config.api_url.startsWith("http")) {
+      errors.push("API URL must start with http:// or https://");
     }
-    return { valid: errors.length === 0, errors: errors.length > 0 ? errors : undefined };
+    return {
+      valid: errors.length === 0,
+      errors: errors.length > 0 ? errors : undefined,
+    };
   }
 
   async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/api/version`, { signal: AbortSignal.timeout(5000) });
+      const response = await fetch(`${this.apiUrl}/api/version`, {
+        signal: AbortSignal.timeout(5000),
+      });
       return response.ok;
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }
 
   async addRoute(route: ExposureRoute): Promise<void> {
-    if (this.provider === 'docker') {
+    if (this.provider === "docker") {
       // Docker provider: labels are injected into the compose YAML via injectLabels()
       // The labels are stored in exposure_config and merged at deploy time
     } else {
@@ -76,7 +90,7 @@ export class TraefikProvider implements ExposureProvider {
   }
 
   async removeRoute(routeId: string): Promise<void> {
-    if (this.provider === 'docker') {
+    if (this.provider === "docker") {
       // Labels are removed when container is stopped
     } else {
       // Remove from config file
@@ -88,15 +102,23 @@ export class TraefikProvider implements ExposureProvider {
       const response = await fetch(`${this.apiUrl}/api/http/routers`);
       const routers = await response.json();
       const router = routers.find((r: any) => r.name.includes(routeId));
-      return { active: !!router, domain: router?.rule || '', message: router?.status || 'Unknown' };
+      return {
+        active: !!router,
+        domain: router?.rule || "",
+        message: router?.status || "Unknown",
+      };
     } catch {
-      return { active: false, domain: '', message: 'Error checking status' };
+      return { active: false, domain: "", message: "Error checking status" };
     }
   }
 
   async getHealth(): Promise<ProviderHealth> {
     const healthy = await this.testConnection();
-    return { healthy, message: healthy ? 'Traefik is responding' : 'Cannot connect to Traefik', lastChecked: new Date() };
+    return {
+      healthy,
+      message: healthy ? "Traefik is responding" : "Cannot connect to Traefik",
+      lastChecked: new Date(),
+    };
   }
 
   async cleanup(): Promise<void> {
@@ -127,7 +149,7 @@ services:
 
 ```typescript
 // src/server/index.ts
-import { TraefikProvider } from './services/exposure/providers/traefik.provider';
+import { TraefikProvider } from "./services/exposure/providers/traefik.provider";
 registry.register(new TraefikProvider());
 ```
 
@@ -148,7 +170,11 @@ If the user already runs the service externally, they skip deployment and just p
 
 ```typescript
 // src/shared/schemas.ts
-export const EXPOSURE_PROVIDER_TYPES = ['caddy', 'cloudflare', 'traefik'] as const;
+export const EXPOSURE_PROVIDER_TYPES = [
+  "caddy",
+  "cloudflare",
+  "traefik",
+] as const;
 ```
 
 ## Testing checklist

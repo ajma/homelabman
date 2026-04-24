@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 15, 25, 50] as const;
 
@@ -10,7 +10,13 @@ interface Props {
   onPageSizeChange: (size: number) => void;
 }
 
-export function TablePagination({ page, pageSize, total, onPageChange, onPageSizeChange }: Props) {
+export function TablePagination({
+  page,
+  pageSize,
+  total,
+  onPageChange,
+  onPageSizeChange,
+}: Props) {
   const totalPages = Math.ceil(total / pageSize);
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
@@ -28,7 +34,9 @@ export function TablePagination({ page, pageSize, total, onPageChange, onPageSiz
           }}
         >
           {PAGE_SIZE_OPTIONS.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </div>

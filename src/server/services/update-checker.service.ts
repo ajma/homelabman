@@ -1,7 +1,7 @@
-import { DockerService } from './docker.service.js';
-import { getDatabase } from '../db/index.js';
-import { containerUpdates, projects } from '../db/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { DockerService } from "./docker.service.js";
+import { getDatabase } from "../db/index.js";
+import { containerUpdates, projects } from "../db/schema.js";
+import { eq, and } from "drizzle-orm";
 
 export class UpdateCheckerService {
   private checkInterval: NodeJS.Timeout | null = null;
@@ -10,7 +10,10 @@ export class UpdateCheckerService {
 
   /** Start periodic checks every 6 hours */
   startPeriodicChecks(): void {
-    this.checkInterval = setInterval(() => this.checkAllProjects(), 6 * 60 * 60 * 1000);
+    this.checkInterval = setInterval(
+      () => this.checkAllProjects(),
+      6 * 60 * 60 * 1000,
+    );
     // Run initial check after 1 minute
     setTimeout(() => this.checkAllProjects(), 60000);
   }
@@ -60,15 +63,21 @@ export class UpdateCheckerService {
         }
 
         // Upsert the update record
-        const containerName = container.Names[0]?.replace(/^\//, '') || container.Id.slice(0, 12);
-        const existing = await db.select().from(containerUpdates)
-          .where(and(
-            eq(containerUpdates.projectId, projectId),
-            eq(containerUpdates.containerName, containerName),
-          ));
+        const containerName =
+          container.Names[0]?.replace(/^\//, "") || container.Id.slice(0, 12);
+        const existing = await db
+          .select()
+          .from(containerUpdates)
+          .where(
+            and(
+              eq(containerUpdates.projectId, projectId),
+              eq(containerUpdates.containerName, containerName),
+            ),
+          );
 
         if (existing.length > 0) {
-          await db.update(containerUpdates)
+          await db
+            .update(containerUpdates)
             .set({
               currentImage: imageName,
               latestImage: latestDigest,
@@ -98,22 +107,22 @@ export class UpdateCheckerService {
   private async checkImageUpdate(imageName: string): Promise<string | null> {
     // Parse image name into registry/repo:tag
     let repo = imageName;
-    let tag = 'latest';
+    let tag = "latest";
 
-    if (repo.includes(':')) {
-      const parts = repo.split(':');
+    if (repo.includes(":")) {
+      const parts = repo.split(":");
       repo = parts[0];
       tag = parts[1];
     }
 
     // Only check Docker Hub images (no registry prefix or docker.io)
-    if (repo.includes('/') && repo.split('/')[0].includes('.')) {
+    if (repo.includes("/") && repo.split("/")[0].includes(".")) {
       // This is a custom registry, skip
       return null;
     }
 
     // Add library/ prefix for official images
-    if (!repo.includes('/')) {
+    if (!repo.includes("/")) {
       repo = `library/${repo}`;
     }
 
@@ -123,21 +132,22 @@ export class UpdateCheckerService {
         `https://auth.docker.io/token?service=registry.docker.io&scope=repository:${repo}:pull`,
       );
       if (!tokenRes.ok) return null;
-      const { token } = await tokenRes.json() as { token: string };
+      const { token } = (await tokenRes.json()) as { token: string };
 
       // Get manifest digest
       const manifestRes = await fetch(
         `https://registry-1.docker.io/v2/${repo}/manifests/${tag}`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json',
+            Authorization: `Bearer ${token}`,
+            Accept:
+              "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
           },
         },
       );
       if (!manifestRes.ok) return null;
 
-      return manifestRes.headers.get('docker-content-digest');
+      return manifestRes.headers.get("docker-content-digest");
     } catch {
       return null;
     }
@@ -146,7 +156,9 @@ export class UpdateCheckerService {
   /** Get update info for a specific project */
   async getProjectUpdates(projectId: string) {
     const db = getDatabase();
-    return db.select().from(containerUpdates)
+    return db
+      .select()
+      .from(containerUpdates)
       .where(eq(containerUpdates.projectId, projectId));
   }
 

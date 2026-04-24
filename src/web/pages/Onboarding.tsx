@@ -1,28 +1,36 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { z } from 'zod';
-import { registerSchema, type ExposureProviderInput } from '@shared/schemas';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRegister, useAuthStatus } from '../hooks/useAuth';
-import { AdoptableStacksList } from '../components/AdoptableStacksList';
-import type { AdoptableStack } from '@shared/types';
-import { api } from '../lib/api';
-import { inputCls } from '../lib/styles';
-import { Input } from '../components/ui/input';
-import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../components/CloudflareProviderForm';
-import { resolveCloudflareBeforeSave, deployCloudflaredProject } from '../lib/cloudflare';
+import { useState, useEffect } from "react";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { z } from "zod";
+import { registerSchema, type ExposureProviderInput } from "@shared/schemas";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRegister, useAuthStatus } from "../hooks/useAuth";
+import { AdoptableStacksList } from "../components/AdoptableStacksList";
+import type { AdoptableStack } from "@shared/types";
+import { api } from "../lib/api";
+import { inputCls } from "../lib/styles";
+import { Input } from "../components/ui/input";
+import {
+  CloudflareProviderForm,
+  type CloudflareProviderFormValue,
+} from "../components/CloudflareProviderForm";
+import {
+  resolveCloudflareBeforeSave,
+  deployCloudflaredProject,
+} from "../lib/cloudflare";
 
 type OnboardingStep = 1 | 2 | 3 | 4;
 
-const createAccountSchema = registerSchema.extend({
-  confirmPassword: z.string().min(8).max(128),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+const createAccountSchema = registerSchema
+  .extend({
+    confirmPassword: z.string().min(8).max(128),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
@@ -43,20 +51,26 @@ interface ProviderSetupResult {
   checks: SetupCheck[];
 }
 
-
 function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
   return (
     <div className="mt-3 space-y-2">
       {result.checks.map((check) => (
         <div key={check.name} className="flex gap-3">
-          <span className={`mt-px shrink-0 text-sm font-medium ${check.passed ? 'text-[#4ade80]' : 'text-[rgba(248,113,113,0.85)]'}`}>
-            {check.passed ? '✓' : '✗'}
+          <span
+            className={`mt-px shrink-0 text-sm font-medium ${check.passed ? "text-[#4ade80]" : "text-[rgba(248,113,113,0.85)]"}`}
+          >
+            {check.passed ? "✓" : "✗"}
           </span>
           <div>
             <span className="text-sm text-foreground">{check.name}</span>
-            <span className="text-sm text-muted-foreground"> — {check.message}</span>
+            <span className="text-sm text-muted-foreground">
+              {" "}
+              — {check.message}
+            </span>
             {!check.passed && check.resolution && (
-              <p className="mt-0.5 text-xs text-muted-foreground">Fix: {check.resolution}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Fix: {check.resolution}
+              </p>
             )}
           </div>
         </div>
@@ -65,12 +79,18 @@ function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
   );
 }
 
-function StepIndicator({ currentStep, showAdopt }: { currentStep: OnboardingStep; showAdopt: boolean }) {
+function StepIndicator({
+  currentStep,
+  showAdopt,
+}: {
+  currentStep: OnboardingStep;
+  showAdopt: boolean;
+}) {
   const allSteps = [
-    { step: 1 as const, label: 'Account' },
-    { step: 2 as const, label: 'Providers' },
-    { step: 3 as const, label: 'Adopt' },
-    { step: 4 as const, label: 'Complete' },
+    { step: 1 as const, label: "Account" },
+    { step: 2 as const, label: "Providers" },
+    { step: 3 as const, label: "Adopt" },
+    { step: 4 as const, label: "Complete" },
   ];
   const steps = showAdopt ? allSteps : allSteps.filter((s) => s.step !== 3);
 
@@ -81,10 +101,10 @@ function StepIndicator({ currentStep, showAdopt }: { currentStep: OnboardingStep
           <div
             className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
               step === currentStep
-                ? 'bg-primary text-primary-foreground'
+                ? "bg-primary text-primary-foreground"
                 : step < currentStep
-                  ? 'bg-primary/[0.15] text-primary'
-                  : 'bg-muted text-muted-foreground'
+                  ? "bg-primary/[0.15] text-primary"
+                  : "bg-muted text-muted-foreground"
             }`}
           >
             {step}
@@ -92,13 +112,15 @@ function StepIndicator({ currentStep, showAdopt }: { currentStep: OnboardingStep
           <span
             className={`text-sm ${
               step === currentStep
-                ? 'font-medium text-foreground'
-                : 'text-muted-foreground'
+                ? "font-medium text-foreground"
+                : "text-muted-foreground"
             }`}
           >
             {label}
           </span>
-          {step < steps[steps.length - 1].step && <div className="mx-2 h-px w-8 bg-muted" />}
+          {step < steps[steps.length - 1].step && (
+            <div className="mx-2 h-px w-8 bg-muted" />
+          )}
         </div>
       ))}
     </div>
@@ -117,42 +139,88 @@ function CreateAccountStep({ onComplete }: { onComplete: () => void }) {
   });
 
   const onSubmit = ({ username, password }: CreateAccountInput) => {
-    registerMutation.mutate({ username, password }, {
-      onSuccess: () => {
-        toast.success('Admin account created');
-        onComplete();
+    registerMutation.mutate(
+      { username, password },
+      {
+        onSuccess: () => {
+          toast.success("Admin account created");
+          onComplete();
+        },
       },
-    });
+    );
   };
 
   return (
     <div className="rounded-2xl border border-white/[0.22] bg-accent/80 p-6">
-      <h2 className="mb-1 text-lg font-semibold text-foreground">Create Admin Account</h2>
+      <h2 className="mb-1 text-lg font-semibold text-foreground">
+        Create Admin Account
+      </h2>
       <p className="mb-5 text-sm text-muted-foreground">
         Set up the administrator account for your Labrador instance.
       </p>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
-          <label htmlFor="username" className="text-xs font-medium text-muted-foreground">Username</label>
-          <Input id="username" placeholder="Choose a username" {...register('username')} />
-          {errors.username && <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.username.message}</p>}
+          <label
+            htmlFor="username"
+            className="text-xs font-medium text-muted-foreground"
+          >
+            Username
+          </label>
+          <Input
+            id="username"
+            placeholder="Choose a username"
+            {...register("username")}
+          />
+          {errors.username && (
+            <p className="text-xs text-[rgba(254,202,202,0.85)]">
+              {errors.username.message}
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="password" className="text-xs font-medium text-muted-foreground">Password</label>
-          <Input id="password" type="password" placeholder="Choose a strong password" {...register('password')} />
-          {errors.password && <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.password.message}</p>}
+          <label
+            htmlFor="password"
+            className="text-xs font-medium text-muted-foreground"
+          >
+            Password
+          </label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Choose a strong password"
+            {...register("password")}
+          />
+          {errors.password && (
+            <p className="text-xs text-[rgba(254,202,202,0.85)]">
+              {errors.password.message}
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="confirm-password" className="text-xs font-medium text-muted-foreground">Confirm Password</label>
-          <Input id="confirm-password" type="password" placeholder="Re-enter your password" {...register('confirmPassword')} />
-          {errors.confirmPassword && <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.confirmPassword.message}</p>}
+          <label
+            htmlFor="confirm-password"
+            className="text-xs font-medium text-muted-foreground"
+          >
+            Confirm Password
+          </label>
+          <Input
+            id="confirm-password"
+            type="password"
+            placeholder="Re-enter your password"
+            {...register("confirmPassword")}
+          />
+          {errors.confirmPassword && (
+            <p className="text-xs text-[rgba(254,202,202,0.85)]">
+              {errors.confirmPassword.message}
+            </p>
+          )}
         </div>
         <button
           type="submit"
           disabled={registerMutation.isPending}
           className="mt-2 w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
         >
-          {registerMutation.isPending ? 'Creating Account…' : 'Create Account'}
+          {registerMutation.isPending ? "Creating Account…" : "Create Account"}
         </button>
       </form>
     </div>
@@ -170,42 +238,65 @@ function ConfigureProvidersStep({
   onNext: () => void;
   onSkip: () => void;
 }) {
-  const [expandedProvider, setExpandedProvider] = useState<'caddy' | 'cloudflare' | null>(null);
-  const [setupResults, setSetupResults] = useState<Record<string, ProviderSetupResult>>({});
-  const [checkingSetup, setCheckingSetup] = useState<Record<string, boolean>>({});
+  const [expandedProvider, setExpandedProvider] = useState<
+    "caddy" | "cloudflare" | null
+  >(null);
+  const [setupResults, setSetupResults] = useState<
+    Record<string, ProviderSetupResult>
+  >({});
+  const [checkingSetup, setCheckingSetup] = useState<Record<string, boolean>>(
+    {},
+  );
 
-  const runCheckSetup = async (providerType: string, configuration: Record<string, any>) => {
+  const runCheckSetup = async (
+    providerType: string,
+    configuration: Record<string, any>,
+  ) => {
     setCheckingSetup((prev) => ({ ...prev, [providerType]: true }));
     try {
-      const result = await api.post<ProviderSetupResult>('/settings/exposure-providers/check-setup', {
-        providerType,
-        configuration,
-      });
+      const result = await api.post<ProviderSetupResult>(
+        "/settings/exposure-providers/check-setup",
+        {
+          providerType,
+          configuration,
+        },
+      );
       setSetupResults((prev) => ({ ...prev, [providerType]: result }));
     } catch (err: any) {
-      toast.error(err.message || 'Failed to check setup');
+      toast.error(err.message || "Failed to check setup");
     } finally {
       setCheckingSetup((prev) => ({ ...prev, [providerType]: false }));
     }
   };
 
-  const [caddyApiUrl, setCaddyApiUrl] = useState(providerConfig.caddy?.apiUrl ?? 'http://localhost:2019');
+  const [caddyApiUrl, setCaddyApiUrl] = useState(
+    providerConfig.caddy?.apiUrl ?? "http://localhost:2019",
+  );
   const [cfFormValue, setCfFormValue] = useState<CloudflareProviderFormValue>({
-    apiToken: providerConfig.cloudflare?.apiToken ?? '',
-    accountId: providerConfig.cloudflare?.accountId ?? '',
-    tunnelId: providerConfig.cloudflare?.tunnelId ?? '__new__',
-    tunnelName: providerConfig.cloudflare?.tunnelName ?? '',
+    apiToken: providerConfig.cloudflare?.apiToken ?? "",
+    accountId: providerConfig.cloudflare?.accountId ?? "",
+    tunnelId: providerConfig.cloudflare?.tunnelId ?? "__new__",
+    tunnelName: providerConfig.cloudflare?.tunnelName ?? "",
     deployContainer: providerConfig.cloudflare?.deployContainer ?? true,
     adoptStackName: providerConfig.cloudflare?.adoptStackName ?? null,
   });
 
-  const [detectedStack, setDetectedStack] = useState<{ stackName: string; providerType: string } | null>(null);
+  const [detectedStack, setDetectedStack] = useState<{
+    stackName: string;
+    providerType: string;
+  } | null>(null);
 
   useEffect(() => {
-    api.get<{ detected: boolean; stackName?: string; providerType?: string }>('/projects/detect-provider-stack')
+    api
+      .get<{ detected: boolean; stackName?: string; providerType?: string }>(
+        "/projects/detect-provider-stack",
+      )
       .then((res) => {
         if (res.detected && res.stackName && res.providerType) {
-          setDetectedStack({ stackName: res.stackName, providerType: res.providerType });
+          setDetectedStack({
+            stackName: res.stackName,
+            providerType: res.providerType,
+          });
         }
       })
       .catch(() => {});
@@ -214,40 +305,43 @@ function ConfigureProvidersStep({
   const saveCaddy = () => {
     onConfigChange({ ...providerConfig, caddy: { apiUrl: caddyApiUrl } });
     setExpandedProvider(null);
-    toast.success('Caddy configuration saved');
+    toast.success("Caddy configuration saved");
   };
 
   const removeCaddy = () => {
     const { caddy: _caddy, ...rest } = providerConfig;
     onConfigChange(rest);
-    toast.info('Caddy configuration removed');
+    toast.info("Caddy configuration removed");
   };
 
   const saveCloudflare = () => {
     if (!cfFormValue.apiToken || !cfFormValue.accountId) {
-      toast.error('Connect your token and select an account before saving');
+      toast.error("Connect your token and select an account before saving");
       return;
     }
-    if (cfFormValue.tunnelId === '__new__' && !cfFormValue.tunnelName.trim()) {
-      toast.error('Enter a tunnel name');
+    if (cfFormValue.tunnelId === "__new__" && !cfFormValue.tunnelName.trim()) {
+      toast.error("Enter a tunnel name");
       return;
     }
     onConfigChange({ ...providerConfig, cloudflare: cfFormValue });
     setExpandedProvider(null);
-    toast.success('Cloudflare configuration saved');
+    toast.success("Cloudflare configuration saved");
   };
 
   const removeCloudflare = () => {
     const { cloudflare: _cloudflare, ...rest } = providerConfig;
     onConfigChange(rest);
-    toast.info('Cloudflare configuration removed');
+    toast.info("Cloudflare configuration removed");
   };
 
   return (
     <div className="rounded-2xl border border-white/[0.22] bg-accent/80 p-6">
-      <h2 className="mb-1 text-lg font-semibold text-foreground">Configure Exposure Providers</h2>
+      <h2 className="mb-1 text-lg font-semibold text-foreground">
+        Configure Exposure Providers
+      </h2>
       <p className="mb-5 text-sm text-muted-foreground">
-        Optionally configure how your services are exposed to the internet. You can skip this and configure later in Settings.
+        Optionally configure how your services are exposed to the internet. You
+        can skip this and configure later in Settings.
       </p>
 
       <div className="space-y-3">
@@ -256,8 +350,10 @@ function ConfigureProvidersStep({
           <div className="flex items-center justify-between px-4 py-3">
             <div>
               <p className="text-sm font-medium text-foreground">Caddy</p>
-              <p className="text-xs text-muted-foreground">Reverse proxy with automatic HTTPS</p>
-              {providerConfig.caddy && expandedProvider !== 'caddy' && (
+              <p className="text-xs text-muted-foreground">
+                Reverse proxy with automatic HTTPS
+              </p>
+              {providerConfig.caddy && expandedProvider !== "caddy" && (
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   Configured: {providerConfig.caddy.apiUrl}
                 </p>
@@ -272,32 +368,45 @@ function ConfigureProvidersStep({
                   Remove
                 </button>
               )}
-              {providerConfig.caddy && expandedProvider !== 'caddy' && (
+              {providerConfig.caddy && expandedProvider !== "caddy" && (
                 <button
-                  onClick={() => runCheckSetup('caddy', { apiUrl: providerConfig.caddy!.apiUrl })}
-                  disabled={checkingSetup['caddy']}
+                  onClick={() =>
+                    runCheckSetup("caddy", {
+                      apiUrl: providerConfig.caddy!.apiUrl,
+                    })
+                  }
+                  disabled={checkingSetup["caddy"]}
                   className="rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground disabled:opacity-40"
                 >
-                  {checkingSetup['caddy'] ? 'Checking…' : 'Check Setup'}
+                  {checkingSetup["caddy"] ? "Checking…" : "Check Setup"}
                 </button>
               )}
               <button
-                onClick={() => setExpandedProvider(expandedProvider === 'caddy' ? null : 'caddy')}
+                onClick={() =>
+                  setExpandedProvider(
+                    expandedProvider === "caddy" ? null : "caddy",
+                  )
+                }
                 className="rounded-lg border border-primary/[0.4] px-3 py-1 text-xs text-primary transition-colors hover:bg-primary/[0.08]"
               >
-                {providerConfig.caddy ? 'Edit' : 'Configure'}
+                {providerConfig.caddy ? "Edit" : "Configure"}
               </button>
             </div>
           </div>
-          {setupResults['caddy'] && expandedProvider !== 'caddy' && (
+          {setupResults["caddy"] && expandedProvider !== "caddy" && (
             <div className="border-t border-white/[0.24] px-4 pb-3">
-              <SetupCheckDisplay result={setupResults['caddy']} />
+              <SetupCheckDisplay result={setupResults["caddy"]} />
             </div>
           )}
-          {expandedProvider === 'caddy' && (
+          {expandedProvider === "caddy" && (
             <div className="border-t border-white/[0.24] px-4 py-4 space-y-3">
               <div className="space-y-1.5">
-                <label htmlFor="caddy-api-url" className="text-xs font-medium text-muted-foreground">API URL</label>
+                <label
+                  htmlFor="caddy-api-url"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  API URL
+                </label>
                 <input
                   id="caddy-api-url"
                   type="text"
@@ -322,15 +431,18 @@ function ConfigureProvidersStep({
           <div className="flex items-center justify-between px-4 py-3">
             <div>
               <p className="text-sm font-medium text-foreground">Cloudflare</p>
-              <p className="text-xs text-muted-foreground">Tunnel-based exposure via Cloudflare</p>
-              {providerConfig.cloudflare && expandedProvider !== 'cloudflare' && (
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Account {providerConfig.cloudflare.accountId}
-                  {providerConfig.cloudflare.tunnelId !== '__new__'
-                    ? ` · Tunnel ${providerConfig.cloudflare.tunnelId}`
-                    : ` · New tunnel "${providerConfig.cloudflare.tunnelName}"`}
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Tunnel-based exposure via Cloudflare
+              </p>
+              {providerConfig.cloudflare &&
+                expandedProvider !== "cloudflare" && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Account {providerConfig.cloudflare.accountId}
+                    {providerConfig.cloudflare.tunnelId !== "__new__"
+                      ? ` · Tunnel ${providerConfig.cloudflare.tunnelId}`
+                      : ` · New tunnel "${providerConfig.cloudflare.tunnelName}"`}
+                  </p>
+                )}
             </div>
             <div className="flex items-center gap-2">
               {providerConfig.cloudflare && (
@@ -342,16 +454,24 @@ function ConfigureProvidersStep({
                 </button>
               )}
               <button
-                onClick={() => setExpandedProvider(expandedProvider === 'cloudflare' ? null : 'cloudflare')}
+                onClick={() =>
+                  setExpandedProvider(
+                    expandedProvider === "cloudflare" ? null : "cloudflare",
+                  )
+                }
                 className="rounded-lg border border-primary/[0.4] px-3 py-1 text-xs text-primary transition-colors hover:bg-primary/[0.08]"
               >
-                {providerConfig.cloudflare ? 'Edit' : 'Configure'}
+                {providerConfig.cloudflare ? "Edit" : "Configure"}
               </button>
             </div>
           </div>
-          {expandedProvider === 'cloudflare' && (
+          {expandedProvider === "cloudflare" && (
             <div className="border-t border-white/[0.24] px-4 py-4 space-y-4">
-              <CloudflareProviderForm value={cfFormValue} onChange={setCfFormValue} detectedStack={detectedStack} />
+              <CloudflareProviderForm
+                value={cfFormValue}
+                onChange={setCfFormValue}
+                detectedStack={detectedStack}
+              />
               <button
                 onClick={saveCloudflare}
                 className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -381,12 +501,23 @@ function ConfigureProvidersStep({
   );
 }
 
-function AdoptStep({ stacks, onNext, onSkip }: { stacks: AdoptableStack[]; onNext: () => void; onSkip: () => void }) {
+function AdoptStep({
+  stacks,
+  onNext,
+  onSkip,
+}: {
+  stacks: AdoptableStack[];
+  onNext: () => void;
+  onSkip: () => void;
+}) {
   return (
     <div className="rounded-2xl border border-white/[0.22] bg-accent/80 p-6">
-      <h2 className="mb-1 text-lg font-semibold text-foreground">Adopt Existing Stacks</h2>
+      <h2 className="mb-1 text-lg font-semibold text-foreground">
+        Adopt Existing Stacks
+      </h2>
       <p className="mb-5 text-sm text-muted-foreground">
-        We found Docker Compose stacks already running on this host. Select which ones to bring under Labrador management.
+        We found Docker Compose stacks already running on this host. Select
+        which ones to bring under Labrador management.
       </p>
 
       <AdoptableStacksList stacks={stacks} onAdopted={onNext} />
@@ -413,19 +544,27 @@ function CompleteStep({
   isSubmitting: boolean;
 }) {
   const configuredProviders: string[] = [];
-  if (providerConfig.caddy) configuredProviders.push('Caddy');
-  if (providerConfig.cloudflare) configuredProviders.push('Cloudflare');
+  if (providerConfig.caddy) configuredProviders.push("Caddy");
+  if (providerConfig.cloudflare) configuredProviders.push("Cloudflare");
 
   return (
     <div className="rounded-2xl border border-white/[0.22] bg-accent/80 p-6">
-      <h2 className="mb-1 text-lg font-semibold text-foreground">Setup Complete</h2>
-      <p className="mb-5 text-sm text-muted-foreground">Your Labrador instance is ready to use.</p>
+      <h2 className="mb-1 text-lg font-semibold text-foreground">
+        Setup Complete
+      </h2>
+      <p className="mb-5 text-sm text-muted-foreground">
+        Your Labrador instance is ready to use.
+      </p>
       <div className="mb-5 rounded-xl border border-white/[0.20] bg-accent/50 px-4 py-3">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Configuration Summary</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          Configuration Summary
+        </p>
         <ul className="space-y-1 text-sm text-muted-foreground">
           <li>Admin account created</li>
           {configuredProviders.length > 0 ? (
-            <li>Exposure providers configured: {configuredProviders.join(', ')}</li>
+            <li>
+              Exposure providers configured: {configuredProviders.join(", ")}
+            </li>
           ) : (
             <li>No exposure providers configured (can be added in Settings)</li>
           )}
@@ -436,7 +575,7 @@ function CompleteStep({
         disabled={isSubmitting}
         className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
       >
-        {isSubmitting ? 'Finishing Setup…' : 'Get Started'}
+        {isSubmitting ? "Finishing Setup…" : "Get Started"}
       </button>
     </div>
   );
@@ -450,15 +589,15 @@ export function Onboarding() {
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: adoptableStacks } = useQuery<AdoptableStack[]>({
-    queryKey: ['projects', 'adoptable'],
-    queryFn: () => api.get('/projects/adoptable'),
+    queryKey: ["projects", "adoptable"],
+    queryFn: () => api.get("/projects/adoptable"),
     enabled: step >= 2,
   });
   const hasAdoptable = adoptableStacks && adoptableStacks.length > 0;
   const nextAfterProviders: OnboardingStep = hasAdoptable ? 3 : 4;
 
   useEffect(() => {
-    if (authStatus?.authenticated) setStep((s) => s === 1 ? 2 : s);
+    if (authStatus?.authenticated) setStep((s) => (s === 1 ? 2 : s));
   }, [authStatus?.authenticated]);
 
   if (authStatus && !authStatus.needsOnboarding) {
@@ -472,8 +611,8 @@ export function Onboarding() {
 
       if (providerConfig.caddy) {
         exposureProviders.push({
-          providerType: 'caddy',
-          name: 'Caddy',
+          providerType: "caddy",
+          name: "Caddy",
           enabled: true,
           configuration: { apiUrl: providerConfig.caddy.apiUrl },
         });
@@ -488,20 +627,25 @@ export function Onboarding() {
           : await resolveCloudflareBeforeSave(cf);
 
         if (cf.adoptStackName) {
-          const adoptResult = await api.post<{ adopted: string[]; failed: { stackName: string; reason: string }[] }>(
-            '/projects/adopt',
-            { stackNames: [cf.adoptStackName], isInfrastructure: true },
-          );
+          const adoptResult = await api.post<{
+            adopted: string[];
+            failed: { stackName: string; reason: string }[];
+          }>("/projects/adopt", {
+            stackNames: [cf.adoptStackName],
+            isInfrastructure: true,
+          });
           if (adoptResult.failed.length > 0) {
-            throw new Error(`Failed to adopt cloudflared stack: ${adoptResult.failed[0].reason}`);
+            throw new Error(
+              `Failed to adopt cloudflared stack: ${adoptResult.failed[0].reason}`,
+            );
           }
         } else if (cf.deployContainer && tunnelToken) {
           await deployCloudflaredProject(tunnelToken);
         }
 
         exposureProviders.push({
-          providerType: 'cloudflare',
-          name: 'Cloudflare',
+          providerType: "cloudflare",
+          name: "Cloudflare",
           enabled: true,
           configuration: {
             apiToken: cf.apiToken,
@@ -511,12 +655,14 @@ export function Onboarding() {
         });
       }
 
-      await api.post('/settings/onboarding', { exposureProviders });
-      await queryClient.invalidateQueries({ queryKey: ['auth'] });
-      toast.success('Setup complete! Welcome to Labrador.');
-      navigate('/');
+      await api.post("/settings/onboarding", { exposureProviders });
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
+      toast.success("Setup complete! Welcome to Labrador.");
+      navigate("/");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to complete setup');
+      toast.error(
+        error instanceof Error ? error.message : "Failed to complete setup",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -542,7 +688,11 @@ export function Onboarding() {
           />
         )}
         {step === 3 && hasAdoptable && (
-          <AdoptStep stacks={adoptableStacks!} onNext={() => setStep(4)} onSkip={() => setStep(4)} />
+          <AdoptStep
+            stacks={adoptableStacks!}
+            onNext={() => setStep(4)}
+            onSkip={() => setStep(4)}
+          />
         )}
         {step === 4 && (
           <CompleteStep

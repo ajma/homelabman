@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { api } from '../lib/api';
-import type { AdoptableStack, AdoptResult } from '@shared/types';
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { api } from "../lib/api";
+import type { AdoptableStack, AdoptResult } from "@shared/types";
 
 interface Props {
   stacks: AdoptableStack[];
@@ -17,24 +17,24 @@ export function AdoptableStacksList({ stacks, onAdopted }: Props) {
 
   const adoptMutation = useMutation({
     mutationFn: (stackNames: string[]) =>
-      api.post<AdoptResult>('/projects/adopt', { stackNames }),
+      api.post<AdoptResult>("/projects/adopt", { stackNames }),
     onSuccess: (result) => {
       if (result.adopted.length > 0) {
         toast.success(
-          `Adopted ${result.adopted.length} stack${result.adopted.length > 1 ? 's' : ''}`,
+          `Adopted ${result.adopted.length} stack${result.adopted.length > 1 ? "s" : ""}`,
         );
       }
       if (result.failed.length > 0) {
         toast.warning(
-          `Failed: ${result.failed.map((f) => `${f.stackName} (${f.reason})`).join(', ')}`,
+          `Failed: ${result.failed.map((f) => `${f.stackName} (${f.reason})`).join(", ")}`,
         );
       }
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['projects', 'adoptable'] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projects", "adoptable"] });
       onAdopted?.();
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Adoption failed');
+      toast.error(err.message || "Adoption failed");
     },
   });
 
@@ -51,7 +51,10 @@ export function AdoptableStacksList({ stacks, onAdopted }: Props) {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-2">
         {stacks.map((stack) => (
-          <label key={stack.stackName} className="flex cursor-pointer items-center gap-3">
+          <label
+            key={stack.stackName}
+            className="flex cursor-pointer items-center gap-3"
+          >
             <input
               type="checkbox"
               checked={selected.has(stack.stackName)}
@@ -63,8 +66,9 @@ export function AdoptableStacksList({ stacks, onAdopted }: Props) {
                 {stack.stackName}
               </span>
               <span className="text-2xs text-muted-foreground">
-                {stack.containerCount} container{stack.containerCount !== 1 ? 's' : ''}
-                {stack.workingDir ? ` · ${stack.workingDir}` : ''}
+                {stack.containerCount} container
+                {stack.containerCount !== 1 ? "s" : ""}
+                {stack.workingDir ? ` · ${stack.workingDir}` : ""}
               </span>
             </div>
           </label>
@@ -75,7 +79,9 @@ export function AdoptableStacksList({ stacks, onAdopted }: Props) {
         disabled={selected.size === 0 || adoptMutation.isPending}
         className="mt-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {adoptMutation.isPending ? 'Adopting…' : `Adopt selected (${selected.size})`}
+        {adoptMutation.isPending
+          ? "Adopting…"
+          : `Adopt selected (${selected.size})`}
       </button>
     </div>
   );

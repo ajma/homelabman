@@ -1,5 +1,5 @@
-import { rm } from 'fs/promises';
-import { getServer } from './server-singleton.js';
+import { rm } from "fs/promises";
+import { getServer } from "./server-singleton.js";
 
 export default async function globalTeardown() {
   const { server, dbPath } = getServer();

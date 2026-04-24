@@ -1,8 +1,15 @@
-import { useNavigate } from 'react-router-dom';
-import { Play, Square, RotateCcw, ExternalLink, Globe, ArrowUpCircle } from 'lucide-react';
-import type { Project } from '@shared/types';
-import { useProjectUpdates } from '../hooks/useProjects';
-import type { ContainerStats } from '../hooks/useStats';
+import { useNavigate } from "react-router-dom";
+import {
+  Play,
+  Square,
+  RotateCcw,
+  ExternalLink,
+  Globe,
+  ArrowUpCircle,
+} from "lucide-react";
+import type { Project } from "@shared/types";
+import { useProjectUpdates } from "../hooks/useProjects";
+import type { ContainerStats } from "../hooks/useStats";
 
 interface ProjectCardProps {
   project: Project;
@@ -13,58 +20,74 @@ interface ProjectCardProps {
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
-const statusConfig: Record<Project['status'], { dot: string; label: string; labelColor: string; cardBorder: string; cardBg: string; cardHover: string }> = {
+const statusConfig: Record<
+  Project["status"],
+  {
+    dot: string;
+    label: string;
+    labelColor: string;
+    cardBorder: string;
+    cardBg: string;
+    cardHover: string;
+  }
+> = {
   running: {
-    dot: 'bg-[#4ade80] shadow-[0_0_8px_rgba(74,222,128,0.45)]',
-    label: 'Running',
-    labelColor: 'text-[rgba(74,222,128,0.9)]',
-    cardBorder: 'border-[rgba(74,222,128,0.18)]',
-    cardBg: 'bg-[rgba(74,222,128,0.02)]',
-    cardHover: 'hover:bg-[rgba(74,222,128,0.04)]',
+    dot: "bg-[#4ade80] shadow-[0_0_8px_rgba(74,222,128,0.45)]",
+    label: "Running",
+    labelColor: "text-[rgba(74,222,128,0.9)]",
+    cardBorder: "border-[rgba(74,222,128,0.18)]",
+    cardBg: "bg-[rgba(74,222,128,0.02)]",
+    cardHover: "hover:bg-[rgba(74,222,128,0.04)]",
   },
   stopped: {
-    dot: 'bg-[rgba(255,255,255,0.20)]',
-    label: 'Stopped',
-    labelColor: 'text-muted-foreground',
-    cardBorder: 'border-white/[0.20]',
-    cardBg: 'bg-accent/60',
-    cardHover: 'hover:bg-accent',
+    dot: "bg-[rgba(255,255,255,0.20)]",
+    label: "Stopped",
+    labelColor: "text-muted-foreground",
+    cardBorder: "border-white/[0.20]",
+    cardBg: "bg-accent/60",
+    cardHover: "hover:bg-accent",
   },
   starting: {
-    dot: 'bg-[#facc15] animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.4)]',
-    label: 'Starting',
-    labelColor: 'text-[#facc15]',
-    cardBorder: 'border-[rgba(250,204,21,0.20)]',
-    cardBg: 'bg-[rgba(250,204,21,0.015)]',
-    cardHover: 'hover:bg-[rgba(250,204,21,0.03)]',
+    dot: "bg-[#facc15] animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.4)]",
+    label: "Starting",
+    labelColor: "text-[#facc15]",
+    cardBorder: "border-[rgba(250,204,21,0.20)]",
+    cardBg: "bg-[rgba(250,204,21,0.015)]",
+    cardHover: "hover:bg-[rgba(250,204,21,0.03)]",
   },
   error: {
-    dot: 'bg-[#f87171] shadow-[0_0_8px_rgba(248,113,113,0.45)]',
-    label: 'Error',
-    labelColor: 'text-[#f87171]',
-    cardBorder: 'border-[rgba(248,113,113,0.20)]',
-    cardBg: 'bg-[rgba(248,113,113,0.02)]',
-    cardHover: 'hover:bg-[rgba(248,113,113,0.04)]',
+    dot: "bg-[#f87171] shadow-[0_0_8px_rgba(248,113,113,0.45)]",
+    label: "Error",
+    labelColor: "text-[#f87171]",
+    cardBorder: "border-[rgba(248,113,113,0.20)]",
+    cardBg: "bg-[rgba(248,113,113,0.02)]",
+    cardHover: "hover:bg-[rgba(248,113,113,0.04)]",
   },
 };
 
 function timeAgo(timestamp: number | null): string {
-  if (!timestamp) return 'Never';
+  if (!timestamp) return "Never";
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return 'Just now';
+  if (seconds < 60) return "Just now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: ProjectCardProps) {
+export function ProjectCard({
+  project,
+  stats,
+  onDeploy,
+  onStop,
+  onRestart,
+}: ProjectCardProps) {
   const navigate = useNavigate();
   const status = statusConfig[project.status];
   const { data: updates } = useProjectUpdates(project.id);
@@ -115,7 +138,9 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
           )}
           <div className="flex items-center gap-1.5">
             <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-            <span className={`text-xs ${status.labelColor}`}>{status.label}</span>
+            <span className={`text-xs ${status.labelColor}`}>
+              {status.label}
+            </span>
           </div>
         </div>
       </div>
@@ -126,56 +151,77 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
           Last deployed: {timeAgo(project.deployedAt)}
         </p>
 
-        {project.status === 'running' && stats && stats.length > 0 && (() => {
-          const totalCpu = stats.reduce((sum, s) => sum + s.cpuUsage, 0);
-          const totalMem = stats.reduce((sum, s) => sum + s.memoryUsage, 0);
-          const totalMemLimit = stats.reduce((sum, s) => sum + s.memoryLimit, 0);
-          const cpuColor = totalCpu > 80 ? '#f87171' : totalCpu > 50 ? '#facc15' : '#4ade80';
-          return (
-            <div className="mt-2 space-y-1.5">
-              <div>
-                <div className="mb-0.5 flex justify-between text-2xs text-muted-foreground">
-                  <span>CPU</span>
-                  <span>{totalCpu.toFixed(1)}%</span>
+        {project.status === "running" &&
+          stats &&
+          stats.length > 0 &&
+          (() => {
+            const totalCpu = stats.reduce((sum, s) => sum + s.cpuUsage, 0);
+            const totalMem = stats.reduce((sum, s) => sum + s.memoryUsage, 0);
+            const totalMemLimit = stats.reduce(
+              (sum, s) => sum + s.memoryLimit,
+              0,
+            );
+            const cpuColor =
+              totalCpu > 80 ? "#f87171" : totalCpu > 50 ? "#facc15" : "#4ade80";
+            return (
+              <div className="mt-2 space-y-1.5">
+                <div>
+                  <div className="mb-0.5 flex justify-between text-2xs text-muted-foreground">
+                    <span>CPU</span>
+                    <span>{totalCpu.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-1 w-full rounded-full bg-muted">
+                    <div
+                      className="h-1 rounded-full transition-all"
+                      style={{
+                        width: `${Math.min(totalCpu, 100)}%`,
+                        backgroundColor: cpuColor,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1 w-full rounded-full bg-muted">
-                  <div
-                    className="h-1 rounded-full transition-all"
-                    style={{ width: `${Math.min(totalCpu, 100)}%`, backgroundColor: cpuColor }}
-                  />
+                <div className="flex justify-between text-2xs text-muted-foreground">
+                  <span>Memory</span>
+                  <span>
+                    {formatBytes(totalMem)} / {formatBytes(totalMemLimit)}
+                  </span>
                 </div>
               </div>
-              <div className="flex justify-between text-2xs text-muted-foreground">
-                <span>Memory</span>
-                <span>{formatBytes(totalMem)} / {formatBytes(totalMemLimit)}</span>
-              </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
       </div>
 
       {/* Footer actions */}
       <div className="mt-auto flex items-center gap-1.5 border-t border-white/[0.24] px-4 py-2.5">
-        {(project.status === 'stopped' || project.status === 'error') && (
+        {(project.status === "stopped" || project.status === "error") && (
           <button
-            onClick={(e) => { e.stopPropagation(); onDeploy(project.id); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeploy(project.id);
+            }}
             className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-[#4ade80] transition-colors hover:bg-[rgba(74,222,128,0.08)]"
           >
             <Play className="h-3 w-3" />
             Deploy
           </button>
         )}
-        {project.status === 'running' && (
+        {project.status === "running" && (
           <>
             <button
-              onClick={(e) => { e.stopPropagation(); onStop(project.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onStop(project.id);
+              }}
               className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <Square className="h-3 w-3" />
               Stop
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); onRestart(project.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRestart(project.id);
+              }}
               className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <RotateCcw className="h-3 w-3" />
@@ -183,11 +229,14 @@ export function ProjectCard({ project, stats, onDeploy, onStop, onRestart }: Pro
             </button>
           </>
         )}
-        {project.status === 'starting' && (
+        {project.status === "starting" && (
           <span className="text-xs text-[#facc15]">Deploying…</span>
         )}
         <button
-          onClick={(e) => { e.stopPropagation(); navigate(`/projects/${project.id}`); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/projects/${project.id}`);
+          }}
           className="ml-auto flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
         >
           <ExternalLink className="h-3 w-3" />

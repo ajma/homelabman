@@ -1,7 +1,7 @@
-import { eq, and, sql } from 'drizzle-orm';
-import { getDatabase } from '../db/index.js';
-import { projectGroups, projects } from '../db/schema.js';
-import type { ProjectGroup } from '../../shared/types.js';
+import { eq, and, sql } from "drizzle-orm";
+import { getDatabase } from "../db/index.js";
+import { projectGroups, projects } from "../db/schema.js";
+import type { ProjectGroup } from "../../shared/types.js";
 
 export class GroupService {
   async listGroups(userId: string): Promise<ProjectGroup[]> {
@@ -17,7 +17,9 @@ export class GroupService {
   async createGroup(userId: string, name: string): Promise<ProjectGroup> {
     const db = getDatabase();
     const [{ maxOrder }] = await db
-      .select({ maxOrder: sql<number>`coalesce(max(${projectGroups.sortOrder}), -1)` })
+      .select({
+        maxOrder: sql<number>`coalesce(max(${projectGroups.sortOrder}), -1)`,
+      })
       .from(projectGroups)
       .where(eq(projectGroups.userId, userId));
     const [row] = await db
@@ -27,14 +29,20 @@ export class GroupService {
     return row as ProjectGroup;
   }
 
-  async renameGroup(groupId: string, userId: string, name: string): Promise<ProjectGroup> {
+  async renameGroup(
+    groupId: string,
+    userId: string,
+    name: string,
+  ): Promise<ProjectGroup> {
     const db = getDatabase();
     const [row] = await db
       .update(projectGroups)
       .set({ name, updatedAt: Date.now() })
-      .where(and(eq(projectGroups.id, groupId), eq(projectGroups.userId, userId)))
+      .where(
+        and(eq(projectGroups.id, groupId), eq(projectGroups.userId, userId)),
+      )
       .returning();
-    if (!row) throw new Error('Group not found');
+    if (!row) throw new Error("Group not found");
     return row as ProjectGroup;
   }
 
@@ -44,15 +52,15 @@ export class GroupService {
       const [group] = await tx
         .select({ id: projectGroups.id })
         .from(projectGroups)
-        .where(and(eq(projectGroups.id, groupId), eq(projectGroups.userId, userId)));
-      if (!group) throw new Error('Group not found');
+        .where(
+          and(eq(projectGroups.id, groupId), eq(projectGroups.userId, userId)),
+        );
+      if (!group) throw new Error("Group not found");
       await tx
         .update(projects)
         .set({ groupId: null, updatedAt: Date.now() })
         .where(eq(projects.groupId, groupId));
-      await tx
-        .delete(projectGroups)
-        .where(eq(projectGroups.id, groupId));
+      await tx.delete(projectGroups).where(eq(projectGroups.id, groupId));
     });
   }
 
@@ -63,7 +71,9 @@ export class GroupService {
         await tx
           .update(projectGroups)
           .set({ sortOrder: i, updatedAt: Date.now() })
-          .where(and(eq(projectGroups.id, ids[i]), eq(projectGroups.userId, userId)));
+          .where(
+            and(eq(projectGroups.id, ids[i]), eq(projectGroups.userId, userId)),
+          );
       }
     });
   }

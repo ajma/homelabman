@@ -1,17 +1,18 @@
-import { drizzle } from 'drizzle-orm/libsql';
-import { migrate } from 'drizzle-orm/libsql/migrator';
-import { createClient } from '@libsql/client';
-import * as schema from './schema.js';
-import fs from 'fs';
-import path from 'path';
+import { drizzle } from "drizzle-orm/libsql";
+import { migrate } from "drizzle-orm/libsql/migrator";
+import { createClient } from "@libsql/client";
+import * as schema from "./schema.js";
+import fs from "fs";
+import path from "path";
 
 let db: ReturnType<typeof drizzle>;
 
 export function initDatabase(url?: string) {
-  const dbUrl = url ?? `file:${process.env.DATABASE_PATH ?? './data/labrador.db'}`;
+  const dbUrl =
+    url ?? `file:${process.env.DATABASE_PATH ?? "./data/labrador.db"}`;
 
-  if (dbUrl.startsWith('file:') && !dbUrl.includes(':memory:')) {
-    const dbPath = dbUrl.replace(/^file:/, '');
+  if (dbUrl.startsWith("file:") && !dbUrl.includes(":memory:")) {
+    const dbPath = dbUrl.replace(/^file:/, "");
     const dir = path.dirname(path.resolve(dbPath));
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -29,7 +30,7 @@ export async function migrateDatabase(migrationsFolder: string) {
 
 export function getDatabase() {
   if (!db) {
-    throw new Error('Database not initialized. Call initDatabase() first.');
+    throw new Error("Database not initialized. Call initDatabase() first.");
   }
   return db;
 }

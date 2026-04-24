@@ -12,6 +12,7 @@ Docker Compose stacks running on the host that were not deployed through labrado
 A stack is adoptable if its `com.docker.compose.project` label value does not match any project's `slug` in the database for that user. This is the single source of truth — container labels are not used for this check.
 
 Two concrete scenarios produce adoptable stacks:
+
 1. **Never managed** — containers have no `labrador.project_id` label and the stack name isn't a known slug.
 2. **Orphaned** — containers have a `labrador.project_id` label whose UUID no longer exists in the `projects` table.
 
@@ -22,6 +23,7 @@ After adoption the project record exists with `slug = stackName`, so the stack i
 ### AdoptService (`src/server/services/adopt.service.ts`)
 
 **`listAdoptable(userId: string)`**
+
 - Fetches all containers from Docker that have the `com.docker.compose.project` label.
 - Groups containers by stack name. `workingDir` is read from the `com.docker.compose.project.working_dir` label on any container in the group.
 - Queries all project slugs for the user from the DB.
@@ -29,6 +31,7 @@ After adoption the project record exists with `slug = stackName`, so the stack i
 - Return shape: `{ stackName: string, workingDir: string, containerCount: number }[]`
 
 **`adoptStacks(stackNames: string[], userId: string)`**
+
 - Re-queries Docker to build a map of `stackName → { workingDir, containerIds[] }` for the requested names.
 - Checks the DB for existing slugs; any `stackName` that already matches a slug is immediately added to `failed` with reason `"slug already exists"`.
 - For each remaining stack, resolves `composeContent`:
@@ -101,6 +104,7 @@ POST /api/projects/adopt { stackNames }
 Unit tests for `AdoptService` (`src/server/services/__tests__/adopt.service.test.ts`) using vitest with `vi.stubGlobal` / mocked Dockerode and DB:
 
 **`listAdoptable`**
+
 - Returns stack that has no `labrador.project_id` label and no matching slug.
 - Excludes stack whose name matches an existing project slug (never-managed but already adopted).
 - Returns orphaned stack (has `labrador.project_id` label whose UUID is absent from the DB).
@@ -108,6 +112,7 @@ Unit tests for `AdoptService` (`src/server/services/__tests__/adopt.service.test
 - Returns empty array when all running stacks are known slugs.
 
 **`adoptStacks`**
+
 - Creates project record with compose content read from disk when file exists.
 - Creates project record with commented generated YAML when compose file not found on disk.
 - Generated YAML header comment includes the original `workingDir` path.
@@ -120,17 +125,20 @@ Unit tests for `AdoptService` (`src/server/services/__tests__/adopt.service.test
 Uses the existing Playwright + `MockDockerService` pattern (reset via `POST /api/test/reset`, session via `GET /api/test/session`, mock docker state via `POST /api/test/mock/docker`). The mock needs a `listAdoptable` stub that reads from the containers array.
 
 **Zero-state dashboard surface**
+
 - When docker mock has compose stacks with no matching project slugs, the adoptable checklist appears on the dashboard.
 - When docker mock has no unmanaged stacks, the checklist is absent.
 - Selecting stacks and clicking "Adopt selected" creates project records and navigates to dashboard with projects visible.
 
 **New project page banner**
+
 - Banner shows correct count of adoptable stacks when they exist.
 - Banner is hidden when no stacks are adoptable.
 - Clicking the banner button opens the adopt dialog.
 - Adopting from the dialog closes it and invalidates the project list.
 
 **Adopt variations**
+
 - Adopting an orphaned stack (has `labrador.project_id` label but no matching project) succeeds.
 - Adopting a stack whose name collides with an existing slug shows a failure toast with the reason.
 - Adopting a stack with a logo label (`labrador.logo_url`) restores the logo on the created project.

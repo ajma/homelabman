@@ -1,18 +1,21 @@
-import { useState, useMemo } from 'react';
-import { X, Search } from 'lucide-react';
-import { toast } from 'sonner';
-import { useTemplates } from '../hooks/useTemplates';
-import { api } from '../lib/api';
-import type { ProjectTemplate } from '@shared/types';
+import { useState, useMemo } from "react";
+import { X, Search } from "lucide-react";
+import { toast } from "sonner";
+import { useTemplates } from "../hooks/useTemplates";
+import { api } from "../lib/api";
+import type { ProjectTemplate } from "@shared/types";
 
 interface TemplatePickerModalProps {
   onSelect: (template: ProjectTemplate) => void;
   onClose: () => void;
 }
 
-export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalProps) {
+export function TemplatePickerModal({
+  onSelect,
+  onClose,
+}: TemplatePickerModalProps) {
   const { data: templates, isLoading, isError } = useTemplates();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -26,8 +29,12 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
     const q = search.toLowerCase();
     return templates
       .filter((t) => {
-        const matchesSearch = !q || t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q);
-        const matchesCategory = !activeCategory || t.categories.includes(activeCategory);
+        const matchesSearch =
+          !q ||
+          t.name.toLowerCase().includes(q) ||
+          t.description.toLowerCase().includes(q);
+        const matchesCategory =
+          !activeCategory || t.categories.includes(activeCategory);
         return matchesSearch && matchesCategory;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -36,10 +43,12 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
   async function handleSelect(id: string) {
     setLoadingId(id);
     try {
-      const template = await api.get<ProjectTemplate>(`/projects/templates/${id}`);
+      const template = await api.get<ProjectTemplate>(
+        `/projects/templates/${id}`,
+      );
       onSelect(template);
     } catch {
-      toast.error('Failed to load template');
+      toast.error("Failed to load template");
     } finally {
       setLoadingId(null);
     }
@@ -50,7 +59,9 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
       <div className="relative flex h-[80vh] w-full max-w-5xl flex-col rounded-2xl border border-white/[0.24] bg-background/[0.97] shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.20] px-6 py-4">
-          <h2 className="text-lg font-semibold text-foreground">Choose a Template</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            Choose a Template
+          </h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
@@ -78,8 +89,8 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
                 onClick={() => setActiveCategory(null)}
                 className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                   activeCategory === null
-                    ? 'bg-primary/[0.15] text-primary'
-                    : 'border border-white/[0.20] text-muted-foreground hover:bg-accent hover:text-foreground'
+                    ? "bg-primary/[0.15] text-primary"
+                    : "border border-white/[0.20] text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
                 All
@@ -87,11 +98,13 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
               {categories.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+                  onClick={() =>
+                    setActiveCategory(activeCategory === cat ? null : cat)
+                  }
                   className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                     activeCategory === cat
-                      ? 'bg-primary/[0.15] text-primary'
-                      : 'border border-white/[0.20] text-muted-foreground hover:bg-accent hover:text-foreground'
+                      ? "bg-primary/[0.15] text-primary"
+                      : "border border-white/[0.20] text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
                 >
                   {cat}
@@ -104,13 +117,19 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
         {/* Template list */}
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading && (
-            <p className="text-center text-sm text-muted-foreground">Loading templates…</p>
+            <p className="text-center text-sm text-muted-foreground">
+              Loading templates…
+            </p>
           )}
           {isError && (
-            <p className="text-center text-sm text-[rgba(254,202,202,0.85)]">Failed to load templates.</p>
+            <p className="text-center text-sm text-[rgba(254,202,202,0.85)]">
+              Failed to load templates.
+            </p>
           )}
           {!isLoading && !isError && filtered.length === 0 && (
-            <p className="text-center text-sm text-muted-foreground">No templates match your search.</p>
+            <p className="text-center text-sm text-muted-foreground">
+              No templates match your search.
+            </p>
           )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((template) => (
@@ -133,7 +152,7 @@ export function TemplatePickerModal({ onSelect, onClose }: TemplatePickerModalPr
                 )}
                 <div className="min-w-0 flex-1">
                   <span className="truncate text-sm font-medium text-foreground">
-                    {loadingId === template.id ? 'Loading…' : template.name}
+                    {loadingId === template.id ? "Loading…" : template.name}
                   </span>
                   <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                     {template.description}

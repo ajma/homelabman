@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const loginSchema = z.object({
   username: z.string().min(3).max(50),
@@ -6,14 +6,18 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_-]+$/, 'Username must be alphanumeric'),
+  username: z
+    .string()
+    .min(3)
+    .max(50)
+    .regex(/^[a-zA-Z0-9_-]+$/, "Username must be alphanumeric"),
   password: z.string().min(8).max(128),
 });
 
 export const createProjectSchema = z.object({
   name: z.string().min(1).max(100),
   composeContent: z.string().max(102400),
-  logoUrl: z.string().url().or(z.literal('')).nullable().optional(),
+  logoUrl: z.string().url().or(z.literal("")).nullable().optional(),
   domainName: z.string().nullable().optional(),
   exposureEnabled: z.boolean().optional().default(false),
   exposureProviderId: z.string().uuid().nullable().optional(),
@@ -26,7 +30,7 @@ export const createProjectSchema = z.object({
 export const updateProjectSchema = createProjectSchema.partial();
 
 export const exposureProviderSchema = z.object({
-  providerType: z.enum(['caddy', 'cloudflare']),
+  providerType: z.enum(["caddy", "cloudflare"]),
   name: z.string().min(1).max(100),
   enabled: z.boolean().optional().default(true),
   configuration: z.record(z.any()),
@@ -40,14 +44,16 @@ export const onboardingSchema = z.object({
   exposureProviders: z.array(exposureProviderSchema).optional().default([]),
 });
 
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1),
-  newPassword: z.string().min(8).max(128),
-  confirmPassword: z.string().min(1),
-}).refine((d) => d.newPassword === d.confirmPassword, {
-  message: "Passwords don't match.",
-  path: ['confirmPassword'],
-});
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(8).max(128),
+    confirmPassword: z.string().min(1),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, {
+    message: "Passwords don't match.",
+    path: ["confirmPassword"],
+  });
 
 export const createGroupSchema = z.object({
   name: z.string().min(1).max(100),
@@ -62,11 +68,13 @@ export const reorderGroupsSchema = z.object({
 });
 
 export const reorderProjectsSchema = z.object({
-  updates: z.array(z.object({
-    id: z.string().uuid(),
-    groupId: z.string().uuid().nullable(),
-    sortOrder: z.number().int().min(0),
-  })),
+  updates: z.array(
+    z.object({
+      id: z.string().uuid(),
+      groupId: z.string().uuid().nullable(),
+      sortOrder: z.number().int().min(0),
+    }),
+  ),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

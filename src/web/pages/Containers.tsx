@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Box, Search, Play, Square, RotateCw, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { api } from '../lib/api';
-import { Input } from '../components/ui/input';
-import { TablePagination } from '../components/TablePagination';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Box, Search, Play, Square, RotateCw, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { api } from "../lib/api";
+import { Input } from "../components/ui/input";
+import { TablePagination } from "../components/TablePagination";
 
 interface DockerContainer {
   Id: string;
@@ -21,29 +21,61 @@ function shortId(id: string): string {
 }
 
 function containerName(names: string[]): string {
-  if (!names || names.length === 0) return '<unknown>';
-  return names[0].replace(/^\//, '');
+  if (!names || names.length === 0) return "<unknown>";
+  return names[0].replace(/^\//, "");
 }
 
-function formatPorts(ports: DockerContainer['Ports']): string {
-  if (!ports || ports.length === 0) return '-';
-  return ports
-    .filter((p) => p.PublicPort)
-    .map((p) => `${p.PublicPort}:${p.PrivatePort}/${p.Type}`)
-    .join(', ') || '-';
+function formatPorts(ports: DockerContainer["Ports"]): string {
+  if (!ports || ports.length === 0) return "-";
+  return (
+    ports
+      .filter((p) => p.PublicPort)
+      .map((p) => `${p.PublicPort}:${p.PrivatePort}/${p.Type}`)
+      .join(", ") || "-"
+  );
 }
 
-const stateStyles: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  running: { bg: 'bg-[rgba(74,222,128,0.10)]', text: 'text-[#4ade80]', border: 'border-[rgba(74,222,128,0.25)]', dot: 'bg-[#4ade80] shadow-[0_0_6px_rgba(74,222,128,0.5)]' },
-  exited: { bg: 'bg-[rgba(248,113,113,0.08)]', text: 'text-[rgba(248,113,113,0.85)]', border: 'border-[rgba(248,113,113,0.20)]', dot: 'bg-[rgba(248,113,113,0.85)]' },
-  paused: { bg: 'bg-[rgba(250,204,21,0.08)]', text: 'text-[#facc15]', border: 'border-[rgba(250,204,21,0.20)]', dot: 'bg-[#facc15]' },
-  restarting: { bg: 'bg-primary/[0.10]', text: 'text-primary', border: 'border-primary/[0.25]', dot: 'bg-primary animate-pulse' },
+const stateStyles: Record<
+  string,
+  { bg: string; text: string; border: string; dot: string }
+> = {
+  running: {
+    bg: "bg-[rgba(74,222,128,0.10)]",
+    text: "text-[#4ade80]",
+    border: "border-[rgba(74,222,128,0.25)]",
+    dot: "bg-[#4ade80] shadow-[0_0_6px_rgba(74,222,128,0.5)]",
+  },
+  exited: {
+    bg: "bg-[rgba(248,113,113,0.08)]",
+    text: "text-[rgba(248,113,113,0.85)]",
+    border: "border-[rgba(248,113,113,0.20)]",
+    dot: "bg-[rgba(248,113,113,0.85)]",
+  },
+  paused: {
+    bg: "bg-[rgba(250,204,21,0.08)]",
+    text: "text-[#facc15]",
+    border: "border-[rgba(250,204,21,0.20)]",
+    dot: "bg-[#facc15]",
+  },
+  restarting: {
+    bg: "bg-primary/[0.10]",
+    text: "text-primary",
+    border: "border-primary/[0.25]",
+    dot: "bg-primary animate-pulse",
+  },
 };
 
 function StateBadge({ state }: { state: string }) {
-  const s = stateStyles[state] ?? { bg: 'bg-accent', text: 'text-muted-foreground', border: 'border-border', dot: 'bg-[rgba(255,255,255,0.20)]' };
+  const s = stateStyles[state] ?? {
+    bg: "bg-accent",
+    text: "text-muted-foreground",
+    border: "border-border",
+    dot: "bg-[rgba(255,255,255,0.20)]",
+  };
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${s.bg} ${s.text} ${s.border}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${s.bg} ${s.text} ${s.border}`}
+    >
       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.dot}`} />
       {state}
     </span>
@@ -54,12 +86,18 @@ function useContainerAction(action: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) => {
-      if (action === 'remove') return api.delete(`/docker/containers/${id}?force=true`);
+      if (action === "remove")
+        return api.delete(`/docker/containers/${id}?force=true`);
       return api.post(`/docker/containers/${id}/${action}`, {});
     },
     onSuccess: (_data, { name }) => {
-      queryClient.invalidateQueries({ queryKey: ['containers'] });
-      const labels: Record<string, string> = { start: 'started', stop: 'stopped', restart: 'restarted', remove: 'removed' };
+      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      const labels: Record<string, string> = {
+        start: "started",
+        stop: "stopped",
+        restart: "restarted",
+        remove: "removed",
+      };
       toast.success(`${name} ${labels[action]}`);
     },
     onError: (error: Error, { name }) => {
@@ -69,19 +107,19 @@ function useContainerAction(action: string) {
 }
 
 export function Containers() {
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
-  const startAction = useContainerAction('start');
-  const stopAction = useContainerAction('stop');
-  const restartAction = useContainerAction('restart');
-  const removeAction = useContainerAction('remove');
+  const startAction = useContainerAction("start");
+  const stopAction = useContainerAction("stop");
+  const restartAction = useContainerAction("restart");
+  const removeAction = useContainerAction("remove");
 
   const { data: containers, isLoading } = useQuery<DockerContainer[]>({
-    queryKey: ['containers'],
-    queryFn: () => api.get('/docker/containers'),
+    queryKey: ["containers"],
+    queryFn: () => api.get("/docker/containers"),
     refetchInterval: 5000,
   });
 
@@ -106,7 +144,10 @@ export function Containers() {
           <Input
             placeholder="Filter by name, image, or ID…"
             value={filter}
-            onChange={(e) => { setFilter(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setFilter(e.target.value);
+              setPage(1);
+            }}
             className="pl-10"
           />
         </div>
@@ -115,7 +156,10 @@ export function Containers() {
       {isLoading && (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]" />
+            <div
+              key={i}
+              className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]"
+            />
           ))}
         </div>
       )}
@@ -123,44 +167,75 @@ export function Containers() {
       {!isLoading && containers?.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary/[0.15] bg-primary/[0.02] p-12 text-center">
           <Box className="mb-3 h-8 w-8 text-primary opacity-40" />
-          <p className="text-sm text-muted-foreground">No containers running.</p>
+          <p className="text-sm text-muted-foreground">
+            No containers running.
+          </p>
         </div>
       )}
 
-      {!isLoading && containers && containers.length > 0 && filtered?.length === 0 && (
-        <div className="flex items-center justify-center rounded-2xl border border-dashed border-white/[0.22] p-8 text-center">
-          <p className="text-sm text-muted-foreground">No containers match your filter.</p>
-        </div>
-      )}
+      {!isLoading &&
+        containers &&
+        containers.length > 0 &&
+        filtered?.length === 0 && (
+          <div className="flex items-center justify-center rounded-2xl border border-dashed border-white/[0.22] p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              No containers match your filter.
+            </p>
+          </div>
+        )}
 
       {!isLoading && filtered && filtered.length > 0 && (
         <div className="rounded-2xl border border-white/[0.22] overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.20] bg-accent/50">
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Name</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Image</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Container ID</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">State</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Ports</th>
-                <th className="px-4 py-3 text-right text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Image
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Container ID
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  State
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Ports
+                </th>
+                <th className="px-4 py-3 text-right text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {paginated!.map((container) => (
                 <tr
                   key={container.Id}
-                  className={`border-b border-white/[0.24] last:border-0 ${container.State === 'running' ? 'bg-[rgba(74,222,128,0.015)]' : ''}`}
+                  className={`border-b border-white/[0.24] last:border-0 ${container.State === "running" ? "bg-[rgba(74,222,128,0.015)]" : ""}`}
                 >
-                  <td className="px-4 py-3 text-sm font-medium text-foreground">{containerName(container.Names)}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{container.Image}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{shortId(container.Id)}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-foreground">
+                    {containerName(container.Names)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {container.Image}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                    {shortId(container.Id)}
+                  </td>
                   <td className="px-4 py-3">
                     <StateBadge state={container.State} />
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{container.Status}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatPorts(container.Ports)}</td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {container.Status}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                    {formatPorts(container.Ports)}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     {removingId === container.Id ? (
                       <div className="inline-flex items-center gap-2">
@@ -171,7 +246,13 @@ export function Containers() {
                           Cancel
                         </button>
                         <button
-                          onClick={() => { removeAction.mutate({ id: container.Id, name: containerName(container.Names) }); setRemovingId(null); }}
+                          onClick={() => {
+                            removeAction.mutate({
+                              id: container.Id,
+                              name: containerName(container.Names),
+                            });
+                            setRemovingId(null);
+                          }}
                           disabled={removeAction.isPending}
                           className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
                         >
@@ -180,9 +261,14 @@ export function Containers() {
                       </div>
                     ) : (
                       <div className="inline-flex items-center gap-1">
-                        {container.State === 'running' ? (
+                        {container.State === "running" ? (
                           <button
-                            onClick={() => stopAction.mutate({ id: container.Id, name: containerName(container.Names) })}
+                            onClick={() =>
+                              stopAction.mutate({
+                                id: container.Id,
+                                name: containerName(container.Names),
+                              })
+                            }
                             disabled={stopAction.isPending}
                             className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-[#facc15] disabled:opacity-40"
                             title="Stop"
@@ -191,7 +277,12 @@ export function Containers() {
                           </button>
                         ) : (
                           <button
-                            onClick={() => startAction.mutate({ id: container.Id, name: containerName(container.Names) })}
+                            onClick={() =>
+                              startAction.mutate({
+                                id: container.Id,
+                                name: containerName(container.Names),
+                              })
+                            }
                             disabled={startAction.isPending}
                             className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-[#4ade80] disabled:opacity-40"
                             title="Start"
@@ -200,7 +291,12 @@ export function Containers() {
                           </button>
                         )}
                         <button
-                          onClick={() => restartAction.mutate({ id: container.Id, name: containerName(container.Names) })}
+                          onClick={() =>
+                            restartAction.mutate({
+                              id: container.Id,
+                              name: containerName(container.Names),
+                            })
+                          }
                           disabled={restartAction.isPending}
                           className="rounded-lg p-1.5 text-muted-foreground/50 transition-colors hover:text-primary disabled:opacity-40"
                           title="Restart"

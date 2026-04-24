@@ -31,7 +31,7 @@ export interface Project {
   exposureProviderId: string | null;
   exposureConfig: string;
   isInfrastructure: boolean;
-  status: 'stopped' | 'starting' | 'running' | 'error';
+  status: "stopped" | "starting" | "running" | "error";
   createdAt: number;
   updatedAt: number;
   deployedAt: number | null;

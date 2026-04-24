@@ -1,37 +1,65 @@
-import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { Plus, CheckCircle2, XCircle, FileCheck, X, ChevronUp, ChevronDown, Pencil, Layers } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import {
+  Plus,
+  CheckCircle2,
+  XCircle,
+  FileCheck,
+  X,
+  ChevronUp,
+  ChevronDown,
+  Pencil,
+  Layers,
+} from "lucide-react";
 import {
   exposureProviderSchema,
   changePasswordSchema,
   type ExposureProviderInput,
   type ChangePasswordInput,
-} from '@shared/schemas';
-import type { ExposureProviderConfig, Settings as SettingsType, ProjectGroup, Project } from '@shared/types';
-import { useGroups, useCreateGroup, useRenameGroup, useDeleteGroup, useReorderGroups, useReorderProjects } from '../hooks/useGroups';
-import { useProjects } from '../hooks/useProjects';
-import { api } from '../lib/api';
-import { inputCls } from '../lib/styles';
-import { resolveCloudflareBeforeSave, deployCloudflaredProject } from '../lib/cloudflare';
-import { CloudflareProviderForm, type CloudflareProviderFormValue } from '../components/CloudflareProviderForm';
+} from "@shared/schemas";
+import type {
+  ExposureProviderConfig,
+  Settings as SettingsType,
+  ProjectGroup,
+  Project,
+} from "@shared/types";
+import {
+  useGroups,
+  useCreateGroup,
+  useRenameGroup,
+  useDeleteGroup,
+  useReorderGroups,
+  useReorderProjects,
+} from "../hooks/useGroups";
+import { useProjects } from "../hooks/useProjects";
+import { api } from "../lib/api";
+import { inputCls } from "../lib/styles";
+import {
+  resolveCloudflareBeforeSave,
+  deployCloudflaredProject,
+} from "../lib/cloudflare";
+import {
+  CloudflareProviderForm,
+  type CloudflareProviderFormValue,
+} from "../components/CloudflareProviderForm";
 
 // ─── anchor sections ─────────────────────────────────────────────────────────
 
 const SECTIONS = [
-  { id: 'groups', label: 'Project Groups' },
-  { id: 'account', label: 'Account' },
-  { id: 'providers', label: 'Providers' },
-  { id: 'data', label: 'Data' },
+  { id: "groups", label: "Project Groups" },
+  { id: "account", label: "Account" },
+  { id: "providers", label: "Providers" },
+  { id: "data", label: "Data" },
 ] as const;
 
-type SectionId = (typeof SECTIONS)[number]['id'];
+type SectionId = (typeof SECTIONS)[number]["id"];
 
 function AnchorNav({ active }: { active: SectionId }) {
   const scrollTo = (id: SectionId) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     window.location.hash = id;
   };
 
@@ -43,14 +71,14 @@ function AnchorNav({ active }: { active: SectionId }) {
           onClick={() => scrollTo(s.id)}
           className={`relative flex items-center py-3 text-sm font-medium transition-colors ${
             active === s.id
-              ? 'text-foreground'
-              : 'text-muted-foreground hover:text-muted-foreground'
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-muted-foreground"
           }`}
         >
           {s.label}
           <span
             className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-opacity duration-200 ${
-              active === s.id ? 'opacity-100' : 'opacity-0'
+              active === s.id ? "opacity-100" : "opacity-0"
             }`}
           />
         </button>
@@ -114,9 +142,14 @@ function SetupCheckDisplay({ result }: { result: ProviderSetupResult }) {
           )}
           <div>
             <span className="text-sm text-foreground">{check.name}</span>
-            <span className="text-sm text-muted-foreground"> — {check.message}</span>
+            <span className="text-sm text-muted-foreground">
+              {" "}
+              — {check.message}
+            </span>
             {!check.passed && check.resolution && (
-              <p className="mt-0.5 text-xs text-muted-foreground">Fix: {check.resolution}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Fix: {check.resolution}
+              </p>
             )}
           </div>
         </div>
@@ -132,13 +165,15 @@ function ProviderTypeToggle({
   onChange,
   disabled,
 }: {
-  value: 'caddy' | 'cloudflare';
-  onChange: (t: 'caddy' | 'cloudflare') => void;
+  value: "caddy" | "cloudflare";
+  onChange: (t: "caddy" | "cloudflare") => void;
   disabled?: boolean;
 }) {
   return (
-    <div className={`inline-flex rounded-xl border border-white/[0.15] p-0.5 ${disabled ? 'opacity-50' : ''}`}>
-      {(['cloudflare', 'caddy'] as const).map((type) => (
+    <div
+      className={`inline-flex rounded-xl border border-white/[0.15] p-0.5 ${disabled ? "opacity-50" : ""}`}
+    >
+      {(["cloudflare", "caddy"] as const).map((type) => (
         <button
           key={type}
           type="button"
@@ -146,8 +181,8 @@ function ProviderTypeToggle({
           onClick={() => !disabled && onChange(type)}
           className={`rounded-[10px] px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
             value === type
-              ? 'bg-primary/[0.15] text-primary'
-              : 'text-muted-foreground hover:text-muted-foreground'
+              ? "bg-primary/[0.15] text-primary"
+              : "text-muted-foreground hover:text-muted-foreground"
           }`}
         >
           {type}
@@ -170,13 +205,24 @@ function ProviderForm({
   onSubmit: (data: ExposureProviderInput) => void;
   onDirty: () => void;
 }) {
-  const defaultType: 'caddy' | 'cloudflare' = (provider?.providerType as 'caddy' | 'cloudflare') ?? 'cloudflare';
-  const typeLabel = (t: 'caddy' | 'cloudflare') => t === 'cloudflare' ? 'Cloudflare' : 'Caddy';
+  const defaultType: "caddy" | "cloudflare" =
+    (provider?.providerType as "caddy" | "cloudflare") ?? "cloudflare";
+  const typeLabel = (t: "caddy" | "cloudflare") =>
+    t === "cloudflare" ? "Cloudflare" : "Caddy";
 
-  const [providerType, setProviderType] = useState<'caddy' | 'cloudflare'>(defaultType);
+  const [providerType, setProviderType] = useState<"caddy" | "cloudflare">(
+    defaultType,
+  );
   const [isPresaving, setIsPresaving] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch, getValues } = useForm<ExposureProviderInput>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+    getValues,
+  } = useForm<ExposureProviderInput>({
     resolver: zodResolver(exposureProviderSchema),
     defaultValues: {
       providerType: defaultType,
@@ -186,43 +232,60 @@ function ProviderForm({
     },
   });
 
-  const currentConfig = watch('configuration');
+  const currentConfig = watch("configuration");
 
   const [cfFormValue, setCfFormValue] = useState<CloudflareProviderFormValue>({
-    apiToken: (provider?.configuration as any)?.apiToken ?? '',
-    accountId: (provider?.configuration as any)?.accountId ?? '',
-    tunnelId: (provider?.configuration as any)?.tunnelId ?? '__new__',
-    tunnelName: '',
+    apiToken: (provider?.configuration as any)?.apiToken ?? "",
+    accountId: (provider?.configuration as any)?.accountId ?? "",
+    tunnelId: (provider?.configuration as any)?.tunnelId ?? "__new__",
+    tunnelName: "",
     deployContainer: true,
     adoptStackName: null,
   });
 
-  const handleTypeChange = (type: 'caddy' | 'cloudflare') => {
-    if (!provider && getValues('name') === typeLabel(providerType)) {
-      setValue('name', typeLabel(type));
+  const handleTypeChange = (type: "caddy" | "cloudflare") => {
+    if (!provider && getValues("name") === typeLabel(providerType)) {
+      setValue("name", typeLabel(type));
     }
     setProviderType(type);
-    setValue('providerType', type);
-    setValue('configuration', type === 'caddy' ? { apiUrl: 'http://localhost:2019' } : {});
+    setValue("providerType", type);
+    setValue(
+      "configuration",
+      type === "caddy" ? { apiUrl: "http://localhost:2019" } : {},
+    );
   };
 
   const handleFormSubmit = handleSubmit(async (data) => {
-    if (providerType === 'cloudflare') {
+    if (providerType === "cloudflare") {
       if (!cfFormValue.apiToken || !cfFormValue.accountId) {
-        toast.error('Connect your token and select an account before saving');
+        toast.error("Connect your token and select an account before saving");
         return;
       }
-      if (cfFormValue.tunnelId === '__new__' && !cfFormValue.tunnelName.trim()) {
-        toast.error('Enter a tunnel name');
+      if (
+        cfFormValue.tunnelId === "__new__" &&
+        !cfFormValue.tunnelName.trim()
+      ) {
+        toast.error("Enter a tunnel name");
         return;
       }
       setIsPresaving(true);
       try {
-        const { tunnelId, tunnelToken } = await resolveCloudflareBeforeSave(cfFormValue);
-        if (cfFormValue.deployContainer && tunnelToken) await deployCloudflaredProject(tunnelToken);
-        onSubmit({ ...data, configuration: { apiToken: cfFormValue.apiToken, accountId: cfFormValue.accountId, tunnelId } });
+        const { tunnelId, tunnelToken } =
+          await resolveCloudflareBeforeSave(cfFormValue);
+        if (cfFormValue.deployContainer && tunnelToken)
+          await deployCloudflaredProject(tunnelToken);
+        onSubmit({
+          ...data,
+          configuration: {
+            apiToken: cfFormValue.apiToken,
+            accountId: cfFormValue.accountId,
+            tunnelId,
+          },
+        });
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to create tunnel');
+        toast.error(
+          err instanceof Error ? err.message : "Failed to create tunnel",
+        );
       } finally {
         setIsPresaving(false);
       }
@@ -232,42 +295,75 @@ function ProviderForm({
   });
 
   return (
-    <form ref={formRef} onSubmit={handleFormSubmit} onChange={onDirty} className="space-y-4">
+    <form
+      ref={formRef}
+      onSubmit={handleFormSubmit}
+      onChange={onDirty}
+      className="space-y-4"
+    >
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Type</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Type
+        </label>
         <div>
-          <ProviderTypeToggle value={providerType} onChange={handleTypeChange} disabled={!!provider} />
+          <ProviderTypeToggle
+            value={providerType}
+            onChange={handleTypeChange}
+            disabled={!!provider}
+          />
         </div>
         {!!provider && (
-          <p className="text-xs text-muted-foreground">Provider type cannot be changed after creation.</p>
+          <p className="text-xs text-muted-foreground">
+            Provider type cannot be changed after creation.
+          </p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Name</label>
-        <input type="text" placeholder="e.g. My Caddy Server" className={inputCls} {...register('name')} />
-        {errors.name && <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.name.message}</p>}
+        <label className="text-xs font-medium text-muted-foreground">
+          Name
+        </label>
+        <input
+          type="text"
+          placeholder="e.g. My Caddy Server"
+          className={inputCls}
+          {...register("name")}
+        />
+        {errors.name && (
+          <p className="text-xs text-[rgba(254,202,202,0.85)]">
+            {errors.name.message}
+          </p>
+        )}
       </div>
 
-      {providerType === 'caddy' && (
+      {providerType === "caddy" && (
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">API URL</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            API URL
+          </label>
           <input
             type="text"
             placeholder="http://localhost:2019"
             className={inputCls}
-            value={(currentConfig as Record<string, string>).apiUrl ?? ''}
-            onChange={(e) => setValue('configuration', { apiUrl: e.target.value })}
+            value={(currentConfig as Record<string, string>).apiUrl ?? ""}
+            onChange={(e) =>
+              setValue("configuration", { apiUrl: e.target.value })
+            }
           />
         </div>
       )}
 
-      {providerType === 'cloudflare' && (
+      {providerType === "cloudflare" && (
         <CloudflareProviderForm value={cfFormValue} onChange={setCfFormValue} />
       )}
 
       {/* Hidden submit used by modal footer Save button via formRef.current.requestSubmit() */}
-      <button type="submit" className="hidden" disabled={isPresaving} aria-hidden="true" />
+      <button
+        type="submit"
+        className="hidden"
+        disabled={isPresaving}
+        aria-hidden="true"
+      />
     </form>
   );
 }
@@ -296,12 +392,14 @@ function ProviderModal({
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
     if (e.target !== dialogRef.current) return;
-    if (isDirtyRef.current && !window.confirm('Discard unsaved changes?')) return;
+    if (isDirtyRef.current && !window.confirm("Discard unsaved changes?"))
+      return;
     onClose();
   };
 
   const handleCancel = () => {
-    if (isDirtyRef.current && !window.confirm('Discard unsaved changes?')) return;
+    if (isDirtyRef.current && !window.confirm("Discard unsaved changes?"))
+      return;
     onClose();
   };
 
@@ -315,11 +413,11 @@ function ProviderModal({
       }}
       className="m-auto w-full max-w-lg rounded-2xl border border-white/[0.22] bg-popover p-0 shadow-2xl backdrop:bg-black/60"
     >
-      <div className="flex flex-col" style={{ maxHeight: '90vh' }}>
+      <div className="flex flex-col" style={{ maxHeight: "90vh" }}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.20] px-6 py-4 shrink-0">
           <h3 className="text-lg font-semibold text-foreground">
-            {provider ? 'Edit Provider' : 'Add Provider'}
+            {provider ? "Edit Provider" : "Add Provider"}
           </h3>
           <button
             type="button"
@@ -335,8 +433,13 @@ function ProviderModal({
           <ProviderForm
             provider={provider}
             formRef={formRef}
-            onSubmit={(data) => { isDirtyRef.current = false; onSave(data); }}
-            onDirty={() => { isDirtyRef.current = true; }}
+            onSubmit={(data) => {
+              isDirtyRef.current = false;
+              onSave(data);
+            }}
+            onDirty={() => {
+              isDirtyRef.current = true;
+            }}
           />
         </div>
 
@@ -355,7 +458,7 @@ function ProviderModal({
             onClick={() => formRef.current?.requestSubmit()}
             className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
           >
-            {isPending ? 'Saving…' : 'Save'}
+            {isPending ? "Saving…" : "Save"}
           </button>
         </div>
       </div>
@@ -368,76 +471,90 @@ function ProviderModal({
 function ProvidersSection() {
   const queryClient = useQueryClient();
   const [modalState, setModalState] = useState<
-    { mode: 'add' } | { mode: 'edit'; provider: ExposureProviderConfig } | null
+    { mode: "add" } | { mode: "edit"; provider: ExposureProviderConfig } | null
   >(null);
-  const [setupResults, setSetupResults] = useState<Record<string, ProviderSetupResult>>({});
-  const [checkingSetup, setCheckingSetup] = useState<Record<string, boolean>>({});
-  const [deletingProviderId, setDeletingProviderId] = useState<string | null>(null);
+  const [setupResults, setSetupResults] = useState<
+    Record<string, ProviderSetupResult>
+  >({});
+  const [checkingSetup, setCheckingSetup] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [deletingProviderId, setDeletingProviderId] = useState<string | null>(
+    null,
+  );
 
   const settingsQuery = useQuery<SettingsType>({
-    queryKey: ['settings'],
-    queryFn: () => api.get('/settings'),
+    queryKey: ["settings"],
+    queryFn: () => api.get("/settings"),
   });
 
   const providersQuery = useQuery<ExposureProviderConfig[]>({
-    queryKey: ['settings', 'providers'],
-    queryFn: () => api.get('/settings/exposure-providers'),
+    queryKey: ["settings", "providers"],
+    queryFn: () => api.get("/settings/exposure-providers"),
   });
 
   const createProvider = useMutation({
-    mutationFn: (data: ExposureProviderInput) => api.post('/settings/exposure-providers', data),
+    mutationFn: (data: ExposureProviderInput) =>
+      api.post("/settings/exposure-providers", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
       setModalState(null);
-      toast.success('Provider added');
+      toast.success("Provider added");
     },
-    onError: (error: Error) => toast.error(error.message || 'Failed to add provider'),
+    onError: (error: Error) =>
+      toast.error(error.message || "Failed to add provider"),
   });
 
   const updateProvider = useMutation({
     mutationFn: ({ id, data }: { id: string; data: ExposureProviderInput }) =>
       api.put(`/settings/exposure-providers/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
       setModalState(null);
-      toast.success('Provider updated');
+      toast.success("Provider updated");
     },
-    onError: (error: Error) => toast.error(error.message || 'Failed to update provider'),
+    onError: (error: Error) =>
+      toast.error(error.message || "Failed to update provider"),
   });
 
   const deleteProvider = useMutation({
-    mutationFn: (id: string) => api.delete(`/settings/exposure-providers/${id}`),
+    mutationFn: (id: string) =>
+      api.delete(`/settings/exposure-providers/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
       setDeletingProviderId(null);
-      toast.success('Provider deleted');
+      toast.success("Provider deleted");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete provider');
+      toast.error(error.message || "Failed to delete provider");
       setDeletingProviderId(null);
     },
   });
 
   const setDefaultProvider = useMutation({
     mutationFn: (providerId: string | null) =>
-      api.put('/settings', { defaultExposureProviderId: providerId }),
+      api.put("/settings", { defaultExposureProviderId: providerId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings'] });
-      toast.success('Default provider updated');
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      toast.success("Default provider updated");
     },
-    onError: (error: Error) => toast.error(error.message || 'Failed to update default provider'),
+    onError: (error: Error) =>
+      toast.error(error.message || "Failed to update default provider"),
   });
 
   const runCheckSetup = async (provider: ExposureProviderConfig) => {
     setCheckingSetup((prev) => ({ ...prev, [provider.id]: true }));
     try {
-      const result = await api.post<ProviderSetupResult>('/settings/exposure-providers/check-setup', {
-        providerType: provider.providerType,
-        configuration: provider.configuration,
-      });
+      const result = await api.post<ProviderSetupResult>(
+        "/settings/exposure-providers/check-setup",
+        {
+          providerType: provider.providerType,
+          configuration: provider.configuration,
+        },
+      );
       setSetupResults((prev) => ({ ...prev, [provider.id]: result }));
     } catch (err: any) {
-      toast.error(err.message || 'Failed to check setup');
+      toast.error(err.message || "Failed to check setup");
     } finally {
       setCheckingSetup((prev) => ({ ...prev, [provider.id]: false }));
     }
@@ -446,14 +563,14 @@ function ProvidersSection() {
   const providers = providersQuery.data ?? [];
   const settings = settingsQuery.data;
   const modalIsPending =
-    (modalState?.mode === 'add' && createProvider.isPending) ||
-    (modalState?.mode === 'edit' && updateProvider.isPending);
+    (modalState?.mode === "add" && createProvider.isPending) ||
+    (modalState?.mode === "edit" && updateProvider.isPending);
 
   return (
     <>
       <div className="flex items-center justify-end gap-4 mb-4">
         <button
-          onClick={() => setModalState({ mode: 'add' })}
+          onClick={() => setModalState({ mode: "add" })}
           className="flex shrink-0 items-center gap-1.5 rounded-xl border border-primary/[0.4] px-3 py-1.5 text-sm text-primary transition-colors hover:bg-primary/[0.08]"
         >
           <Plus className="h-3.5 w-3.5" />
@@ -466,30 +583,44 @@ function ProvidersSection() {
       ) : providers.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/[0.22] px-6 py-10 text-center">
           <p className="text-sm text-muted-foreground">
-            No providers yet.{' '}
-            <button onClick={() => setModalState({ mode: 'add' })} className="text-primary hover:underline">
+            No providers yet.{" "}
+            <button
+              onClick={() => setModalState({ mode: "add" })}
+              className="text-primary hover:underline"
+            >
               Add one
-            </button>{' '}
+            </button>{" "}
             to expose your services.
           </p>
         </div>
       ) : (
         <div className="rounded-2xl border border-white/[0.22] overflow-hidden">
           {providers.map((provider, i) => (
-            <div key={provider.id} className={`px-5 py-4 ${i > 0 ? 'border-t border-white/[0.24]' : ''}`}>
+            <div
+              key={provider.id}
+              className={`px-5 py-4 ${i > 0 ? "border-t border-white/[0.24]" : ""}`}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-md font-medium text-foreground">{provider.name}</span>
+                    <span className="text-md font-medium text-foreground">
+                      {provider.name}
+                    </span>
                     {settings?.defaultExposureProviderId === provider.id && (
-                      <span className="rounded-full bg-primary/[0.12] px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-primary">Default</span>
+                      <span className="rounded-full bg-primary/[0.12] px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-primary">
+                        Default
+                      </span>
                     )}
                     {!provider.enabled && (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Disabled</span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                        Disabled
+                      </span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {provider.providerType === 'caddy' ? 'Caddy Reverse Proxy' : 'Cloudflare Tunnel'}
+                    {provider.providerType === "caddy"
+                      ? "Caddy Reverse Proxy"
+                      : "Cloudflare Tunnel"}
                   </p>
                 </div>
 
@@ -507,17 +638,19 @@ function ProvidersSection() {
                     disabled={checkingSetup[provider.id]}
                     className="rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground disabled:opacity-40"
                   >
-                    {checkingSetup[provider.id] ? 'Checking…' : 'Check setup'}
+                    {checkingSetup[provider.id] ? "Checking…" : "Check setup"}
                   </button>
                   <button
-                    onClick={() => setModalState({ mode: 'edit', provider })}
+                    onClick={() => setModalState({ mode: "edit", provider })}
                     className="rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
                   >
                     Edit
                   </button>
                   {deletingProviderId === provider.id ? (
                     <div className="flex items-center gap-1.5 pl-1">
-                      <span className="text-xs text-muted-foreground">Delete?</span>
+                      <span className="text-xs text-muted-foreground">
+                        Delete?
+                      </span>
                       <button
                         onClick={() => setDeletingProviderId(null)}
                         className="text-xs text-muted-foreground transition-colors hover:text-muted-foreground"
@@ -529,7 +662,7 @@ function ProvidersSection() {
                         disabled={deleteProvider.isPending}
                         className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2.5 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
                       >
-                        {deleteProvider.isPending ? 'Deleting…' : 'Confirm'}
+                        {deleteProvider.isPending ? "Deleting…" : "Confirm"}
                       </button>
                     </div>
                   ) : (
@@ -542,7 +675,9 @@ function ProvidersSection() {
                   )}
                 </div>
               </div>
-              {setupResults[provider.id] && <SetupCheckDisplay result={setupResults[provider.id]} />}
+              {setupResults[provider.id] && (
+                <SetupCheckDisplay result={setupResults[provider.id]} />
+              )}
             </div>
           ))}
         </div>
@@ -560,10 +695,12 @@ function ProvidersSection() {
       {/* Modal */}
       {modalState && (
         <ProviderModal
-          provider={modalState.mode === 'edit' ? modalState.provider : undefined}
+          provider={
+            modalState.mode === "edit" ? modalState.provider : undefined
+          }
           onClose={() => setModalState(null)}
           onSave={(data) => {
-            if (modalState.mode === 'add') createProvider.mutate(data);
+            if (modalState.mode === "add") createProvider.mutate(data);
             else updateProvider.mutate({ id: modalState.provider.id, data });
           }}
           isPending={modalIsPending}
@@ -585,7 +722,7 @@ function GroupsSection() {
   const reorderProjects = useReorderProjects();
 
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
+  const [editingName, setEditingName] = useState("");
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
 
   const getGroupProjects = (groupId: string) =>
@@ -606,21 +743,27 @@ function GroupsSection() {
   };
 
   const handleNewGroup = async () => {
-    const group = await createGroup.mutateAsync('New Group');
+    const group = await createGroup.mutateAsync("New Group");
     startEdit(group);
   };
 
   const moveGroupUp = (index: number) => {
     if (index === 0) return;
     const newOrder = [...groups];
-    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    [newOrder[index - 1], newOrder[index]] = [
+      newOrder[index],
+      newOrder[index - 1],
+    ];
     reorderGroups.mutate(newOrder.map((g) => g.id));
   };
 
   const moveGroupDown = (index: number) => {
     if (index === groups.length - 1) return;
     const newOrder = [...groups];
-    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    [newOrder[index], newOrder[index + 1]] = [
+      newOrder[index + 1],
+      newOrder[index],
+    ];
     reorderGroups.mutate(newOrder.map((g) => g.id));
   };
 
@@ -628,31 +771,51 @@ function GroupsSection() {
     if (projectIndex === 0) return;
     const gProjects = getGroupProjects(groupId);
     const newOrder = [...gProjects];
-    [newOrder[projectIndex - 1], newOrder[projectIndex]] = [newOrder[projectIndex], newOrder[projectIndex - 1]];
-    reorderProjects.mutate(newOrder.map((p, i) => ({ id: p.id, groupId, sortOrder: i })));
+    [newOrder[projectIndex - 1], newOrder[projectIndex]] = [
+      newOrder[projectIndex],
+      newOrder[projectIndex - 1],
+    ];
+    reorderProjects.mutate(
+      newOrder.map((p, i) => ({ id: p.id, groupId, sortOrder: i })),
+    );
   };
 
   const moveProjectDown = (groupId: string, projectIndex: number) => {
     const gProjects = getGroupProjects(groupId);
     if (projectIndex === gProjects.length - 1) return;
     const newOrder = [...gProjects];
-    [newOrder[projectIndex], newOrder[projectIndex + 1]] = [newOrder[projectIndex + 1], newOrder[projectIndex]];
-    reorderProjects.mutate(newOrder.map((p, i) => ({ id: p.id, groupId, sortOrder: i })));
+    [newOrder[projectIndex], newOrder[projectIndex + 1]] = [
+      newOrder[projectIndex + 1],
+      newOrder[projectIndex],
+    ];
+    reorderProjects.mutate(
+      newOrder.map((p, i) => ({ id: p.id, groupId, sortOrder: i })),
+    );
   };
 
-  const moveProjectToGroup = (project: Project, targetGroupId: string | null) => {
+  const moveProjectToGroup = (
+    project: Project,
+    targetGroupId: string | null,
+  ) => {
     const targetProjects = projects.filter((p) => p.groupId === targetGroupId);
-    reorderProjects.mutate([{ id: project.id, groupId: targetGroupId, sortOrder: targetProjects.length }]);
+    reorderProjects.mutate([
+      {
+        id: project.id,
+        groupId: targetGroupId,
+        sortOrder: targetProjects.length,
+      },
+    ]);
   };
 
   const dotColor: Record<string, string> = {
-    running: '#4ade80',
-    stopped: 'rgba(255,255,255,0.20)',
-    starting: '#facc15',
-    error: '#f87171',
+    running: "#4ade80",
+    stopped: "rgba(255,255,255,0.20)",
+    starting: "#facc15",
+    error: "#f87171",
   };
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (isLoading)
+    return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   return (
     <div>
@@ -672,7 +835,9 @@ function GroupsSection() {
           <div className="mb-3 flex justify-center">
             <Layers className="h-8 w-8 text-muted-foreground/40" />
           </div>
-          <p className="text-sm text-muted-foreground">Groups help you organize your projects.</p>
+          <p className="text-sm text-muted-foreground">
+            Groups help you organize your projects.
+          </p>
         </div>
       ) : (
         <div className="space-y-0">
@@ -683,7 +848,9 @@ function GroupsSection() {
 
             return (
               <div key={group.id}>
-                <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 ${groupIndex === 0 ? '' : 'mt-1'} bg-accent/80 border border-white/[0.24]`}>
+                <div
+                  className={`flex items-center gap-2 rounded-xl px-3 py-2.5 ${groupIndex === 0 ? "" : "mt-1"} bg-accent/80 border border-white/[0.24]`}
+                >
                   <div className="flex flex-col">
                     <button
                       onClick={() => moveGroupUp(groupIndex)}
@@ -707,13 +874,21 @@ function GroupsSection() {
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
                       onBlur={() => commitEdit(group)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(group); if (e.key === 'Escape') setEditingGroupId(null); }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitEdit(group);
+                        if (e.key === "Escape") setEditingGroupId(null);
+                      }}
                       className="flex-1 rounded-lg border border-primary/[0.4] bg-primary/[0.06] px-2 py-0.5 text-sm text-foreground outline-none"
                     />
                   ) : (
                     <div className="flex flex-1 items-center gap-2 min-w-0">
-                      <span className="truncate text-sm font-medium text-foreground">{group.name}</span>
-                      <button onClick={() => startEdit(group)} className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {group.name}
+                      </span>
+                      <button
+                        onClick={() => startEdit(group)}
+                        className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      >
                         <Pencil className="h-3 w-3" />
                       </button>
                     </div>
@@ -725,10 +900,20 @@ function GroupsSection() {
 
                   {isDeleting ? (
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="text-xs text-muted-foreground">Projects will become ungrouped.</span>
-                      <button onClick={() => setDeletingGroupId(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors">Cancel</button>
+                      <span className="text-xs text-muted-foreground">
+                        Projects will become ungrouped.
+                      </span>
                       <button
-                        onClick={() => { deleteGroup.mutate(group.id); setDeletingGroupId(null); }}
+                        onClick={() => setDeletingGroupId(null)}
+                        className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          deleteGroup.mutate(group.id);
+                          setDeletingGroupId(null);
+                        }}
                         disabled={deleteGroup.isPending}
                         className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2.5 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
                       >
@@ -748,17 +933,24 @@ function GroupsSection() {
                 {gProjects.length > 0 && (
                   <div className="ml-6 border-l border-white/[0.24] pl-3 mt-0.5 space-y-0.5 mb-1">
                     {gProjects.map((project, projectIndex) => (
-                      <div key={project.id} className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-accent/50 transition-colors">
+                      <div
+                        key={project.id}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-accent/50 transition-colors"
+                      >
                         <div className="flex flex-col">
                           <button
-                            onClick={() => moveProjectUp(group.id, projectIndex)}
+                            onClick={() =>
+                              moveProjectUp(group.id, projectIndex)
+                            }
                             disabled={projectIndex === 0}
                             className="text-muted-foreground hover:text-muted-foreground disabled:opacity-20 transition-colors leading-none"
                           >
                             <ChevronUp className="h-3 w-3" />
                           </button>
                           <button
-                            onClick={() => moveProjectDown(group.id, projectIndex)}
+                            onClick={() =>
+                              moveProjectDown(group.id, projectIndex)
+                            }
                             disabled={projectIndex === gProjects.length - 1}
                             className="text-muted-foreground hover:text-muted-foreground disabled:opacity-20 transition-colors leading-none"
                           >
@@ -768,14 +960,23 @@ function GroupsSection() {
 
                         <span
                           className="h-1.5 w-1.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: dotColor[project.status] ?? 'rgba(255,255,255,0.20)' }}
+                          style={{
+                            backgroundColor:
+                              dotColor[project.status] ??
+                              "rgba(255,255,255,0.20)",
+                          }}
                         />
-                        <span className="flex-1 truncate text-sm text-muted-foreground">{project.name}</span>
+                        <span className="flex-1 truncate text-sm text-muted-foreground">
+                          {project.name}
+                        </span>
 
                         <select
-                          value={project.groupId ?? '__ungrouped__'}
+                          value={project.groupId ?? "__ungrouped__"}
                           onChange={(e) => {
-                            const target = e.target.value === '__ungrouped__' ? null : e.target.value;
+                            const target =
+                              e.target.value === "__ungrouped__"
+                                ? null
+                                : e.target.value;
                             moveProjectToGroup(project, target);
                           }}
                           className="appearance-none rounded-lg border border-white/[0.22] bg-transparent px-2 py-0.5 text-xs text-muted-foreground hover:border-white/[0.26] transition-colors cursor-pointer"
@@ -784,7 +985,9 @@ function GroupsSection() {
                           {groups
                             .filter((g) => g.id !== group.id)
                             .map((g) => (
-                              <option key={g.id} value={g.id}>{g.name}</option>
+                              <option key={g.id} value={g.id}>
+                                {g.name}
+                              </option>
                             ))}
                           <option value="__ungrouped__">(ungrouped)</option>
                         </select>
@@ -814,18 +1017,20 @@ function DataSection() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const res = await fetch('/api/settings/export', { credentials: 'include' });
-      if (!res.ok) throw new Error('Export failed');
+      const res = await fetch("/api/settings/export", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const date = new Date().toISOString().slice(0, 10);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `labrador-backup-${date}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      toast.error('Export failed. Please try again.');
+      toast.error("Export failed. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -845,26 +1050,29 @@ function DataSection() {
     try {
       const text = await importFile.text();
       const json = JSON.parse(text);
-      const res = await fetch('/api/settings/import', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/settings/import", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(json),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? 'Import failed');
+        throw new Error(body.error ?? "Import failed");
       }
-      toast.success('Backup restored.');
+      toast.success("Backup restored.");
       window.location.reload();
     } catch (err: any) {
-      if (err.message?.includes('Invalid backup') || err.message?.includes('JSON')) {
+      if (
+        err.message?.includes("Invalid backup") ||
+        err.message?.includes("JSON")
+      ) {
         setImportError("That file doesn't look like a valid Labrador backup.");
       } else {
-        setImportError(err.message || 'Import failed. Please try again.');
+        setImportError(err.message || "Import failed. Please try again.");
       }
       setImportFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } finally {
       setIsImporting(false);
       setImportConfirming(false);
@@ -875,32 +1083,40 @@ function DataSection() {
     <div className="space-y-8">
       {/* Export */}
       <div>
-        <p className="text-sm font-medium text-muted-foreground mb-3">Export backup</p>
+        <p className="text-sm font-medium text-muted-foreground mb-3">
+          Export backup
+        </p>
         <button
           onClick={handleExport}
           disabled={isExporting}
           className="rounded-xl border border-white/[0.15] px-4 py-1.5 text-sm text-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
         >
-          {isExporting ? 'Exporting…' : 'Export backup'}
+          {isExporting ? "Exporting…" : "Export backup"}
         </button>
       </div>
 
       {/* Import */}
       <div>
-        <p className="text-sm font-medium text-muted-foreground mb-3">Restore from backup</p>
+        <p className="text-sm font-medium text-muted-foreground mb-3">
+          Restore from backup
+        </p>
 
         <div
-          onClick={() => { if (!isImporting && !importFile) fileInputRef.current?.click(); }}
+          onClick={() => {
+            if (!isImporting && !importFile) fileInputRef.current?.click();
+          }}
           className={`rounded-2xl border border-dashed px-6 transition-colors ${
             importFile
-              ? 'flex items-center py-5 cursor-default border-white/[0.26]'
-              : 'flex flex-col items-center justify-center gap-2 py-8 cursor-pointer border-white/[0.15] hover:border-white/[0.25] hover:bg-accent/50'
+              ? "flex items-center py-5 cursor-default border-white/[0.26]"
+              : "flex flex-col items-center justify-center gap-2 py-8 cursor-pointer border-white/[0.15] hover:border-white/[0.25] hover:bg-accent/50"
           }`}
         >
           {importFile ? (
             <>
               <FileCheck className="h-4 w-4 shrink-0 text-[#4ade80]" />
-              <span className="ml-3 flex-1 truncate text-sm text-foreground">{importFile.name}</span>
+              <span className="ml-3 flex-1 truncate text-sm text-foreground">
+                {importFile.name}
+              </span>
               <button
                 type="button"
                 disabled={isImporting}
@@ -909,7 +1125,7 @@ function DataSection() {
                   setImportFile(null);
                   setImportConfirming(false);
                   setImportError(null);
-                  if (fileInputRef.current) fileInputRef.current.value = '';
+                  if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
                 className="ml-3 shrink-0 text-muted-foreground/50 transition-colors hover:text-muted-foreground disabled:opacity-40"
               >
@@ -918,8 +1134,12 @@ function DataSection() {
             </>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">Choose a backup file</p>
-              <p className="text-xs text-muted-foreground/50">Click to browse</p>
+              <p className="text-sm text-muted-foreground">
+                Choose a backup file
+              </p>
+              <p className="text-xs text-muted-foreground/50">
+                Click to browse
+              </p>
             </>
           )}
         </div>
@@ -935,7 +1155,8 @@ function DataSection() {
         {importFile && !importConfirming && (
           <div className="mt-4 space-y-3">
             <p className="text-sm text-[rgba(248,113,113,0.85)]">
-              This will replace all projects, providers, and settings. Your current data cannot be recovered.
+              This will replace all projects, providers, and settings. Your
+              current data cannot be recovered.
             </p>
             <button
               onClick={() => setImportConfirming(true)}
@@ -949,7 +1170,9 @@ function DataSection() {
         {/* Two-step confirmation */}
         {importConfirming && (
           <div className="mt-4 flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">Replace everything?</span>
+            <span className="text-sm text-muted-foreground">
+              Replace everything?
+            </span>
             <button
               onClick={() => setImportConfirming(false)}
               className="text-sm text-muted-foreground transition-colors hover:text-muted-foreground"
@@ -961,13 +1184,15 @@ function DataSection() {
               disabled={isImporting}
               className="rounded-xl border border-[rgba(248,113,113,0.36)] px-4 py-1.5 text-sm text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
             >
-              {isImporting ? 'Importing…' : 'Yes, replace it'}
+              {isImporting ? "Importing…" : "Yes, replace it"}
             </button>
           </div>
         )}
 
         {importError && (
-          <p className="mt-3 text-sm text-[rgba(248,113,113,0.85)]">{importError}</p>
+          <p className="mt-3 text-sm text-[rgba(248,113,113,0.85)]">
+            {importError}
+          </p>
         )}
       </div>
     </div>
@@ -992,7 +1217,10 @@ function AccountSection() {
 
   const changePassword = useMutation({
     mutationFn: (data: ChangePasswordInput) =>
-      api.put('/auth/password', { currentPassword: data.currentPassword, newPassword: data.newPassword }),
+      api.put("/auth/password", {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      }),
     onSuccess: () => {
       reset();
       setSuccessVisible(true);
@@ -1001,43 +1229,73 @@ function AccountSection() {
     },
     onError: (err: any) => {
       if (err?.status === 401) {
-        setError('currentPassword', { message: 'That password is incorrect.' });
+        setError("currentPassword", { message: "That password is incorrect." });
       } else {
-        toast.error(err?.message ?? 'Failed to update password');
+        toast.error(err?.message ?? "Failed to update password");
       }
     },
   });
 
   return (
-    <form onSubmit={handleSubmit((data) => changePassword.mutate(data))} className="space-y-4 max-w-sm">
+    <form
+      onSubmit={handleSubmit((data) => changePassword.mutate(data))}
+      className="space-y-4 max-w-sm"
+    >
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Current password</label>
-        <input type="password" autoComplete="current-password" className={inputCls} {...register('currentPassword')} />
+        <label className="text-xs font-medium text-muted-foreground">
+          Current password
+        </label>
+        <input
+          type="password"
+          autoComplete="current-password"
+          className={inputCls}
+          {...register("currentPassword")}
+        />
         {errors.currentPassword && (
-          <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.currentPassword.message}</p>
+          <p className="text-xs text-[rgba(254,202,202,0.85)]">
+            {errors.currentPassword.message}
+          </p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">New password</label>
-        <input type="password" autoComplete="new-password" className={inputCls} {...register('newPassword')} />
+        <label className="text-xs font-medium text-muted-foreground">
+          New password
+        </label>
+        <input
+          type="password"
+          autoComplete="new-password"
+          className={inputCls}
+          {...register("newPassword")}
+        />
         {errors.newPassword && (
-          <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.newPassword.message}</p>
+          <p className="text-xs text-[rgba(254,202,202,0.85)]">
+            {errors.newPassword.message}
+          </p>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Confirm new password</label>
-        <input type="password" autoComplete="new-password" className={inputCls} {...register('confirmPassword')} />
+        <label className="text-xs font-medium text-muted-foreground">
+          Confirm new password
+        </label>
+        <input
+          type="password"
+          autoComplete="new-password"
+          className={inputCls}
+          {...register("confirmPassword")}
+        />
         {errors.confirmPassword && (
-          <p className="text-xs text-[rgba(254,202,202,0.85)]">{errors.confirmPassword.message}</p>
+          <p className="text-xs text-[rgba(254,202,202,0.85)]">
+            {errors.confirmPassword.message}
+          </p>
         )}
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-1">
         <span
           className={`flex items-center gap-1.5 text-sm text-[#4ade80] transition-opacity duration-300 ${
-            successVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            successVisible ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
           <CheckCircle2 className="h-3.5 w-3.5" />
@@ -1048,7 +1306,9 @@ function AccountSection() {
           disabled={isSubmitting || changePassword.isPending}
           className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
         >
-          {isSubmitting || changePassword.isPending ? 'Saving…' : 'Update password'}
+          {isSubmitting || changePassword.isPending
+            ? "Saving…"
+            : "Update password"}
         </button>
       </div>
     </form>
@@ -1058,7 +1318,7 @@ function AccountSection() {
 // ─── main page ────────────────────────────────────────────────────────────────
 
 export function Settings() {
-  const [activeSection, setActiveSection] = useState<SectionId>('groups');
+  const [activeSection, setActiveSection] = useState<SectionId>("groups");
 
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
@@ -1066,8 +1326,10 @@ export function Settings() {
       const el = document.getElementById(id);
       if (!el) return;
       const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
-        { rootMargin: '-30% 0px -60% 0px', threshold: 0 },
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveSection(id);
+        },
+        { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
       );
       obs.observe(el);
       observers.push(obs);
@@ -1083,21 +1345,38 @@ export function Settings() {
       <AnchorNav active={activeSection} />
 
       <div className="px-6 pb-6">
-      <Section id="groups" heading="Project Groups" description="Organize your projects into named groups." first>
-        <GroupsSection />
-      </Section>
+        <Section
+          id="groups"
+          heading="Project Groups"
+          description="Organize your projects into named groups."
+          first
+        >
+          <GroupsSection />
+        </Section>
 
-      <Section id="account" heading="Account" description="Change your login credentials.">
-        <AccountSection />
-      </Section>
+        <Section
+          id="account"
+          heading="Account"
+          description="Change your login credentials."
+        >
+          <AccountSection />
+        </Section>
 
-      <Section id="providers" heading="Exposure Providers" description="Configure how your services are exposed to the internet.">
-        <ProvidersSection />
-      </Section>
+        <Section
+          id="providers"
+          heading="Exposure Providers"
+          description="Configure how your services are exposed to the internet."
+        >
+          <ProvidersSection />
+        </Section>
 
-      <Section id="data" heading="Data" description="Back up or restore your Labrador configuration — projects, providers, and settings.">
-        <DataSection />
-      </Section>
+        <Section
+          id="data"
+          heading="Data"
+          description="Back up or restore your Labrador configuration — projects, providers, and settings."
+        >
+          <DataSection />
+        </Section>
       </div>
     </div>
   );

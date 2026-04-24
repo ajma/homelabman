@@ -1,22 +1,32 @@
-import { useState } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Network, HardDrive, Settings, LogOut, Plus, Menu, X, Container, ChevronDown, ChevronRight, Box } from 'lucide-react';
-import { api } from '../lib/api';
-import { useQueryClient } from '@tanstack/react-query';
-import { useProjects } from '../hooks/useProjects';
-import { useGroups } from '../hooks/useGroups';
-import type { ProjectGroup } from '@shared/types';
+import { useState } from "react";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Network,
+  HardDrive,
+  Settings,
+  LogOut,
+  Plus,
+  Menu,
+  X,
+  Container,
+  ChevronDown,
+  ChevronRight,
+  Box,
+} from "lucide-react";
+import { api } from "../lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { useProjects } from "../hooks/useProjects";
+import { useGroups } from "../hooks/useGroups";
+import type { ProjectGroup } from "@shared/types";
 
-const topNavItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-];
+const topNavItems = [{ to: "/", icon: LayoutDashboard, label: "Dashboard" }];
 
 const dockerNavItems = [
-  { to: '/containers', icon: Box, label: 'Containers' },
-  { to: '/images', icon: HardDrive, label: 'Images' },
-  { to: '/networks', icon: Network, label: 'Networks' },
+  { to: "/containers", icon: Box, label: "Containers" },
+  { to: "/images", icon: HardDrive, label: "Images" },
+  { to: "/networks", icon: Network, label: "Networks" },
 ];
-
 
 function NavItem({
   item,
@@ -28,13 +38,13 @@ function NavItem({
   return (
     <NavLink
       to={item.to}
-      end={item.to === '/'}
+      end={item.to === "/"}
       onClick={onNavClick}
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all ${
           isActive
-            ? 'bg-primary/[0.12] text-primary shadow-[inset_2px_0_0_hsl(var(--primary))]'
-            : 'text-muted-foreground hover:text-muted-foreground hover:bg-accent'
+            ? "bg-primary/[0.12] text-primary shadow-[inset_2px_0_0_hsl(var(--primary))]"
+            : "text-muted-foreground hover:text-muted-foreground hover:bg-accent"
         }`
       }
     >
@@ -56,11 +66,16 @@ function SidebarContent({
   onNavClick?: () => void;
 }) {
   const location = useLocation();
-  const isDockerRoute = dockerNavItems.some((item) => location.pathname === item.to);
+  const isDockerRoute = dockerNavItems.some(
+    (item) => location.pathname === item.to,
+  );
   const [dockerOpen, setDockerOpen] = useState(isDockerRoute);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
 
-  const allCollapsed = groups.length > 0 && collapsedGroups.size === groups.length;
+  const allCollapsed =
+    groups.length > 0 && collapsedGroups.size === groups.length;
 
   const toggleGroup = (id: string) => {
     setCollapsedGroups((prev) => {
@@ -81,7 +96,9 @@ function SidebarContent({
       <div className="flex h-14 items-center border-b border-border px-4">
         <h1 className="text-lg font-semibold text-primary">
           Labrador
-          <span className="ml-1.5 text-2xs font-normal text-muted-foreground">v{__APP_VERSION__}</span>
+          <span className="ml-1.5 text-2xs font-normal text-muted-foreground">
+            v{__APP_VERSION__}
+          </span>
         </h1>
       </div>
       <nav className="flex-1 overflow-y-auto p-2">
@@ -95,8 +112,8 @@ function SidebarContent({
             onClick={() => setDockerOpen(!dockerOpen)}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all ${
               isDockerRoute
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-muted-foreground hover:bg-accent'
+                ? "text-primary"
+                : "text-muted-foreground hover:text-muted-foreground hover:bg-accent"
             }`}
           >
             <Container className="h-4 w-4 shrink-0" />
@@ -114,7 +131,6 @@ function SidebarContent({
               ))}
             </div>
           )}
-
         </div>
 
         {/* Projects section */}
@@ -128,7 +144,7 @@ function SidebarContent({
                 <button
                   onClick={toggleAll}
                   className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground transition-all"
-                  title={allCollapsed ? 'Expand all' : 'Collapse all'}
+                  title={allCollapsed ? "Expand all" : "Collapse all"}
                 >
                   {allCollapsed ? (
                     <ChevronRight className="h-3.5 w-3.5" />
@@ -150,17 +166,23 @@ function SidebarContent({
 
           {(() => {
             if (!projects || projects.length === 0) {
-              return <p className="px-3 py-2 text-xs text-muted-foreground">No projects yet</p>;
+              return (
+                <p className="px-3 py-2 text-xs text-muted-foreground">
+                  No projects yet
+                </p>
+              );
             }
 
             const dotColor: Record<string, string> = {
-              running: '#4ade80',
-              stopped: 'rgba(255,255,255,0.20)',
-              starting: '#facc15',
-              error: '#f87171',
+              running: "#4ade80",
+              stopped: "rgba(255,255,255,0.20)",
+              starting: "#facc15",
+              error: "#f87171",
             };
 
-            const sorted = [...projects].sort((a: any, b: any) => a.sortOrder - b.sortOrder);
+            const sorted = [...projects].sort(
+              (a: any, b: any) => a.sortOrder - b.sortOrder,
+            );
             const ungrouped = sorted.filter((p: any) => p.groupId === null);
 
             const renderProject = (project: any) => (
@@ -171,14 +193,17 @@ function SidebarContent({
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all ${
                     isActive
-                      ? 'bg-primary/[0.12] text-primary shadow-[inset_2px_0_0_hsl(var(--primary))]'
-                      : 'text-muted-foreground hover:text-muted-foreground hover:bg-accent'
+                      ? "bg-primary/[0.12] text-primary shadow-[inset_2px_0_0_hsl(var(--primary))]"
+                      : "text-muted-foreground hover:text-muted-foreground hover:bg-accent"
                   }`
                 }
               >
                 <span
                   className="h-2 w-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: dotColor[project.status] ?? 'rgba(255,255,255,0.20)' }}
+                  style={{
+                    backgroundColor:
+                      dotColor[project.status] ?? "rgba(255,255,255,0.20)",
+                  }}
                 />
                 <span className="truncate">{project.name}</span>
               </NavLink>
@@ -189,7 +214,9 @@ function SidebarContent({
                 {ungrouped.map(renderProject)}
 
                 {groups.map((group) => {
-                  const gProjects = sorted.filter((p: any) => p.groupId === group.id);
+                  const gProjects = sorted.filter(
+                    (p: any) => p.groupId === group.id,
+                  );
                   if (gProjects.length === 0) return null;
                   const collapsed = collapsedGroups.has(group.id);
                   return (
@@ -219,7 +246,10 @@ function SidebarContent({
         </div>
       </nav>
       <div className="border-t border-border p-2 space-y-0.5">
-        <NavItem item={{ to: '/settings', icon: Settings, label: 'Settings' }} onNavClick={onNavClick} />
+        <NavItem
+          item={{ to: "/settings", icon: Settings, label: "Settings" }}
+          onNavClick={onNavClick}
+        />
         <button
           onClick={onLogout}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-muted-foreground"
@@ -240,8 +270,8 @@ export function Layout() {
 
   const handleLogout = async () => {
     setMobileOpen(false);
-    await api.post('/auth/logout');
-    queryClient.invalidateQueries({ queryKey: ['auth'] });
+    await api.post("/auth/logout");
+    queryClient.invalidateQueries({ queryKey: ["auth"] });
   };
 
   return (
@@ -257,7 +287,9 @@ export function Layout() {
         </button>
         <h1 className="ml-3 text-lg font-semibold text-primary">
           Labrador
-          <span className="ml-1.5 text-2xs font-normal text-muted-foreground">v{__APP_VERSION__}</span>
+          <span className="ml-1.5 text-2xs font-normal text-muted-foreground">
+            v{__APP_VERSION__}
+          </span>
         </h1>
       </header>
 
@@ -290,7 +322,11 @@ export function Layout() {
 
       {/* Desktop sidebar */}
       <aside className="hidden w-64 flex-col border-r border-border bg-accent/40 md:flex">
-        <SidebarContent projects={projects} groups={groups} onLogout={handleLogout} />
+        <SidebarContent
+          projects={projects}
+          groups={groups}
+          onLogout={handleLogout}
+        />
       </aside>
 
       <main className="flex-1 overflow-auto">

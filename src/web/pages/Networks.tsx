@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Network, ChevronDown } from 'lucide-react';
-import { TablePagination } from '../components/TablePagination';
-import { toast } from 'sonner';
-import { api } from '../lib/api';
-import { selectCls } from '../lib/styles';
-import { Input } from '../components/ui/input';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Trash2, Network, ChevronDown } from "lucide-react";
+import { TablePagination } from "../components/TablePagination";
+import { toast } from "sonner";
+import { api } from "../lib/api";
+import { selectCls } from "../lib/styles";
+import { Input } from "../components/ui/input";
 
 interface DockerNetwork {
   Id: string;
@@ -22,21 +22,23 @@ function formatDate(dateStr: string): string {
 
 function useNetworks(page: number, pageSize: number) {
   return useQuery<{ data: DockerNetwork[]; total: number }>({
-    queryKey: ['networks', page, pageSize],
-    queryFn: () => api.get(`/docker/networks?page=${page}&pageSize=${pageSize}`),
+    queryKey: ["networks", page, pageSize],
+    queryFn: () =>
+      api.get(`/docker/networks?page=${page}&pageSize=${pageSize}`),
   });
 }
 
 function useCreateNetwork() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name: string; driver?: string }) => api.post('/docker/networks', data),
+    mutationFn: (data: { name: string; driver?: string }) =>
+      api.post("/docker/networks", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['networks'] });
-      toast.success('Network created');
+      queryClient.invalidateQueries({ queryKey: ["networks"] });
+      toast.success("Network created");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create network');
+      toast.error(error.message || "Failed to create network");
     },
   });
 }
@@ -46,30 +48,39 @@ function useDeleteNetwork() {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/docker/networks/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['networks'] });
-      toast.success('Network removed');
+      queryClient.invalidateQueries({ queryKey: ["networks"] });
+      toast.success("Network removed");
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to remove network');
+      toast.error(error.message || "Failed to remove network");
     },
   });
 }
 
-const DRIVER_OPTIONS = ['bridge', 'overlay', 'macvlan', 'host', 'none'] as const;
-
+const DRIVER_OPTIONS = [
+  "bridge",
+  "overlay",
+  "macvlan",
+  "host",
+  "none",
+] as const;
 
 const driverStyles: Record<string, string> = {
-  bridge: 'bg-primary/[0.10] text-primary border-primary/[0.25]',
-  overlay: 'bg-primary/[0.08] text-primary/[0.85] border-primary/[0.20]',
-  macvlan: 'bg-[rgba(74,222,128,0.08)] text-[rgba(74,222,128,0.85)] border-[rgba(74,222,128,0.20)]',
-  host: 'bg-[rgba(250,204,21,0.08)] text-[#facc15] border-[rgba(250,204,21,0.20)]',
-  none: 'bg-accent text-muted-foreground border-border',
+  bridge: "bg-primary/[0.10] text-primary border-primary/[0.25]",
+  overlay: "bg-primary/[0.08] text-primary/[0.85] border-primary/[0.20]",
+  macvlan:
+    "bg-[rgba(74,222,128,0.08)] text-[rgba(74,222,128,0.85)] border-[rgba(74,222,128,0.20)]",
+  host: "bg-[rgba(250,204,21,0.08)] text-[#facc15] border-[rgba(250,204,21,0.20)]",
+  none: "bg-accent text-muted-foreground border-border",
 };
 
 function DriverBadge({ driver }: { driver: string }) {
-  const cls = driverStyles[driver] ?? 'bg-muted text-muted-foreground border-border';
+  const cls =
+    driverStyles[driver] ?? "bg-muted text-muted-foreground border-border";
   return (
-    <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-medium ${cls}`}>
+    <span
+      className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-medium ${cls}`}
+    >
       {driver}
     </span>
   );
@@ -87,8 +98,8 @@ function ContainerCountBadge({ network }: { network: DockerNetwork }) {
 
 export function Networks() {
   const [isCreating, setIsCreating] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newDriver, setNewDriver] = useState('bridge');
+  const [newName, setNewName] = useState("");
+  const [newDriver, setNewDriver] = useState("bridge");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -105,8 +116,8 @@ export function Networks() {
       { name: newName.trim(), driver: newDriver },
       {
         onSuccess: () => {
-          setNewName('');
-          setNewDriver('bridge');
+          setNewName("");
+          setNewDriver("bridge");
           setIsCreating(false);
         },
       },
@@ -131,10 +142,15 @@ export function Networks() {
       {/* Create Network Form */}
       {isCreating && (
         <div className="rounded-2xl border border-white/[0.22] bg-accent/50 p-5">
-          <h3 className="mb-4 text-md font-medium text-foreground">Create Network</h3>
+          <h3 className="mb-4 text-md font-medium text-foreground">
+            Create Network
+          </h3>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="network-name" className="text-xs font-medium text-muted-foreground">
+              <label
+                htmlFor="network-name"
+                className="text-xs font-medium text-muted-foreground"
+              >
                 Network Name
               </label>
               <Input
@@ -142,11 +158,14 @@ export function Networks() {
                 placeholder="e.g. my-network"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="network-driver" className="text-xs font-medium text-muted-foreground">
+              <label
+                htmlFor="network-driver"
+                className="text-xs font-medium text-muted-foreground"
+              >
                 Driver
               </label>
               <div className="relative">
@@ -157,7 +176,9 @@ export function Networks() {
                   onChange={(e) => setNewDriver(e.target.value)}
                 >
                   {DRIVER_OPTIONS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
                   ))}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -166,7 +187,11 @@ export function Networks() {
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button
-              onClick={() => { setIsCreating(false); setNewName(''); setNewDriver('bridge'); }}
+              onClick={() => {
+                setIsCreating(false);
+                setNewName("");
+                setNewDriver("bridge");
+              }}
               className="rounded-xl px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
             >
               Cancel
@@ -176,7 +201,7 @@ export function Networks() {
               disabled={!newName.trim() || createNetwork.isPending}
               className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
-              {createNetwork.isPending ? 'Creating…' : 'Create'}
+              {createNetwork.isPending ? "Creating…" : "Create"}
             </button>
           </div>
         </div>
@@ -186,7 +211,10 @@ export function Networks() {
       {isLoading && (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]" />
+            <div
+              key={i}
+              className="h-14 animate-pulse rounded-xl border border-primary/[0.08] bg-primary/[0.03]"
+            />
           ))}
         </div>
       )}
@@ -205,23 +233,44 @@ export function Networks() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.20] bg-accent/50">
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Name</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Driver</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Scope</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Created</th>
-                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Containers</th>
-                <th className="px-4 py-3 text-right text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Driver
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Scope
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Created
+                </th>
+                <th className="px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Containers
+                </th>
+                <th className="px-4 py-3 text-right text-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {networks.map((network) => (
-                <tr key={network.Id} className="border-b border-white/[0.24] last:border-0">
-                  <td className="px-4 py-3 text-sm font-medium text-foreground">{network.Name}</td>
+                <tr
+                  key={network.Id}
+                  className="border-b border-white/[0.24] last:border-0"
+                >
+                  <td className="px-4 py-3 text-sm font-medium text-foreground">
+                    {network.Name}
+                  </td>
                   <td className="px-4 py-3">
                     <DriverBadge driver={network.Driver} />
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{network.Scope}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(network.Created)}</td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {network.Scope}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {formatDate(network.Created)}
+                  </td>
                   <td className="px-4 py-3">
                     <ContainerCountBadge network={network} />
                   </td>
@@ -235,7 +284,10 @@ export function Networks() {
                           Cancel
                         </button>
                         <button
-                          onClick={() => { deleteNetwork.mutate(network.Id); setDeletingId(null); }}
+                          onClick={() => {
+                            deleteNetwork.mutate(network.Id);
+                            setDeletingId(null);
+                          }}
                           disabled={deleteNetwork.isPending}
                           className="rounded-lg border border-[rgba(248,113,113,0.36)] px-2 py-0.5 text-xs text-[rgba(254,202,202,0.85)] transition-colors hover:bg-[rgba(127,29,29,0.20)] disabled:opacity-40"
                         >

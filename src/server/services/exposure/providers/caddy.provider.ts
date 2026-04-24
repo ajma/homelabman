@@ -3,15 +3,15 @@ import type {
   ValidationResult,
   ProviderHealth,
   RouteStatus,
-} from '@shared/exposure/provider.interface.js';
-import { BaseProvider } from './base.provider.js';
+} from "@shared/exposure/provider.interface.js";
+import { BaseProvider } from "./base.provider.js";
 
 export class CaddyProvider extends BaseProvider {
-  readonly type = 'caddy';
-  readonly name = 'Caddy';
+  readonly type = "caddy";
+  readonly name = "Caddy";
 
   private get apiUrl(): string {
-    return (this.config.apiUrl as string) || 'http://localhost:2019';
+    return (this.config.apiUrl as string) || "http://localhost:2019";
   }
 
   private routeId(projectId: string): string {
@@ -23,14 +23,14 @@ export class CaddyProvider extends BaseProvider {
     const warnings: string[] = [];
 
     if (!config.apiUrl) {
-      warnings.push('No apiUrl set; defaulting to http://localhost:2019');
-    } else if (typeof config.apiUrl !== 'string') {
-      errors.push('apiUrl must be a string');
+      warnings.push("No apiUrl set; defaulting to http://localhost:2019");
+    } else if (typeof config.apiUrl !== "string") {
+      errors.push("apiUrl must be a string");
     } else {
       try {
         new URL(config.apiUrl);
       } catch {
-        errors.push('apiUrl is not a valid URL');
+        errors.push("apiUrl is not a valid URL");
       }
     }
 
@@ -48,24 +48,27 @@ export class CaddyProvider extends BaseProvider {
 
   async addRoute(route: ExposureRoute): Promise<void> {
     const id = this.routeId(route.projectId);
-    const targetHost = route.targetHost || 'localhost';
+    const targetHost = route.targetHost || "localhost";
 
     const caddyRoute = {
-      '@id': id,
+      "@id": id,
       match: [{ host: [route.domain] }],
       handle: [
         {
-          handler: 'reverse_proxy',
+          handler: "reverse_proxy",
           upstreams: [{ dial: `${targetHost}:${route.targetPort}` }],
         },
       ],
     };
 
-    const res = await fetch(`${this.apiUrl}/config/apps/http/servers/srv0/routes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(caddyRoute),
-    });
+    const res = await fetch(
+      `${this.apiUrl}/config/apps/http/servers/srv0/routes`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(caddyRoute),
+      },
+    );
 
     if (!res.ok) {
       const body = await res.text();
@@ -75,22 +78,22 @@ export class CaddyProvider extends BaseProvider {
 
   async updateRoute(route: ExposureRoute): Promise<void> {
     const id = this.routeId(route.projectId);
-    const targetHost = route.targetHost || 'localhost';
+    const targetHost = route.targetHost || "localhost";
 
     const caddyRoute = {
-      '@id': id,
+      "@id": id,
       match: [{ host: [route.domain] }],
       handle: [
         {
-          handler: 'reverse_proxy',
+          handler: "reverse_proxy",
           upstreams: [{ dial: `${targetHost}:${route.targetPort}` }],
         },
       ],
     };
 
     const res = await fetch(`${this.apiUrl}/id/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(caddyRoute),
     });
 
@@ -104,7 +107,7 @@ export class CaddyProvider extends BaseProvider {
     const id = this.routeId(routeId);
 
     const res = await fetch(`${this.apiUrl}/id/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
 
     if (!res.ok && res.status !== 404) {
@@ -120,12 +123,12 @@ export class CaddyProvider extends BaseProvider {
       const res = await fetch(`${this.apiUrl}/id/${id}`);
       if (res.ok) {
         const route = await res.json();
-        const domain = route?.match?.[0]?.host?.[0] || 'unknown';
-        return { active: true, domain, message: 'Route is active' };
+        const domain = route?.match?.[0]?.host?.[0] || "unknown";
+        return { active: true, domain, message: "Route is active" };
       }
-      return { active: false, domain: '', message: 'Route not found' };
+      return { active: false, domain: "", message: "Route not found" };
     } catch {
-      return { active: false, domain: '', message: 'Unable to reach Caddy' };
+      return { active: false, domain: "", message: "Unable to reach Caddy" };
     }
   }
 
@@ -134,7 +137,7 @@ export class CaddyProvider extends BaseProvider {
       const res = await fetch(`${this.apiUrl}/config/`);
       return {
         healthy: res.ok,
-        message: res.ok ? 'Caddy is reachable' : `Caddy returned ${res.status}`,
+        message: res.ok ? "Caddy is reachable" : `Caddy returned ${res.status}`,
         lastChecked: new Date(),
       };
     } catch (err: any) {

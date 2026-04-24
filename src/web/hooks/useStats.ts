@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/api';
-import { useWebSocket } from './useWebSocket';
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../lib/api";
+import { useWebSocket } from "./useWebSocket";
 
 export interface ContainerStats {
   containerId: string;
@@ -23,7 +23,7 @@ export function useRealtimeStats(projectId: string | undefined) {
     if (!projectId || !ws.connected) return;
 
     ws.subscribe(projectId);
-    const cleanup = ws.on('stats:update', (msg) => {
+    const cleanup = ws.on("stats:update", (msg) => {
       if (msg.projectId === projectId) {
         setStats(msg.containers);
       }
@@ -39,10 +39,11 @@ export function useRealtimeStats(projectId: string | undefined) {
 }
 
 /** Hook for historical stats */
-export function useProjectStats(projectId: string, range: string = '24h') {
+export function useProjectStats(projectId: string, range: string = "24h") {
   return useQuery({
-    queryKey: ['stats', projectId, range],
-    queryFn: () => api.get<any[]>(`/projects/${projectId}/stats?range=${range}`),
+    queryKey: ["stats", projectId, range],
+    queryFn: () =>
+      api.get<any[]>(`/projects/${projectId}/stats?range=${range}`),
     enabled: !!projectId,
     refetchInterval: 60000,
   });
@@ -51,7 +52,7 @@ export function useProjectStats(projectId: string, range: string = '24h') {
 /** Hook for uptime */
 export function useProjectUptime(projectId: string) {
   return useQuery({
-    queryKey: ['uptime', projectId],
+    queryKey: ["uptime", projectId],
     queryFn: () => api.get<{ uptime: number }>(`/projects/${projectId}/uptime`),
     enabled: !!projectId,
   });
