@@ -862,7 +862,9 @@ export function ProjectEditor() {
       {/* ── Two-column form (true 50/50) ── */}
       <form
         id="project-form"
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(onSubmit, (errs) =>
+          console.error("Form validation errors:", errs),
+        )}
         className="grid flex-1 grid-cols-1 lg:grid-cols-2"
       >
         {/* ── LEFT: Config ── */}
@@ -966,20 +968,29 @@ export function ProjectEditor() {
                     <label className="font-rubik text-xs font-medium text-muted-foreground">
                       Provider
                     </label>
-                    <div className="relative">
-                      <select
-                        {...register("exposureProviderId")}
-                        className={selectCls}
-                      >
-                        <option value="">Select a provider…</option>
-                        {availableProviders.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} ({p.providerType})
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    </div>
+                    <Controller
+                      name="exposureProviderId"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="relative">
+                          <select
+                            value={field.value ?? ""}
+                            onChange={(e) =>
+                              field.onChange(e.target.value || null)
+                            }
+                            className={selectCls}
+                          >
+                            <option value="">Select a provider…</option>
+                            {availableProviders.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name} ({p.providerType})
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        </div>
+                      )}
+                    />
                     {availableProviders.length === 0 && (
                       <p className="text-xs text-muted-foreground">
                         No providers configured.{" "}
