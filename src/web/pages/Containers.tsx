@@ -85,7 +85,7 @@ function StateBadge({ state }: { state: string }) {
 function useContainerAction(action: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) => {
+    mutationFn: ({ id }: { id: string; name: string }) => {
       if (action === "remove")
         return api.delete(`/docker/containers/${id}?force=true`);
       return api.post(`/docker/containers/${id}/${action}`, {});

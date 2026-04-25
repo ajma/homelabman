@@ -94,3 +94,99 @@ test("networks page renders network rows", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText("local")).toBeVisible();
 });
+
+test("stops a running container from containers page", async ({ page }) => {
+  await page.request.post("/api/test/mock/docker", {
+    data: {
+      containers: [
+        {
+          Id: "abc123def456",
+          Names: ["/nginx-proxy"],
+          Image: "nginx:latest",
+          State: "running",
+          Status: "Up 2 hours",
+          Created: 1700000000,
+          Ports: [{ PrivatePort: 80, PublicPort: 8080, Type: "tcp" }],
+          Labels: {},
+          ImageID: "sha256:abc",
+          Command: "nginx",
+          HostConfig: { NetworkMode: "bridge" },
+          NetworkSettings: { Networks: {} },
+          Mounts: [],
+        },
+      ],
+    },
+  });
+
+  await page.goto("/containers");
+  await expect(page.getByText("nginx-proxy")).toBeVisible();
+
+  const row = page.getByRole("row").filter({ hasText: "nginx-proxy" });
+  await row.getByTitle("Stop").click();
+
+  await expect(page.getByText("nginx-proxy stopped")).toBeVisible();
+});
+
+test("starts a stopped container from containers page", async ({ page }) => {
+  await page.request.post("/api/test/mock/docker", {
+    data: {
+      containers: [
+        {
+          Id: "abc123def456",
+          Names: ["/nginx-proxy"],
+          Image: "nginx:latest",
+          State: "exited",
+          Status: "Exited (0) 5 minutes ago",
+          Created: 1700000000,
+          Ports: [],
+          Labels: {},
+          ImageID: "sha256:abc",
+          Command: "nginx",
+          HostConfig: { NetworkMode: "bridge" },
+          NetworkSettings: { Networks: {} },
+          Mounts: [],
+        },
+      ],
+    },
+  });
+
+  await page.goto("/containers");
+  await expect(page.getByText("nginx-proxy")).toBeVisible();
+
+  const row = page.getByRole("row").filter({ hasText: "nginx-proxy" });
+  await row.getByRole("button", { name: "Start", exact: true }).click();
+
+  await expect(page.getByText("nginx-proxy started")).toBeVisible();
+});
+
+test("restarts a container from containers page", async ({ page }) => {
+  await page.request.post("/api/test/mock/docker", {
+    data: {
+      containers: [
+        {
+          Id: "abc123def456",
+          Names: ["/nginx-proxy"],
+          Image: "nginx:latest",
+          State: "running",
+          Status: "Up 2 hours",
+          Created: 1700000000,
+          Ports: [{ PrivatePort: 80, PublicPort: 8080, Type: "tcp" }],
+          Labels: {},
+          ImageID: "sha256:abc",
+          Command: "nginx",
+          HostConfig: { NetworkMode: "bridge" },
+          NetworkSettings: { Networks: {} },
+          Mounts: [],
+        },
+      ],
+    },
+  });
+
+  await page.goto("/containers");
+  await expect(page.getByText("nginx-proxy")).toBeVisible();
+
+  const row = page.getByRole("row").filter({ hasText: "nginx-proxy" });
+  await row.getByTitle("Restart").click();
+
+  await expect(page.getByText("nginx-proxy restarted")).toBeVisible();
+});
