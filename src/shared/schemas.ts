@@ -14,6 +14,26 @@ export const registerSchema = z.object({
   password: z.string().min(8).max(128),
 });
 
+export const configFileSchema = z.object({
+  filename: z
+    .string()
+    .min(1, "Filename is required")
+    .refine((f) => !f.includes("/") && !f.includes(".."), {
+      message: "Filename must not contain / or ..",
+    })
+    .refine(
+      (f) =>
+        ![
+          "docker-compose.yml",
+          "docker-compose.yaml",
+          "compose.yml",
+          "compose.yaml",
+        ].includes(f.toLowerCase()),
+      { message: "Reserved filename" },
+    ),
+  content: z.string(),
+});
+
 export const createProjectSchema = z.object({
   name: z.string().min(1).max(100),
   composeContent: z.string().max(102400),
@@ -25,6 +45,17 @@ export const createProjectSchema = z.object({
   isInfrastructure: z.boolean().optional().default(false),
   groupId: z.string().uuid().nullable().optional(),
   sortOrder: z.number().int().min(0).optional().default(0),
+  configFiles: z
+    .array(configFileSchema)
+    .optional()
+    .default([])
+    .refine(
+      (files) => {
+        const names = files.map((f) => f.filename);
+        return new Set(names).size === names.length;
+      },
+      { message: "Duplicate filenames" },
+    ),
 });
 
 export const updateProjectSchema = createProjectSchema.partial();
@@ -89,3 +120,4 @@ export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type RenameGroupInput = z.infer<typeof renameGroupSchema>;
 export type ReorderGroupsInput = z.infer<typeof reorderGroupsSchema>;
 export type ReorderProjectsInput = z.infer<typeof reorderProjectsSchema>;
+export type ConfigFileInput = z.infer<typeof configFileSchema>;

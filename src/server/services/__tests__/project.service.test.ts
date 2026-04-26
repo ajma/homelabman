@@ -3,6 +3,14 @@ import crypto from "crypto";
 
 vi.mock("../../db/index.js", () => ({ getDatabase: vi.fn() }));
 
+vi.mock("../config-file.service.js", () => ({
+  ConfigFileService: vi.fn().mockImplementation(() => ({
+    readConfigFiles: vi.fn().mockResolvedValue([]),
+    writeConfigFiles: vi.fn().mockResolvedValue(undefined),
+    syncConfigFiles: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 import { getDatabase } from "../../db/index.js";
 import { ProjectService } from "../project.service.js";
 
@@ -169,7 +177,7 @@ describe("ProjectService.getProject", () => {
     const service = new ProjectService();
     const result = await service.getProject(PROJECT_ID, USER_ID);
 
-    expect(result).toEqual(makeProject());
+    expect(result).toEqual({ ...makeProject(), configFiles: [] });
     expect(db.select).toHaveBeenCalled();
   });
 
@@ -297,5 +305,98 @@ describe("ProjectService.reorderProjects", () => {
     expect(txSetFns[1]).toHaveBeenCalledWith(
       expect.objectContaining({ groupId: "group-1", sortOrder: 1 }),
     );
+  });
+});
+
+describe("ProjectService.getProject configFiles", () => {
+  it("includes configFiles from ConfigFileService in the response", async () => {
+    const db = makeDb();
+    vi.mocked(getDatabase).mockReturnValue(db as any);
+
+    const service = new ProjectService();
+    const cfsMock = (service as any).configFileService;
+    cfsMock.readConfigFiles.mockResolvedValue([
+      { filename: "nginx.conf", content: "server {}" },
+    ]);
+
+    const result = await service.getProject(PROJECT_ID, USER_ID);
+    expect(result).toBeDefined();
+    expect(result!.configFiles).toEqual([
+      { filename: "nginx.conf", content: "server {}" },
+    ]);
+    expect(cfsMock.readConfigFiles).toHaveBeenCalledWith("my-app");
+  });
+});
+
+describe("ProjectService.createProject configFiles", () => {
+  it("calls writeConfigFiles when configFiles provided", async () => {
+    const db = makeDb();
+    const slugCheckWhere = vi.fn().mockResolvedValue([]);
+    db.select = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({ where: slugCheckWhere }),
+    });
+    const returning = vi.fn().mockResolvedValue([makeProject()]);
+    const values = vi.fn().mockReturnValue({ returning });
+    db.insert = vi.fn().mockReturnValue({ values });
+    vi.mocked(getDatabase).mockReturnValue(db as any);
+
+    const service = new ProjectService();
+    const cfsMock = (service as any).configFileService;
+
+    await service.createProject(USER_ID, {
+      name: "My App",
+      sortOrder: 0,
+      composeContent: "services:\n  web:\n    image: nginx\n",
+      exposureEnabled: false,
+      exposureConfig: {},
+      isInfrastructure: false,
+      configFiles: [{ filename: "nginx.conf", content: "server {}" }],
+    });
+
+    expect(cfsMock.writeConfigFiles).toHaveBeenCalledWith("my-app", [
+      { filename: "nginx.conf", content: "server {}" },
+    ]);
+  });
+});
+
+describe("ProjectService.updateProject configFiles", () => {
+  it("calls syncConfigFiles when configFiles provided", async () => {
+    const updated = makeProject({ name: "Updated App" });
+    const returning = vi.fn().mockResolvedValue([updated]);
+    const where = vi.fn().mockReturnValue({ returning });
+    const set = vi.fn().mockReturnValue({ where });
+
+    const db = makeDb();
+    db.update = vi.fn().mockReturnValue({ set });
+    vi.mocked(getDatabase).mockReturnValue(db as any);
+
+    const service = new ProjectService();
+    const cfsMock = (service as any).configFileService;
+
+    await service.updateProject(PROJECT_ID, USER_ID, {
+      configFiles: [{ filename: "app.conf", content: "config" }],
+    });
+
+    expect(cfsMock.syncConfigFiles).toHaveBeenCalledWith("my-app", [
+      { filename: "app.conf", content: "config" },
+    ]);
+  });
+
+  it("does not call syncConfigFiles when configFiles not in update data", async () => {
+    const updated = makeProject({ name: "Updated App" });
+    const returning = vi.fn().mockResolvedValue([updated]);
+    const where = vi.fn().mockReturnValue({ returning });
+    const set = vi.fn().mockReturnValue({ where });
+
+    const db = makeDb();
+    db.update = vi.fn().mockReturnValue({ set });
+    vi.mocked(getDatabase).mockReturnValue(db as any);
+
+    const service = new ProjectService();
+    const cfsMock = (service as any).configFileService;
+
+    await service.updateProject(PROJECT_ID, USER_ID, { name: "Updated App" });
+
+    expect(cfsMock.syncConfigFiles).not.toHaveBeenCalled();
   });
 });

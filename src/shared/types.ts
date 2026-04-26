@@ -108,3 +108,8 @@ export interface AdoptResult {
   adopted: string[];
   failed: { stackName: string; reason: string }[];
 }
+
+export interface ConfigFile {
+  filename: string;
+  content: string;
+}

@@ -26,6 +26,7 @@ import type { CreateProjectInput } from "@shared/schemas";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { load } from "js-yaml";
 import { ComposeEditor } from "../components/ComposeEditor";
+import { ConfigFilesSection } from "../components/ConfigFilesSection";
 import { TemplatePickerModal } from "../components/TemplatePickerModal";
 import { inputCls, selectCls } from "../lib/styles";
 import { api } from "../lib/api";
@@ -275,6 +276,7 @@ const emptyProjectFormValues: CreateProjectInput = {
   exposureConfig: {},
   isInfrastructure: false,
   groupId: null,
+  configFiles: [],
 };
 
 const statusStyles: Record<string, string> = {
@@ -608,6 +610,7 @@ export function ProjectEditor() {
         exposureProviderId: project.exposureProviderId || null,
         exposureConfig: expConfig,
         groupId: project.groupId ?? null,
+        configFiles: (project as any).configFiles ?? [],
       });
     }
   }, [isEditing, project, reset]);
@@ -1338,6 +1341,17 @@ export function ProjectEditor() {
               </p>
             )}
           </div>
+
+          <Controller
+            name="configFiles"
+            control={control}
+            render={({ field }) => (
+              <ConfigFilesSection
+                files={field.value ?? []}
+                onChange={(files) => field.onChange(files)}
+              />
+            )}
+          />
         </div>
       </form>
 

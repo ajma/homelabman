@@ -6,6 +6,8 @@ import type {
   UpdateProjectInput,
 } from "../../shared/schemas.js";
 import type { Project } from "../../shared/types.js";
+import type { ConfigFile } from "../../shared/types.js";
+import { ConfigFileService } from "./config-file.service.js";
 import crypto from "crypto";
 
 function generateSlug(name: string): string {
@@ -15,7 +17,10 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
+const COMPOSE_DIR = process.env.COMPOSE_DIR ?? "/data/compose";
+
 export class ProjectService {
+  private configFileService = new ConfigFileService(COMPOSE_DIR);
   async listProjects(userId: string): Promise<Project[]> {
     const db = getDatabase();
     const rows = await db
@@ -25,13 +30,18 @@ export class ProjectService {
     return rows as Project[];
   }
 
-  async getProject(projectId: string, userId: string): Promise<Project | null> {
+  async getProject(
+    projectId: string,
+    userId: string,
+  ): Promise<(Project & { configFiles: ConfigFile[] }) | null> {
     const db = getDatabase();
     const [row] = await db
       .select()
       .from(projects)
       .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
-    return (row as Project) ?? null;
+    if (!row) return null;
+    const configFiles = await this.configFileService.readConfigFiles(row.slug);
+    return { ...(row as Project), configFiles };
   }
 
   async createProject(
@@ -70,6 +80,10 @@ export class ProjectService {
       })
       .returning();
 
+    if (data.configFiles && data.configFiles.length > 0) {
+      await this.configFileService.writeConfigFiles(slug, data.configFiles);
+    }
+
     return row as Project;
   }
 
@@ -84,6 +98,13 @@ export class ProjectService {
     const existing = await this.getProject(projectId, userId);
     if (!existing) {
       throw new Error("Project not found");
+    }
+
+    if (data.configFiles !== undefined) {
+      await this.configFileService.syncConfigFiles(
+        existing.slug,
+        data.configFiles,
+      );
     }
 
     const updateData: Record<string, unknown> = { updatedAt: Date.now() };
