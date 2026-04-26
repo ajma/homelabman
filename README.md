@@ -47,6 +47,28 @@ volumes:
 
 Then open http://localhost:3000 in your browser.
 
+## Data Directory
+
+Everything Labrador needs to persist is stored under the mounted data directory (`/data` inside the container, backed by the `labrador-data` volume). Labrador creates these subdirectories automatically on first use — no manual setup required.
+
+```
+/data/
+├── labrador.db        # SQLite database (all projects, settings, providers, stats)
+└── compose/
+    ├── my-stack/
+    │   └── docker-compose.yml
+    ├── another-project/
+    │   └── docker-compose.yml
+    └── …
+```
+
+| Path                                | Purpose                                                                                                                                                                                                                                                                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labrador.db`                       | Single-file SQLite database. Contains all project definitions (including compose YAML), user accounts, exposure provider configuration, container stats history, and image update records.                                                                                                                                    |
+| `compose/<slug>/docker-compose.yml` | Generated compose file for each project, written before every deploy, stop, or restart. The compose content is always re-generated from the database, so this directory is a working cache — you can delete it and it will be recreated on the next operation. One subfolder per project, named after the project's URL slug. |
+
+> **Backup**: backing up `labrador.db` is sufficient to restore all project definitions and configuration. The `compose/` directory is derived from the database and does not need to be included in backups.
+
 ## Environment Variables
 
 | Variable        | Description                                      | Required | Default             |
