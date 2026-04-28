@@ -34,6 +34,8 @@ const createAccountSchema = registerSchema
 
 type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
+const SHOW_CADDY = false;
+
 interface ProviderConfig {
   caddy?: { apiUrl: string };
   cloudflare?: CloudflareProviderFormValue;
@@ -346,85 +348,87 @@ function ConfigureProvidersStep({
 
       <div className="space-y-3">
         {/* Caddy Provider */}
-        <div className="rounded-xl border border-white/[0.20] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">Caddy</p>
-              <p className="text-xs text-muted-foreground">
-                Reverse proxy with automatic HTTPS
-              </p>
-              {providerConfig.caddy && expandedProvider !== "caddy" && (
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Configured: {providerConfig.caddy.apiUrl}
+        {SHOW_CADDY && (
+          <div className="rounded-xl border border-white/[0.20] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">Caddy</p>
+                <p className="text-xs text-muted-foreground">
+                  Reverse proxy with automatic HTTPS
                 </p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {providerConfig.caddy && (
-                <button
-                  onClick={removeCaddy}
-                  className="rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
-                >
-                  Remove
-                </button>
-              )}
-              {providerConfig.caddy && expandedProvider !== "caddy" && (
+                {providerConfig.caddy && expandedProvider !== "caddy" && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Configured: {providerConfig.caddy.apiUrl}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {providerConfig.caddy && (
+                  <button
+                    onClick={removeCaddy}
+                    className="rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground"
+                  >
+                    Remove
+                  </button>
+                )}
+                {providerConfig.caddy && expandedProvider !== "caddy" && (
+                  <button
+                    onClick={() =>
+                      runCheckSetup("caddy", {
+                        apiUrl: providerConfig.caddy!.apiUrl,
+                      })
+                    }
+                    disabled={checkingSetup["caddy"]}
+                    className="rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground disabled:opacity-40"
+                  >
+                    {checkingSetup["caddy"] ? "Checking…" : "Check Setup"}
+                  </button>
+                )}
                 <button
                   onClick={() =>
-                    runCheckSetup("caddy", {
-                      apiUrl: providerConfig.caddy!.apiUrl,
-                    })
+                    setExpandedProvider(
+                      expandedProvider === "caddy" ? null : "caddy",
+                    )
                   }
-                  disabled={checkingSetup["caddy"]}
-                  className="rounded-lg px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-muted-foreground disabled:opacity-40"
+                  className="rounded-lg border border-primary/[0.4] px-3 py-1 text-xs text-primary transition-colors hover:bg-primary/[0.08]"
                 >
-                  {checkingSetup["caddy"] ? "Checking…" : "Check Setup"}
+                  {providerConfig.caddy ? "Edit" : "Configure"}
                 </button>
-              )}
-              <button
-                onClick={() =>
-                  setExpandedProvider(
-                    expandedProvider === "caddy" ? null : "caddy",
-                  )
-                }
-                className="rounded-lg border border-primary/[0.4] px-3 py-1 text-xs text-primary transition-colors hover:bg-primary/[0.08]"
-              >
-                {providerConfig.caddy ? "Edit" : "Configure"}
-              </button>
-            </div>
-          </div>
-          {setupResults["caddy"] && expandedProvider !== "caddy" && (
-            <div className="border-t border-white/[0.24] px-4 pb-3">
-              <SetupCheckDisplay result={setupResults["caddy"]} />
-            </div>
-          )}
-          {expandedProvider === "caddy" && (
-            <div className="border-t border-white/[0.24] px-4 py-4 space-y-3">
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="caddy-api-url"
-                  className="text-xs font-medium text-muted-foreground"
-                >
-                  API URL
-                </label>
-                <input
-                  id="caddy-api-url"
-                  type="text"
-                  placeholder="http://localhost:2019"
-                  value={caddyApiUrl}
-                  onChange={(e) => setCaddyApiUrl(e.target.value)}
-                  className={inputCls}
-                />
               </div>
-              <button
-                onClick={saveCaddy}
-                className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                Save
-              </button>
             </div>
-          )}
-        </div>
+            {setupResults["caddy"] && expandedProvider !== "caddy" && (
+              <div className="border-t border-white/[0.24] px-4 pb-3">
+                <SetupCheckDisplay result={setupResults["caddy"]} />
+              </div>
+            )}
+            {expandedProvider === "caddy" && (
+              <div className="border-t border-white/[0.24] px-4 py-4 space-y-3">
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="caddy-api-url"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    API URL
+                  </label>
+                  <input
+                    id="caddy-api-url"
+                    type="text"
+                    placeholder="http://localhost:2019"
+                    value={caddyApiUrl}
+                    onChange={(e) => setCaddyApiUrl(e.target.value)}
+                    className={inputCls}
+                  />
+                </div>
+                <button
+                  onClick={saveCaddy}
+                  className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  Save
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Cloudflare Provider */}
         <div className="rounded-xl border border-white/[0.20] overflow-hidden">
@@ -544,7 +548,7 @@ function CompleteStep({
   isSubmitting: boolean;
 }) {
   const configuredProviders: string[] = [];
-  if (providerConfig.caddy) configuredProviders.push("Caddy");
+  if (SHOW_CADDY && providerConfig.caddy) configuredProviders.push("Caddy");
   if (providerConfig.cloudflare) configuredProviders.push("Cloudflare");
 
   return (
@@ -609,7 +613,7 @@ export function Onboarding() {
     try {
       const exposureProviders: ExposureProviderInput[] = [];
 
-      if (providerConfig.caddy) {
+      if (SHOW_CADDY && providerConfig.caddy) {
         exposureProviders.push({
           providerType: "caddy",
           name: "Caddy",

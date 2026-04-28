@@ -46,6 +46,8 @@ import {
   type CloudflareProviderFormValue,
 } from "../components/CloudflareProviderForm";
 
+const SHOW_CADDY = false;
+
 // ─── anchor sections ─────────────────────────────────────────────────────────
 
 const SECTIONS = [
@@ -173,21 +175,23 @@ function ProviderTypeToggle({
     <div
       className={`inline-flex rounded-xl border border-white/[0.15] p-0.5 ${disabled ? "opacity-50" : ""}`}
     >
-      {(["cloudflare", "caddy"] as const).map((type) => (
-        <button
-          key={type}
-          type="button"
-          disabled={disabled}
-          onClick={() => !disabled && onChange(type)}
-          className={`rounded-[10px] px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
-            value === type
-              ? "bg-primary/[0.15] text-primary"
-              : "text-muted-foreground hover:text-muted-foreground"
-          }`}
-        >
-          {type}
-        </button>
-      ))}
+      {(["cloudflare", "caddy"] as const)
+        .filter((type) => SHOW_CADDY || type !== "caddy")
+        .map((type) => (
+          <button
+            key={type}
+            type="button"
+            disabled={disabled}
+            onClick={() => !disabled && onChange(type)}
+            className={`rounded-[10px] px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
+              value === type
+                ? "bg-primary/[0.15] text-primary"
+                : "text-muted-foreground hover:text-muted-foreground"
+            }`}
+          >
+            {type}
+          </button>
+        ))}
     </div>
   );
 }
@@ -301,23 +305,25 @@ function ProviderForm({
       onChange={onDirty}
       className="space-y-4"
     >
-      <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">
-          Type
-        </label>
-        <div>
-          <ProviderTypeToggle
-            value={providerType}
-            onChange={handleTypeChange}
-            disabled={!!provider}
-          />
+      {SHOW_CADDY && (
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">
+            Type
+          </label>
+          <div>
+            <ProviderTypeToggle
+              value={providerType}
+              onChange={handleTypeChange}
+              disabled={!!provider}
+            />
+          </div>
+          {!!provider && (
+            <p className="text-xs text-muted-foreground">
+              Provider type cannot be changed after creation.
+            </p>
+          )}
         </div>
-        {!!provider && (
-          <p className="text-xs text-muted-foreground">
-            Provider type cannot be changed after creation.
-          </p>
-        )}
-      </div>
+      )}
 
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-muted-foreground">
@@ -325,7 +331,7 @@ function ProviderForm({
         </label>
         <input
           type="text"
-          placeholder="e.g. My Caddy Server"
+          placeholder="e.g. My Cloudflare Tunnel"
           className={inputCls}
           {...register("name")}
         />
@@ -619,7 +625,9 @@ function ProvidersSection() {
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {provider.providerType === "caddy"
-                      ? "Caddy Reverse Proxy"
+                      ? SHOW_CADDY
+                        ? "Caddy Reverse Proxy"
+                        : provider.providerType
                       : "Cloudflare Tunnel"}
                   </p>
                 </div>
