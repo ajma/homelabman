@@ -10,38 +10,25 @@ import { eq } from "drizzle-orm";
 import type { Project } from "../../shared/types.js";
 import type { ConfigFile } from "../../shared/types.js";
 
-const PROJECTS_DIR = process.env.PROJECTS_DIR ?? "/data/projects";
-const HOST_PROJECTS_DIR = process.env.HOST_PROJECTS_DIR;
-
-if (HOST_PROJECTS_DIR && !path.isAbsolute(HOST_PROJECTS_DIR)) {
-  throw new Error(
-    `HOST_PROJECTS_DIR must be an absolute path, got: "${HOST_PROJECTS_DIR}". ` +
-      `Set DATA_DIR to an absolute host path (e.g. /home/user/labrador/data).`,
-  );
-}
-
-interface DeploymentListener {
+export interface DeploymentListener {
   onProgress: (stage: string, message: string) => void;
   onComplete: (status: "success" | "error") => void;
   onError: (error: string) => void;
 }
 
 export class DeployService {
-  private exposureService: ExposureService | null = null;
-
   constructor(
-    private dockerService: DockerService,
+    private dockerService: DockerService | null,
     private projectService: ProjectService,
+    private exposureService: ExposureService | null,
+    private projectsDir: string,
+    private hostProjectsDir?: string,
   ) {}
-
-  setExposureService(exposureService: ExposureService): void {
-    this.exposureService = exposureService;
-  }
 
   private async writeProjectFiles(
     project: Project & { configFiles: ConfigFile[] },
   ): Promise<string> {
-    const projectDir = path.join(PROJECTS_DIR, project.slug);
+    const projectDir = path.join(this.projectsDir, project.slug);
     await fs.mkdir(projectDir, { recursive: true });
 
     let compose = this.injectLabels(
@@ -60,8 +47,8 @@ export class DeployService {
   }
 
   private rewriteVolumePaths(composeContent: string, slug: string): string {
-    if (!HOST_PROJECTS_DIR) return composeContent;
-    const hostProjectDir = path.join(HOST_PROJECTS_DIR, slug);
+    if (!this.hostProjectsDir) return composeContent;
+    const hostProjectDir = path.join(this.hostProjectsDir, slug);
     const parsed = yaml.load(composeContent) as any;
     if (!parsed?.services) return composeContent;
 
@@ -123,34 +110,34 @@ export class DeployService {
     return yaml.dump(parsed);
   }
 
+  private requireDocker(): DockerService {
+    if (!this.dockerService) throw new Error("Docker is not available");
+    return this.dockerService;
+  }
+
   async deploy(
     projectId: string,
     userId: string,
     listener?: DeploymentListener,
   ): Promise<void> {
+    const docker = this.requireDocker();
     const db = getDatabase();
     const project = await this.projectService.getProject(projectId, userId);
     if (!project) throw new Error("Project not found");
 
     listener?.onProgress("preparing", "Preparing deployment...");
 
-    // Update status to starting
     await db
       .update(projects)
       .set({ status: "starting", updatedAt: Date.now() })
       .where(eq(projects.id, projectId));
 
     try {
-      // Write compose + config files
       listener?.onProgress("preparing", "Writing project files...");
       const composeFile = await this.writeProjectFiles(project);
 
-      // Run docker compose up
       listener?.onProgress("deploying", "Running docker compose up...");
-      const result = await this.dockerService.composeUp(
-        composeFile,
-        project.slug,
-      );
+      const result = await docker.composeUp(composeFile, project.slug);
 
       if (
         result.stderr &&
@@ -158,11 +145,9 @@ export class DeployService {
         !result.stderr.includes("Running") &&
         !result.stderr.includes("Created")
       ) {
-        // docker compose often writes progress to stderr, so only treat as error if it looks like one
         listener?.onProgress("deploying", result.stderr);
       }
 
-      // Update status to running
       await db
         .update(projects)
         .set({
@@ -172,7 +157,6 @@ export class DeployService {
         })
         .where(eq(projects.id, projectId));
 
-      // Set up exposure routes if configured
       if (this.exposureService) {
         try {
           listener?.onProgress("exposure", "Configuring exposure routes...");
@@ -182,7 +166,6 @@ export class DeployService {
             "exposure",
             `Exposure setup failed: ${exposureErr.message}`,
           );
-          // Don't fail the deploy for exposure errors
         }
       }
 
@@ -201,13 +184,13 @@ export class DeployService {
   }
 
   async stop(projectId: string, userId: string): Promise<void> {
+    const docker = this.requireDocker();
     const db = getDatabase();
     const project = await this.projectService.getProject(projectId, userId);
     if (!project) throw new Error("Project not found");
 
     const composeFile = await this.writeProjectFiles(project);
 
-    // Remove exposure routes before stopping
     if (this.exposureService) {
       try {
         await this.exposureService.removeProjectExposure(projectId);
@@ -217,7 +200,7 @@ export class DeployService {
     }
 
     try {
-      await this.dockerService.composeDown(composeFile, project.slug);
+      await docker.composeDown(composeFile, project.slug);
     } catch {
       // If compose file doesn't exist, try stopping containers by label
     }
@@ -229,17 +212,43 @@ export class DeployService {
   }
 
   async restart(projectId: string, userId: string): Promise<void> {
+    const docker = this.requireDocker();
     const db = getDatabase();
     const project = await this.projectService.getProject(projectId, userId);
     if (!project) throw new Error("Project not found");
 
     const composeFile = await this.writeProjectFiles(project);
 
-    await this.dockerService.composeRestart(composeFile, project.slug);
+    await docker.composeRestart(composeFile, project.slug);
 
     await db
       .update(projects)
       .set({ status: "running", updatedAt: Date.now() })
       .where(eq(projects.id, projectId));
+  }
+
+  async teardown(projectId: string, userId: string): Promise<void> {
+    const project = await this.projectService.getProject(projectId, userId);
+    if (!project) throw new Error("Project not found");
+
+    if (
+      this.dockerService &&
+      (project.status === "running" || project.status === "starting")
+    ) {
+      try {
+        await this.stop(projectId, userId);
+      } catch {
+        // Continue with deletion even if stop fails
+      }
+    }
+
+    const projectDir = path.join(this.projectsDir, project.slug);
+    try {
+      await fs.rm(projectDir, { recursive: true, force: true });
+    } catch {
+      // Continue with deletion even if directory cleanup fails
+    }
+
+    await this.projectService.deleteProject(projectId, userId);
   }
 }

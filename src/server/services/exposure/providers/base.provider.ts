@@ -16,6 +16,10 @@ export abstract class BaseProvider implements ExposureProvider {
     this.config = config;
   }
 
+  getRouteId(project: { id: string; domainName?: string | null }): string {
+    return project.id;
+  }
+
   abstract validateConfig(
     config: Record<string, any>,
   ): Promise<ValidationResult>;

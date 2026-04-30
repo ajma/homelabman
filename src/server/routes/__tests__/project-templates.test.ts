@@ -32,6 +32,12 @@ const COMPOSE_YML = "services:\n  nginx:\n    image: nginx:latest\n";
 async function buildApp() {
   const app = Fastify();
   await app.register(fastifyJwt, { secret: "test-secret" });
+  (app as any).appConfig = {
+    projectsDir: "/data/projects",
+    jwtSecret: "test-secret",
+    port: 3000,
+    nodeEnv: "test",
+  };
   await app.register(projectRoutes);
   await app.ready();
   return app;

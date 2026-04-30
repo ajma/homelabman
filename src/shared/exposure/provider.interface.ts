@@ -19,6 +19,7 @@ export interface ExposureProvider {
   validateConfig(config: Record<string, any>): Promise<ValidationResult>;
   testConnection(): Promise<boolean>;
 
+  getRouteId(project: { id: string; domainName?: string | null }): string;
   addRoute(route: ExposureRoute): Promise<void>;
   updateRoute(route: ExposureRoute): Promise<void>;
   removeRoute(routeId: string): Promise<void>;

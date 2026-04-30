@@ -228,6 +228,54 @@ export class DockerService {
     return this.docker.pruneVolumes();
   }
 
+  async getProjectLogs(
+    projectId: string,
+    tail = 100,
+  ): Promise<Array<{ container: string; output: string }>> {
+    const containers = await this.listContainers(projectId);
+    const logs: Array<{ container: string; output: string }> = [];
+
+    for (const container of containers) {
+      const output = await this.getContainerLogs(container.Id, tail);
+      logs.push({
+        container: container.Names[0]?.replace(/^\//, "") || container.Id,
+        output,
+      });
+    }
+
+    return logs;
+  }
+
+  async listVolumesWithUsage(
+    page: number,
+    pageSize: number,
+  ): Promise<{
+    data: Array<Dockerode.VolumeInspectInfo & { ContainerCount: number }>;
+    total: number;
+  }> {
+    const allVolumes = await this.listVolumes();
+    const containers = await this.listContainers();
+
+    const volumeContainerCount = new Map<string, number>();
+    for (const container of containers) {
+      for (const mount of (container as any).Mounts || []) {
+        if (mount.Type === "volume" && mount.Name) {
+          volumeContainerCount.set(
+            mount.Name,
+            (volumeContainerCount.get(mount.Name) || 0) + 1,
+          );
+        }
+      }
+    }
+
+    const paged = allVolumes.slice((page - 1) * pageSize, page * pageSize);
+    const data = paged.map((v) => ({
+      ...v,
+      ContainerCount: volumeContainerCount.get(v.Name) || 0,
+    }));
+    return { data, total: allVolumes.length };
+  }
+
   /**
    * Reconcile project statuses on startup.
    * Scans for containers with labrador.managed=true label,

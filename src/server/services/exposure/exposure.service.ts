@@ -3,33 +3,41 @@ import { getDatabase } from "../../db/index.js";
 import { projects, exposureProviders } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import type {
+  ExposureProvider,
   ExposureRoute,
   RouteStatus,
 } from "@shared/exposure/provider.interface.js";
 
+interface InitializedProvider {
+  provider: ExposureProvider;
+  project: typeof projects.$inferSelect;
+}
+
 export class ExposureService {
   constructor(private registry: ExposureProviderRegistry) {}
 
-  async addProjectExposure(projectId: string): Promise<void> {
+  private async getInitializedProvider(
+    projectId: string,
+  ): Promise<InitializedProvider | null> {
     const db = getDatabase();
 
     const [project] = await db
       .select()
       .from(projects)
       .where(eq(projects.id, projectId));
-    if (!project) return;
+    if (!project) return null;
 
-    if (!project.exposureEnabled || !project.exposureProviderId) return;
+    if (!project.exposureEnabled || !project.exposureProviderId) return null;
 
     const [providerConfig] = await db
       .select()
       .from(exposureProviders)
       .where(eq(exposureProviders.id, project.exposureProviderId));
 
-    if (!providerConfig || !providerConfig.enabled) return;
+    if (!providerConfig || !providerConfig.enabled) return null;
 
     const provider = this.registry.get(providerConfig.providerType);
-    if (!provider) return;
+    if (!provider) return null;
 
     const config =
       typeof providerConfig.configuration === "string"
@@ -37,6 +45,15 @@ export class ExposureService {
         : providerConfig.configuration;
 
     await provider.initialize(config);
+
+    return { provider, project };
+  }
+
+  async addProjectExposure(projectId: string): Promise<void> {
+    const result = await this.getInitializedProvider(projectId);
+    if (!result) return;
+
+    const { provider, project } = result;
 
     const exposureConfig =
       typeof project.exposureConfig === "string"
@@ -86,11 +103,10 @@ export class ExposureService {
 
     await provider.initialize(config);
 
-    // For Caddy, routeId is the projectId. For Cloudflare, it's the domain.
-    const routeId =
-      providerConfig.providerType === "cloudflare"
-        ? project.domainName || projectId
-        : projectId;
+    const routeId = provider.getRouteId({
+      id: projectId,
+      domainName: project.domainName,
+    });
 
     await provider.removeRoute(routeId);
   }
@@ -98,40 +114,15 @@ export class ExposureService {
   async getProjectExposureStatus(
     projectId: string,
   ): Promise<RouteStatus | null> {
-    const db = getDatabase();
+    const result = await this.getInitializedProvider(projectId);
+    if (!result) return null;
 
-    const [project] = await db
-      .select()
-      .from(projects)
-      .where(eq(projects.id, projectId));
-    if (!project) return null;
+    const { provider, project } = result;
 
-    if (!project.exposureEnabled || !project.exposureProviderId) {
-      return null;
-    }
-
-    const [providerConfig] = await db
-      .select()
-      .from(exposureProviders)
-      .where(eq(exposureProviders.id, project.exposureProviderId));
-
-    if (!providerConfig) return null;
-
-    const provider = this.registry.get(providerConfig.providerType);
-    if (!provider) return null;
-
-    const config =
-      typeof providerConfig.configuration === "string"
-        ? JSON.parse(providerConfig.configuration)
-        : providerConfig.configuration;
-
-    await provider.initialize(config);
-
-    // For Caddy we look up by projectId, for Cloudflare by domain
-    const routeId =
-      providerConfig.providerType === "cloudflare"
-        ? project.domainName || projectId
-        : projectId;
+    const routeId = provider.getRouteId({
+      id: projectId,
+      domainName: project.domainName,
+    });
 
     return provider.getRouteStatus(routeId);
   }

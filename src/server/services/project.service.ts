@@ -17,17 +17,29 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
-const PROJECTS_DIR = process.env.PROJECTS_DIR ?? "/data/projects";
-
 export class ProjectService {
-  private configFileService = new ConfigFileService(PROJECTS_DIR);
+  private configFileService: ConfigFileService;
+
+  constructor(private projectsDir: string) {
+    this.configFileService = new ConfigFileService(projectsDir);
+  }
+  private parseProjectRow(row: any): Project {
+    return {
+      ...row,
+      exposureConfig:
+        typeof row.exposureConfig === "string"
+          ? JSON.parse(row.exposureConfig)
+          : row.exposureConfig || {},
+    } as Project;
+  }
+
   async listProjects(userId: string): Promise<Project[]> {
     const db = getDatabase();
     const rows = await db
       .select()
       .from(projects)
       .where(eq(projects.userId, userId));
-    return rows as Project[];
+    return rows.map((row) => this.parseProjectRow(row));
   }
 
   async getProject(
@@ -41,7 +53,7 @@ export class ProjectService {
       .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
     if (!row) return null;
     const configFiles = await this.configFileService.readConfigFiles(row.slug);
-    return { ...(row as Project), configFiles };
+    return { ...this.parseProjectRow(row), configFiles };
   }
 
   async createProject(
@@ -84,7 +96,7 @@ export class ProjectService {
       await this.configFileService.writeConfigFiles(slug, data.configFiles);
     }
 
-    return row as Project;
+    return this.parseProjectRow(row);
   }
 
   async updateProject(
@@ -132,7 +144,7 @@ export class ProjectService {
       .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
       .returning();
 
-    return row as Project;
+    return this.parseProjectRow(row);
   }
 
   async deleteProject(projectId: string, userId: string): Promise<void> {

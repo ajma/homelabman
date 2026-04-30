@@ -25,6 +25,10 @@ export class CloudflareProvider extends BaseProvider {
   readonly name = "Cloudflare Tunnel";
   readonly containerImage = "cloudflare/cloudflared";
 
+  getRouteId(project: { id: string; domainName?: string | null }): string {
+    return project.domainName || project.id;
+  }
+
   private get apiToken(): string {
     return this.config.apiToken as string;
   }

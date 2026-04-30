@@ -53,6 +53,8 @@ describe("injectLabels", () => {
     service = new DeployService(
       mockDockerService as any,
       mockProjectService as any,
+      null,
+      "/data/projects",
     );
   });
 
@@ -122,8 +124,9 @@ describe("deploy", () => {
     service = new DeployService(
       mockDockerService as any,
       mockProjectService as any,
+      mockExposureService as any,
+      "/data/projects",
     );
-    service.setExposureService(mockExposureService as any);
   });
 
   it("writes compose file to PROJECTS_DIR/{slug}/docker-compose.yml", async () => {
@@ -244,8 +247,9 @@ describe("stop", () => {
     service = new DeployService(
       mockDockerService as any,
       mockProjectService as any,
+      mockExposureService as any,
+      "/data/projects",
     );
-    service.setExposureService(mockExposureService as any);
   });
 
   it("calls removeProjectExposure then composeDown", async () => {
@@ -317,6 +321,8 @@ describe("restart", () => {
     service = new DeployService(
       mockDockerService as any,
       mockProjectService as any,
+      null,
+      "/data/projects",
     );
   });
 

@@ -27,20 +27,23 @@ import {
   CloudflareProvider,
 } from "./services/exposure/providers/index.js";
 import { CloudflareApiService } from "./services/cloudflare-api.service.js";
+import { parseConfig } from "./config.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function main() {
+  const config = parseConfig(process.env);
+
   const app = Fastify({
     logger: {
-      level: process.env.NODE_ENV === "production" ? "info" : "debug",
+      level: config.nodeEnv === "production" ? "info" : "debug",
     },
   });
 
   await app.register(cors, { origin: true, credentials: true });
   await app.register(cookie);
   await app.register(jwt, {
-    secret: process.env.JWT_SECRET || "dev-secret-change-me",
+    secret: config.jwtSecret,
     cookie: {
       cookieName: "token",
       signed: false,
@@ -49,7 +52,7 @@ async function main() {
   await app.register(websocket);
 
   // Serve frontend in production
-  if (process.env.NODE_ENV === "production") {
+  if (config.nodeEnv === "production") {
     await app.register(fastifyStatic, {
       root: path.join(__dirname, "../web"),
       prefix: "/",
@@ -60,8 +63,9 @@ async function main() {
   const db = initDatabase();
   await migrateDatabase(path.join(__dirname, "db/migrations"));
 
-  // Decorate app with db
+  // Decorate app with db and config
   app.decorate("db", db);
+  app.decorate("appConfig", config);
 
   // Initialize Docker service
   let dockerService: DockerService | null = null;
@@ -161,7 +165,7 @@ async function main() {
   app.setErrorHandler(errorHandler);
 
   // SPA fallback for frontend routing (production only)
-  if (process.env.NODE_ENV === "production") {
+  if (config.nodeEnv === "production") {
     app.setNotFoundHandler(async (request, reply) => {
       if (!request.url.startsWith("/api/") && !request.url.startsWith("/ws")) {
         return reply.sendFile("index.html");
@@ -170,7 +174,7 @@ async function main() {
     });
   }
 
-  const port = parseInt(process.env.PORT || "3000", 10);
+  const port = config.port;
   await app.listen({ port, host: "0.0.0.0" });
 
   const shutdown = async () => {

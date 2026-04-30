@@ -14,14 +14,13 @@ import type { ExposureService } from "../services/exposure/exposure.service.js";
 import type { UpdateCheckerService } from "../services/update-checker.service.js";
 import type { StatsService } from "../services/stats.service.js";
 import type { ExposureProviderRegistry } from "../services/exposure/provider-registry.js";
+import type { AppConfig } from "../config.js";
 import fs from "fs/promises";
 import path from "path";
 import type {
   ProjectTemplateSummary,
   ProjectTemplate,
 } from "../../shared/types.js";
-
-const projectService = new ProjectService();
 
 /** Parse a range string like '1h', '6h', '24h', '7d', '30d' into milliseconds */
 function parseRange(range: string): number {
@@ -46,15 +45,16 @@ export async function projectRoutes(app: FastifyInstance) {
   const wsBroadcast = (app as any).wsBroadcast as
     | ((projectId: string, message: any) => void)
     | undefined;
+  const config = (app as any).appConfig as AppConfig;
 
-  // Create DeployService only if Docker is available
-  let deployService: DeployService | null = null;
-  if (dockerService) {
-    deployService = new DeployService(dockerService, projectService);
-    if (exposureService) {
-      deployService.setExposureService(exposureService);
-    }
-  }
+  const projectService = new ProjectService(config.projectsDir);
+  const deployService = new DeployService(
+    dockerService,
+    projectService,
+    exposureService ?? null,
+    config.projectsDir,
+    config.hostProjectsDir,
+  );
 
   let adoptService: AdoptService | null = null;
   if (dockerService) {
@@ -212,40 +212,12 @@ export async function projectRoutes(app: FastifyInstance) {
     const { id } = request.params;
 
     try {
-      const project = await projectService.getProject(id, userId);
-      if (!project) {
-        return reply.code(404).send({ error: "Project not found" });
-      }
-
-      // Stop and clean up Docker containers if project is running
-      if (
-        deployService &&
-        (project.status === "running" || project.status === "starting")
-      ) {
-        try {
-          await deployService.stop(id, userId);
-        } catch (err) {
-          // Continue with deletion even if stop fails
-          console.error("Failed to stop project during deletion:", err);
-        }
-      }
-
-      // Clean up compose file directory
-      const PROJECTS_DIR = process.env.PROJECTS_DIR ?? "/data/projects";
-      const projectDir = path.join(PROJECTS_DIR, project.slug);
-      try {
-        await fs.rm(projectDir, { recursive: true, force: true });
-      } catch (err) {
-        // Continue with deletion even if directory cleanup fails
-        console.error("Failed to remove project directory:", err);
-      }
-
-      // Delete from database
-      await projectService.deleteProject(id, userId);
-
+      await deployService.teardown(id, userId);
       return reply.code(204).send();
     } catch (err: any) {
-      console.error("Delete project error:", err);
+      if (err.message === "Project not found") {
+        return reply.code(404).send({ error: "Project not found" });
+      }
       return reply
         .code(500)
         .send({ error: err.message || "Failed to delete project" });
@@ -258,10 +230,6 @@ export async function projectRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const userId = (request.user as any).id;
       const { id } = request.params;
-
-      if (!deployService) {
-        return reply.code(503).send({ error: "Docker is not available" });
-      }
 
       try {
         await deployService.deploy(id, userId, {
@@ -286,6 +254,9 @@ export async function projectRoutes(app: FastifyInstance) {
         });
         return { success: true };
       } catch (error: any) {
+        if (error.message === "Docker is not available") {
+          return reply.code(503).send({ error: error.message });
+        }
         return reply.code(500).send({ error: error.message });
       }
     },
@@ -296,14 +267,13 @@ export async function projectRoutes(app: FastifyInstance) {
     const userId = (request.user as any).id;
     const { id } = request.params;
 
-    if (!deployService) {
-      return reply.code(503).send({ error: "Docker is not available" });
-    }
-
     try {
       await deployService.stop(id, userId);
       return { success: true };
     } catch (error: any) {
+      if (error.message === "Docker is not available") {
+        return reply.code(503).send({ error: error.message });
+      }
       return reply.code(500).send({ error: error.message });
     }
   });
@@ -315,14 +285,13 @@ export async function projectRoutes(app: FastifyInstance) {
       const userId = (request.user as any).id;
       const { id } = request.params;
 
-      if (!deployService) {
-        return reply.code(503).send({ error: "Docker is not available" });
-      }
-
       try {
         await deployService.restart(id, userId);
         return { success: true };
       } catch (error: any) {
+        if (error.message === "Docker is not available") {
+          return reply.code(503).send({ error: error.message });
+        }
         return reply.code(500).send({ error: error.message });
       }
     },
@@ -345,20 +314,10 @@ export async function projectRoutes(app: FastifyInstance) {
         return { logs: [] };
       }
 
-      const containers = await dockerService.listContainers(id);
-      const logs: Array<{ container: string; output: string }> = [];
-
-      for (const container of containers) {
-        const output = await dockerService.getContainerLogs(
-          container.Id,
-          parseInt(tail || "100"),
-        );
-        logs.push({
-          container: container.Names[0]?.replace(/^\//, "") || container.Id,
-          output,
-        });
-      }
-
+      const logs = await dockerService.getProjectLogs(
+        id,
+        parseInt(tail || "100"),
+      );
       return { logs };
     },
   );

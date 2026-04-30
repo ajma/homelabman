@@ -83,7 +83,7 @@ describe("ProjectService.createProject", () => {
     db.insert = vi.fn().mockReturnValue({ values });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     await service.createProject(USER_ID, {
       name: "My App",
       sortOrder: 0,
@@ -91,6 +91,7 @@ describe("ProjectService.createProject", () => {
       exposureEnabled: false,
       exposureConfig: {},
       isInfrastructure: false,
+      configFiles: [],
     });
 
     expect(values).toHaveBeenCalledWith(
@@ -116,7 +117,7 @@ describe("ProjectService.createProject", () => {
       Buffer.from("aabbcc", "hex") as any,
     );
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     await service.createProject(USER_ID, {
       name: "My App",
       sortOrder: 0,
@@ -124,6 +125,7 @@ describe("ProjectService.createProject", () => {
       exposureEnabled: false,
       exposureConfig: {},
       isInfrastructure: false,
+      configFiles: [],
     });
 
     expect(values).toHaveBeenCalledWith(
@@ -142,7 +144,7 @@ describe("ProjectService.createProject", () => {
     db.insert = vi.fn().mockReturnValue({ values });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     await service.createProject(USER_ID, {
       name: "My App",
       sortOrder: 0,
@@ -150,6 +152,7 @@ describe("ProjectService.createProject", () => {
       exposureEnabled: false,
       exposureConfig: {},
       isInfrastructure: false,
+      configFiles: [],
     });
 
     expect(values).toHaveBeenCalledWith({
@@ -174,10 +177,14 @@ describe("ProjectService.getProject", () => {
     const db = makeDb();
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     const result = await service.getProject(PROJECT_ID, USER_ID);
 
-    expect(result).toEqual({ ...makeProject(), configFiles: [] });
+    expect(result).toEqual({
+      ...makeProject(),
+      exposureConfig: {},
+      configFiles: [],
+    });
     expect(db.select).toHaveBeenCalled();
   });
 
@@ -190,7 +197,7 @@ describe("ProjectService.getProject", () => {
     });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     const result = await service.getProject("nonexistent", USER_ID);
 
     expect(result).toBeNull();
@@ -208,7 +215,7 @@ describe("ProjectService.updateProject", () => {
     });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     await expect(
       service.updateProject("bad-id", USER_ID, { name: "Updated" }),
     ).rejects.toThrow("Project not found");
@@ -224,7 +231,7 @@ describe("ProjectService.updateProject", () => {
     db.update = vi.fn().mockReturnValue({ set });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     const result = await service.updateProject(PROJECT_ID, USER_ID, {
       name: "Updated App",
     });
@@ -247,7 +254,7 @@ describe("ProjectService.deleteProject", () => {
     });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     await expect(service.deleteProject("bad-id", USER_ID)).rejects.toThrow(
       "Project not found",
     );
@@ -267,7 +274,7 @@ describe("ProjectService.deleteProject", () => {
     db.delete = deleteFn;
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     await service.deleteProject(PROJECT_ID, USER_ID);
 
     expect(deleteFn).toHaveBeenCalledTimes(3);
@@ -291,7 +298,7 @@ describe("ProjectService.reorderProjects", () => {
     });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     await service.reorderProjects(USER_ID, [
       { id: "proj-a", groupId: null, sortOrder: 0 },
       { id: "proj-b", groupId: "group-1", sortOrder: 1 },
@@ -313,7 +320,7 @@ describe("ProjectService.getProject configFiles", () => {
     const db = makeDb();
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     const cfsMock = (service as any).configFileService;
     cfsMock.readConfigFiles.mockResolvedValue([
       { filename: "nginx.conf", content: "server {}" },
@@ -340,7 +347,7 @@ describe("ProjectService.createProject configFiles", () => {
     db.insert = vi.fn().mockReturnValue({ values });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     const cfsMock = (service as any).configFileService;
 
     await service.createProject(USER_ID, {
@@ -370,7 +377,7 @@ describe("ProjectService.updateProject configFiles", () => {
     db.update = vi.fn().mockReturnValue({ set });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     const cfsMock = (service as any).configFileService;
 
     await service.updateProject(PROJECT_ID, USER_ID, {
@@ -392,7 +399,7 @@ describe("ProjectService.updateProject configFiles", () => {
     db.update = vi.fn().mockReturnValue({ set });
     vi.mocked(getDatabase).mockReturnValue(db as any);
 
-    const service = new ProjectService();
+    const service = new ProjectService("/data/projects");
     const cfsMock = (service as any).configFileService;
 
     await service.updateProject(PROJECT_ID, USER_ID, { name: "Updated App" });

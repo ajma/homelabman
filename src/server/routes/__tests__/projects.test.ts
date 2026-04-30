@@ -17,7 +17,7 @@ const { mockProjectService, mockDeployService } = vi.hoisted(() => ({
     deploy: vi.fn().mockResolvedValue(undefined),
     stop: vi.fn().mockResolvedValue(undefined),
     restart: vi.fn().mockResolvedValue(undefined),
-    setExposureService: vi.fn(),
+    teardown: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -69,6 +69,7 @@ import { projectRoutes } from "../projects.routes.js";
 const mockDockerService = {
   listContainers: vi.fn().mockResolvedValue([]),
   getContainerLogs: vi.fn().mockResolvedValue("log output"),
+  getProjectLogs: vi.fn().mockResolvedValue([]),
 };
 
 const PROJECT = {
@@ -87,6 +88,12 @@ async function buildApp({ withDocker = true } = {}) {
   if (withDocker) {
     (app as any).dockerService = mockDockerService;
   }
+  (app as any).appConfig = {
+    projectsDir: "/data/projects",
+    jwtSecret: "test-secret",
+    port: 3000,
+    nodeEnv: "test",
+  };
   await app.register(projectRoutes);
   await app.ready();
   return app;
@@ -156,37 +163,23 @@ describe("project routes", () => {
   });
 
   describe("DELETE /:id", () => {
-    it("deletes project and returns 204", async () => {
-      mockProjectService.getProject.mockResolvedValue(PROJECT);
-      mockProjectService.deleteProject.mockResolvedValue(undefined);
+    it("calls teardown and returns 204", async () => {
       const app = await buildApp();
       const res = await app.inject({
         method: "DELETE",
         url: "/proj-1",
       });
       expect(res.statusCode).toBe(204);
-      expect(mockProjectService.deleteProject).toHaveBeenCalledWith(
+      expect(mockDeployService.teardown).toHaveBeenCalledWith(
         "proj-1",
         "user-1",
       );
     });
 
-    it("calls stop when project status is running", async () => {
-      const runningProject = { ...PROJECT, status: "running" };
-      mockProjectService.getProject.mockResolvedValue(runningProject);
-      mockProjectService.deleteProject.mockResolvedValue(undefined);
-      const app = await buildApp();
-      const res = await app.inject({
-        method: "DELETE",
-        url: "/proj-1",
-      });
-      expect(res.statusCode).toBe(204);
-      expect(mockDeployService.stop).toHaveBeenCalledWith("proj-1", "user-1");
-      expect(mockProjectService.deleteProject).toHaveBeenCalled();
-    });
-
     it("returns 404 when project not found", async () => {
-      mockProjectService.getProject.mockResolvedValue(null);
+      mockDeployService.teardown.mockRejectedValueOnce(
+        new Error("Project not found"),
+      );
       const app = await buildApp();
       const res = await app.inject({
         method: "DELETE",
@@ -196,30 +189,26 @@ describe("project routes", () => {
       expect(res.json()).toHaveProperty("error", "Project not found");
     });
 
-    it("continues deletion even when stop fails", async () => {
-      const runningProject = { ...PROJECT, status: "running" };
-      mockProjectService.getProject.mockResolvedValue(runningProject);
-      mockProjectService.deleteProject.mockResolvedValue(undefined);
-      mockDeployService.stop.mockRejectedValueOnce(
-        new Error("stop failed unexpectedly"),
+    it("returns 500 when teardown fails", async () => {
+      mockDeployService.teardown.mockRejectedValueOnce(
+        new Error("teardown failed"),
       );
       const app = await buildApp();
       const res = await app.inject({
         method: "DELETE",
         url: "/proj-1",
       });
-      expect(res.statusCode).toBe(204);
-      expect(mockDeployService.stop).toHaveBeenCalled();
-      expect(mockProjectService.deleteProject).toHaveBeenCalledWith(
-        "proj-1",
-        "user-1",
-      );
+      expect(res.statusCode).toBe(500);
+      expect(res.json()).toHaveProperty("error", "teardown failed");
     });
   });
 
   describe("POST /:id/deploy", () => {
     it("returns 503 when Docker is unavailable", async () => {
-      const app = await buildApp({ withDocker: false });
+      mockDeployService.deploy.mockRejectedValueOnce(
+        new Error("Docker is not available"),
+      );
+      const app = await buildApp();
       const res = await app.inject({
         method: "POST",
         url: "/proj-1/deploy",
@@ -260,7 +249,10 @@ describe("project routes", () => {
 
   describe("POST /:id/stop", () => {
     it("returns 503 when Docker is unavailable", async () => {
-      const app = await buildApp({ withDocker: false });
+      mockDeployService.stop.mockRejectedValueOnce(
+        new Error("Docker is not available"),
+      );
+      const app = await buildApp();
       const res = await app.inject({
         method: "POST",
         url: "/proj-1/stop",
@@ -273,11 +265,10 @@ describe("project routes", () => {
   describe("GET /:id/logs", () => {
     it("returns logs from all project containers", async () => {
       mockProjectService.getProject.mockResolvedValue(PROJECT);
-      mockDockerService.listContainers.mockResolvedValue([
-        { Id: "c1", Names: ["/my-app-web-1"] },
-        { Id: "c2", Names: ["/my-app-db-1"] },
+      mockDockerService.getProjectLogs.mockResolvedValue([
+        { container: "my-app-web-1", output: "log output" },
+        { container: "my-app-db-1", output: "log output" },
       ]);
-      mockDockerService.getContainerLogs.mockResolvedValue("log output");
       const app = await buildApp();
       const res = await app.inject({
         method: "GET",
@@ -294,7 +285,6 @@ describe("project routes", () => {
         container: "my-app-db-1",
         output: "log output",
       });
-      expect(mockDockerService.getContainerLogs).toHaveBeenCalledTimes(2);
     });
 
     it("returns 404 when project not found", async () => {

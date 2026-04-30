@@ -18,6 +18,7 @@ import { errorHandler } from "./middleware/error.middleware.js";
 import { setupWebSocket } from "./websocket/stats.handler.js";
 import { ExposureProviderRegistry } from "./services/exposure/provider-registry.js";
 import { ExposureService } from "./services/exposure/exposure.service.js";
+import { parseConfig } from "./config.js";
 import type { MockDockerService } from "../../e2e/mocks/docker.mock.js";
 import type { MockCloudflareApiService } from "../../e2e/mocks/cloudflare-api.mock.js";
 import type { MockCaddyProvider } from "../../e2e/mocks/caddy.mock.js";
@@ -60,7 +61,9 @@ export async function createTestServer(opts: {
   });
   await app.register(websocket);
 
+  const config = parseConfig(process.env);
   app.decorate("db", db);
+  app.decorate("appConfig", config);
   app.decorate("dockerService", mocks.dockerService);
   app.decorate("cloudflareApiService", mocks.cloudflareApiService);
   app.decorate("updateCheckerService", null);

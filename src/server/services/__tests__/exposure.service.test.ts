@@ -29,6 +29,11 @@ const CLOUDFLARE_PROVIDER = {
 
 const mockProvider = {
   initialize: vi.fn().mockResolvedValue(undefined),
+  getRouteId: vi
+    .fn()
+    .mockImplementation(
+      (project: { id: string; domainName?: string | null }) => project.id,
+    ),
   addRoute: vi.fn().mockResolvedValue(undefined),
   removeRoute: vi.fn().mockResolvedValue(undefined),
   getRouteStatus: vi
@@ -238,6 +243,7 @@ describe("removeProjectExposure", () => {
   it("calls removeRoute with domain for cloudflare provider", async () => {
     const db = makeDb(PROJECT, CLOUDFLARE_PROVIDER);
     vi.mocked(getDatabase).mockReturnValue(db as any);
+    mockProvider.getRouteId.mockReturnValueOnce("app.example.com");
     const service = new ExposureService(mockRegistry as any);
 
     await service.removeProjectExposure("proj-1");
@@ -278,6 +284,7 @@ describe("removeProjectExposure", () => {
   it("falls back to projectId when cloudflare project has no domain", async () => {
     const db = makeDb({ ...PROJECT, domainName: null }, CLOUDFLARE_PROVIDER);
     vi.mocked(getDatabase).mockReturnValue(db as any);
+    mockProvider.getRouteId.mockReturnValueOnce("proj-1");
     const service = new ExposureService(mockRegistry as any);
 
     await service.removeProjectExposure("proj-1");
@@ -356,6 +363,7 @@ describe("getProjectExposureStatus", () => {
   it("calls getRouteStatus with domain for cloudflare provider", async () => {
     const db = makeDb(PROJECT, CLOUDFLARE_PROVIDER);
     vi.mocked(getDatabase).mockReturnValue(db as any);
+    mockProvider.getRouteId.mockReturnValueOnce("app.example.com");
     const service = new ExposureService(mockRegistry as any);
 
     const result = await service.getProjectExposureStatus("proj-1");
